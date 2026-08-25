@@ -1,0 +1,30 @@
+# Dependências
+node_modules/
+
+# Variáveis de ambiente (NUNCA subir segredos reais)
+.env
+.env.local
+.env.*.local
+backend/.env
+frontend/.env
+
+# Build
+dist/
+build/
+frontend/dist/
+
+# Logs
+*.log
+npm-debug.log*
+logs/
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Testes / cobertura
+coverage/
