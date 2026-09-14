@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PrimaryButton, SecondaryButton } from '../components/Button';
 import { XpIcon } from '../icons';
+import { LivePlatformStats } from '../components/LivePlatformStats';
 
 /**
  * Onboarding Persuasivo (Doc. Mestre Seção 19.1).
@@ -83,10 +84,7 @@ export function Onboarding() {
             </p>
 
             <div className="bg-gold/10 rounded-card p-4 text-center mb-8">
-              <p className="text-body text-gold font-semibold">
-                Mais de 12.000 moçambicanos ativos
-              </p>
-              <p className="text-caption text-gold">+46.000 MZN já distribuídos em recompensas</p>
+              <LivePlatformStats />
             </div>
 
             <div className="flex gap-3">

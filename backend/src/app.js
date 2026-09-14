@@ -9,6 +9,7 @@ const { defaultRateLimiter } = require('./middleware/rateLimiter');
 const errorHandler = require('./middleware/errorHandler');
 const { NotFoundError } = require('./common/errors/AppError');
 
+const platformStatsRoutes = require('./modules/platformStats/routes/platformStatsRoutes');
 const authRoutes = require('./modules/auth/routes/authRoutes');
 const userRoutes = require('./modules/users/routes/userRoutes');
 const gamificationRoutes = require('./modules/gamification/routes/gamificationRoutes');
@@ -47,6 +48,7 @@ app.get('/health', (req, res) => {
 });
 
 // Rotas versionadas (Manual Parte 5: RESTful versionado /api/v1)
+app.use('/api/v1/platform-stats', platformStatsRoutes);
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/gamification', gamificationRoutes);

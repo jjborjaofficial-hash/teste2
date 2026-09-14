@@ -5,6 +5,7 @@ import { gamificationApi } from '../api/profileApi';
 import { missionsApi, notificationsApi } from '../api/gameplayApi';
 import { Card } from '../components/Card';
 import { XpProgressBar } from '../components/XpProgressBar';
+import { LivePlatformStats } from '../components/LivePlatformStats';
 import { FireIcon, WalletIcon, XpIcon, ChevronRightIcon, NotificationIcon, MissionsIcon, PointsIcon } from '../icons';
 
 /**
@@ -111,7 +112,7 @@ export function Dashboard() {
       )}
 
       <Card className="bg-gold/5 border-gold/20 text-center">
-        <p className="text-body text-gold font-semibold">12.000+ ativos • 46.000+ MZN distribuídos</p>
+        <LivePlatformStats variant="compact" />
       </Card>
 
       {/* Anúncio Estratégico 1 — Banner Nativo (Seção 19.2). Placeholder até a
