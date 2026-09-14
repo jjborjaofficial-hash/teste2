@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { walletApi } from '../api/gameplayApi';
+import { gamificationApi } from '../api/profileApi';
 import { Card } from '../components/Card';
-import { PrimaryButton } from '../components/Button';
+import { PrimaryButton, SecondaryButton } from '../components/Button';
 import { useToast } from '../components/Toast';
 import { ApiError } from '../api/client';
 
@@ -26,13 +27,26 @@ export function Wallet() {
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  // Conversão de Pontos em dinheiro (docx "SISTEMA DE ECONOMIA E RECOMPENSAS",
+  // Seção 6.1). A taxa vem sempre da API — nunca fixa no frontend — para que
+  // um ajuste feito pelo admin em `system_config` apareça aqui sem deploy.
+  const [pointsBalance, setPointsBalance] = useState(0);
+  const [conversionRate, setConversionRate] = useState(null);
+  const [pointsToConvert, setPointsToConvert] = useState('');
+  const [converting, setConverting] = useState(false);
+
   async function load() {
-    const [balanceRes, historyRes] = await Promise.all([
+    const [balanceRes, historyRes, gamificationRes, rateRes] = await Promise.all([
       walletApi.getBalance(),
       walletApi.getHistory(),
+      gamificationApi.me(),
+      walletApi.getConversionRate(),
     ]);
     setBalance(balanceRes.data.walletBalanceMzn);
     setHistory(historyRes.data);
+    setPointsBalance(gamificationRes.data.pointsBalance ?? 0);
+    setConversionRate(rateRes.data);
+    setPointsToConvert(String(rateRes.data.ratePoints));
   }
 
   useEffect(() => {
@@ -54,6 +68,30 @@ export function Wallet() {
   }
 
   const canWithdraw = balance !== null && balance >= WITHDRAWAL_MIN_MZN;
+
+  const pointsNumber = Number(pointsToConvert) || 0;
+  const isMultipleOfRate = !!conversionRate && pointsNumber > 0 && pointsNumber % conversionRate.ratePoints === 0;
+  const previewMzn = conversionRate && isMultipleOfRate
+    ? (pointsNumber / conversionRate.ratePoints) * conversionRate.rateMzn
+    : null;
+  const canConvert = conversionRate && isMultipleOfRate && pointsNumber <= pointsBalance;
+
+  async function handleConvert(e) {
+    e.preventDefault();
+    setConverting(true);
+    try {
+      const res = await walletApi.convertPoints({ pointsAmount: pointsNumber });
+      showToast(
+        `Convertido! ${res.data.pointsConverted} Pontos -> ${res.data.amountMzn.toFixed(2)} MZN.`,
+        'success'
+      );
+      await load();
+    } catch (err) {
+      showToast(err instanceof ApiError ? err.message : 'Não foi possível converter os Pontos.', 'error');
+    } finally {
+      setConverting(false);
+    }
+  }
 
   return (
     <div className="space-y-5 pb-4">
@@ -79,6 +117,50 @@ export function Wallet() {
           quando você solicita um saque do que já ganhou estudando.
         </p>
       </div>
+
+      <Card>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-display text-h2 text-text">Converter Pontos</h2>
+          <span className="text-caption text-text-secondary">
+            {pointsBalance} Pontos disponíveis
+          </span>
+        </div>
+
+        {conversionRate && (
+          <p className="text-caption text-text-secondary mb-3">
+            Taxa atual: {conversionRate.ratePoints} Pontos = {conversionRate.rateMzn.toFixed(2)} MZN.
+            A conversão entra no seu teto de ganho diário, igual a missões e streak.
+          </p>
+        )}
+
+        <form onSubmit={handleConvert} className="space-y-3">
+          <input
+            type="number"
+            step={conversionRate?.ratePoints ?? 1000}
+            min={conversionRate?.ratePoints ?? 1000}
+            max={pointsBalance}
+            value={pointsToConvert}
+            onChange={(e) => setPointsToConvert(e.target.value)}
+            className="w-full rounded-button border border-border bg-surface px-4 py-3 text-body text-text focus:border-primary outline-none"
+          />
+
+          {!isMultipleOfRate && pointsNumber > 0 && conversionRate && (
+            <p className="text-caption text-warning">
+              A conversão só pode ser feita em múltiplos de {conversionRate.ratePoints} Pontos.
+            </p>
+          )}
+
+          {previewMzn !== null && (
+            <p className="text-caption text-success">
+              Você vai receber {previewMzn.toFixed(2)} MZN na Carteira.
+            </p>
+          )}
+
+          <SecondaryButton type="submit" loading={converting} disabled={!canConvert} className="w-full">
+            Converter em Dinheiro
+          </SecondaryButton>
+        </form>
+      </Card>
 
       <Card>
         <h2 className="font-display text-h2 text-text mb-3">Solicitar saque</h2>

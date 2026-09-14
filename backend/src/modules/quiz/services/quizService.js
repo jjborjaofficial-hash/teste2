@@ -6,6 +6,7 @@ const streakService = require('../../gamification/services/streakService');
 const missionsService = require('../../missions/services/missionsService');
 const referralsService = require('../../referrals/services/referralsService');
 const trustScoreService = require('../../trustscore/services/trustScoreService');
+const configRepository = require('../../../common/repositories/systemConfigRepository');
 const { NotFoundError, BusinessRuleError } = require('../../../common/errors/AppError');
 
 /**
@@ -17,6 +18,22 @@ const { NotFoundError, BusinessRuleError } = require('../../../common/errors/App
 // Antifraude: tempo de resposta abaixo deste limiar é fisiologicamente improvável
 // para leitura + decisão humana, e sinaliza possível automação (Doc. Mestre Seção 7).
 const SUSPICIOUSLY_FAST_RESPONSE_MS = 400;
+
+// Fallback caso `system_config` não tenha a chave (nunca deveria acontecer após a
+// migration 029, mas evita que o Quiz pare de dar Pontos por uma linha ausente).
+const DEFAULT_POINTS_BY_DIFFICULTY = { easy: 10, medium: 25, hard: 50 };
+
+/**
+ * Pontos por acerto, de acordo com a dificuldade da pergunta (docx
+ * "Aprenda-e-Ganhe-Documentao-Oficial", Seção 5.9-B — "Quiz fácil: +10
+ * pontos | Quiz médio: +25 pontos | Quiz difícil: +50 pontos"). Vem de
+ * `system_config` (migration 029), não fixo no código, para poder ser
+ * recalibrado sem deploy.
+ */
+async function getPointsRewardForDifficulty(difficulty) {
+  const value = await configRepository.getConfigValue(`quiz_points_reward_${difficulty}`);
+  return value !== null ? Number(value) : (DEFAULT_POINTS_BY_DIFFICULTY[difficulty] ?? 0);
+}
 
 async function listCategories() {
   return repository.listActiveCategories();
@@ -60,6 +77,7 @@ async function submitAnswer({ userId, questionId, alternativeId }) {
   const timeExpired = elapsedMs === null || responseTimeMs > question.time_limit_seconds * 1000;
   const isCorrect = !timeExpired && chosenAlternative.is_correct;
   const xpAwarded = isCorrect ? question.xp_reward : 0;
+  const pointsAwarded = isCorrect ? await getPointsRewardForDifficulty(question.difficulty) : 0;
 
   const client = await db.getClient();
   try {
@@ -72,6 +90,10 @@ async function submitAnswer({ userId, questionId, alternativeId }) {
       isCorrect,
       responseTimeMs,
       xpAwarded,
+      // Valor "bruto" pela dificuldade, antes do teto diário/boost aplicados em
+      // xpService.addXpAndPoints — o valor efetivamente creditado (líquido) fica
+      // em points_ledger.metadata (source = 'quiz_correct_answer').
+      pointsAwarded,
     });
 
     let xpResult = null;
@@ -79,7 +101,14 @@ async function submitAnswer({ userId, questionId, alternativeId }) {
     let missionsProgress = [];
 
     if (isCorrect) {
-      xpResult = await xpService.addXpAndPoints(client, { userId, xpDelta: xpAwarded, pointsDelta: 0 });
+      xpResult = await xpService.addXpAndPoints(client, {
+        userId,
+        xpDelta: xpAwarded,
+        pointsDelta: pointsAwarded,
+        pointsSource: 'quiz_correct_answer',
+        pointsReferenceId: question.id,
+        pointsMetadata: { difficulty: question.difficulty, categoryId: question.category_id },
+      });
       streakResult = await streakService.registerDailyActivity(client, userId);
       missionsProgress = await missionsService.incrementProgressForCategory(client, {
         userId,
@@ -105,9 +134,12 @@ async function submitAnswer({ userId, questionId, alternativeId }) {
       isCorrect,
       timeExpired,
       xpAwarded,
+      pointsAwarded: xpResult ? xpResult.pointsCredited : 0,
       newXpTotal: xpResult ? xpResult.xpTotal : undefined,
+      newPointsBalance: xpResult ? xpResult.pointsBalance : undefined,
       newLevel: xpResult ? xpResult.level : undefined,
       leveledUp: xpResult ? xpResult.leveledUp : false,
+      pointsCappedByDailyLimit: xpResult ? xpResult.pointsCappedByDailyLimit : false,
       streak: streakResult ? streakResult.streak : undefined,
       streakMilestoneReached: streakResult ? streakResult.milestoneReached : undefined,
       missionsUpdated: missionsProgress.length,

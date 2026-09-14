@@ -12,7 +12,7 @@ async function listForUser(userId, executor = db) {
     `SELECT ui.id, ui.quantity, ui.source, ui.acquired_at, ui.activated_at, ui.expires_at, ui.used_at,
             effective_inventory_status(ui.status, ui.expires_at) AS status,
             si.key, si.category, si.name, si.description, si.effect_key,
-            si.is_consumable, si.duration_seconds
+            si.is_consumable, si.duration_seconds, si.price_points, si.eligibility_rule
      FROM user_inventory ui
      JOIN shop_items si ON si.id = ui.item_id
      WHERE ui.user_id = $1
@@ -132,6 +132,30 @@ async function expireOverdue(executor = db) {
   return rowCount;
 }
 
+/**
+ * Itens ativos cujo prazo termina dentro da janela de aviso (spec Seção 50:
+ * "Seu XP Boost expira em 10 minutos") e que ainda não receberam o alerta —
+ * `expiry_alert_sent` garante que o aviso é enviado uma única vez por item,
+ * não repetido a cada execução do CRON.
+ */
+async function findExpiringSoon(withinMinutes, executor = db) {
+  const { rows } = await executor.query(
+    `SELECT ui.id, ui.user_id, ui.expires_at, si.name
+     FROM user_inventory ui
+     JOIN shop_items si ON si.id = ui.item_id
+     WHERE ui.status = 'active'
+       AND ui.expiry_alert_sent = FALSE
+       AND ui.expires_at > now()
+       AND ui.expires_at <= now() + ($1 || ' minutes')::interval`,
+    [withinMinutes]
+  );
+  return rows;
+}
+
+async function markExpiryAlertSent(id, executor = db) {
+  await executor.query(`UPDATE user_inventory SET expiry_alert_sent = TRUE WHERE id = $1`, [id]);
+}
+
 module.exports = {
   listForUser,
   grantConsumable,
@@ -141,4 +165,6 @@ module.exports = {
   consumeOne,
   getActiveEffect,
   expireOverdue,
+  findExpiringSoon,
+  markExpiryAlertSent,
 };

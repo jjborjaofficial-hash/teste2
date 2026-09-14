@@ -10,6 +10,19 @@
  *
  * Frequência recomendada: uma vez por dia, à meia-noite (horário de Moçambique).
  * Uso manual: node src/cron/jobs/assignDailyMissions.js
+ *
+ * CORREÇÃO: antes atribuía QUALQUER missão ativa (daily/weekly/special/
+ * sponsored) todo santo dia, sem filtrar por `type`. Isso nunca deu problema
+ * porque só existiam missões 'daily' no catálogo até agora — mas uma missão
+ * 'weekly' seria incorretamente reatribuída diariamente em vez de uma vez
+ * por semana. Agora este job só cuida de `type = 'daily'`.
+ *
+ * ATUALIZAÇÃO: o job equivalente para `type = 'weekly'` já existe —
+ * ver `assignWeeklyMissions.js` (reutiliza `currentWeekStartDate()` do
+ * módulo Ranking, como planejado aqui). 'special'/'sponsored' continuam
+ * sem ciclo automático, por serem tipicamente definidas manualmente pelo
+ * admin com `starts_at`/`ends_at` explícitos — isso é intencional, não uma
+ * lacuna.
  */
 require('dotenv').config();
 const logger = require('../../common/logger');
@@ -36,6 +49,7 @@ async function run() {
     WHERE u.deleted_at IS NULL
       AND u.status = 'active'
       AND m.is_active = TRUE
+      AND m.type = 'daily'
       AND (m.starts_at IS NULL OR m.starts_at <= now())
       AND (m.ends_at IS NULL OR m.ends_at >= now())
     ON CONFLICT DO NOTHING
@@ -44,9 +58,13 @@ async function run() {
   logger.info(`CRON: ${rowCount} nova(s) atribuição(ões) de missão criada(s)`);
 }
 
-run()
-  .catch((err) => {
-    logger.error('CRON: falha na atribuição diária de missões', { error: err.message });
-    process.exitCode = 1;
-  })
-  .finally(() => pool.end());
+module.exports = run;
+
+if (require.main === module) {
+  run()
+    .catch((err) => {
+      logger.error('CRON: falha na atribuição diária de missões', { error: err.message });
+      process.exitCode = 1;
+    })
+    .finally(() => pool.end());
+}

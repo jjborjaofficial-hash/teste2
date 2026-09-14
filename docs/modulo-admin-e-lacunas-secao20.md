@@ -1,6 +1,7 @@
-# Módulo: Painel Administrativo (base) + Lacunas da Seção 20
+# Módulo: Painel Administrativo + Lacunas da Seção 20
 
-**Status:** ✅ Concluído (v1.0 — base de API, sem interface visual)
+**Status:** ✅ Concluído — API + interface visual (React) + papéis granulares +
+filas/scheduler automático (ver nota de atualização abaixo)
 **Referências:** Doc. Mestre Seção 20, 23.1 | Manual Parte 3 (módulo oficial), Parte 5
 
 ## Módulo Admin
@@ -45,15 +46,26 @@ quem fez (`adminUserId`), o quê, e com qual motivo — nenhuma ação de admin 
 
 ## Lacunas da Seção 20 que continuam pendentes (fora do escopo desta entrega)
 
-- **Autenticação/autorização entre módulos internos**: hoje a autorização é só
-  usuário-vs-admin. Não há ainda um sistema de permissões granulares (ex: admin
-  "financeiro" vs admin "suporte").
-- **Filas (Queues)**: os CRON jobs são scripts standalone, não há fila de mensagens
-  (ex: BullMQ/RabbitMQ) para processamento assíncrono real.
-- **Scheduler automático em produção**: nenhum dos scripts de CRON roda sozinho —
-  precisam ser registrados manualmente no Render Cron Jobs (ou equivalente).
+- **Filas (Queues) e Scheduler automático**: ✅ **fechado numa entrega posterior** —
+  ver `src/queue/` (BullMQ + Redis). `npm run worker` agenda e executa todos os
+  jobs de `src/cron/jobs/` internamente, sem depender de um agendador externo.
+  Os scripts continuam podendo ser rodados manualmente (`node src/cron/jobs/x.js`)
+  para depuração local.
 - **Rotação de credenciais expostas** (Seção 23.2.1): ação operacional, não é código.
-- **Painel Administrativo — interface visual**: esta entrega é só a API.
+
+> ⚠️ **Nota de atualização (documentação estava desatualizada):** as duas linhas
+> abaixo, presentes numa versão anterior deste documento, não refletem mais o
+> estado real do código — mantidas aqui riscadas por rastreabilidade, não como
+> pendência:
+> - ~~Autenticação/autorização entre módulos internos: hoje a autorização é só
+>   usuário-vs-admin~~ → **resolvido**: migration 012 introduziu papéis
+>   granulares (`admin_master`, `admin_financeiro`, `admin_suporte`, e depois
+>   `admin_juridico` na migration 016), aplicados rota a rota via
+>   `middleware/requireRole.js`.
+> - ~~Painel Administrativo — interface visual: esta entrega é só a API~~ →
+>   **resolvido**: existe uma UI completa em React (`frontend/src/pages/admin/`,
+>   14 páginas, ~1.700 linhas), com guarda de papel também no frontend
+>   (`router/RequireAdminRole.jsx`), espelhando as mesmas regras do backend.
 
 ## Nota técnica: `assignDailyMissions.js`
 

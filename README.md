@@ -50,6 +50,11 @@ Abra `http://localhost:5173` no navegador (ou no celular, se estiver na mesma re
   de teto diário e Trust Score mínimo
 ✅ Módulo **Ranking Semanal**: leaderboard com cache Redis (cache-aside)
 ✅ Módulo **Notificações**: streak em risco, missão concluída, marco atingido
+✅ **Push e SMS reais — infraestrutura pronta, falta só a credencial**: fila
+  de entrega (BullMQ), tabela de tokens, service worker web, botão de opt-in
+  no app; ativa sozinho assim que as variáveis `FIREBASE_*`/`TWILIO_*`
+  forem preenchidas — passo a passo completo em
+  `docs/notificacoes-push-sms.md`
 ✅ Módulo **Convites/Indicações**: código único por usuário, qualificação automática
 ✅ **CRON Jobs**: recálculo de ranking semanal, alerta de streak em risco, atribuição
   diária de missões (em lote, escalável), expiração de missões vencidas
@@ -117,6 +122,46 @@ Abra `http://localhost:5173` no navegador (ou no celular, se estiver na mesma re
 ✅ Livro-razão imutável para a Carteira (`wallet_transactions`) e histórico de Trust Score
 ✅ Testes de integração básicos (Jest + Supertest)
 ✅ `docker-compose.yml` para rodar Postgres + Redis localmente
+✅ **Fila real + Scheduler automático (BullMQ/Redis)**: `npm run worker` agenda os 9
+  CRON Jobs existentes automaticamente, com retry e backoff — não depende mais de
+  registro manual em cron externo (Render Cron Jobs) — ver `CHANGELOG_organizacao_expansao.md`
+✅ **Economia de Pontos ativada de ponta a ponta**: Quiz agora concede Pontos por
+  dificuldade (fácil=10/médio=25/difícil=50, Seção 5.9-B), além de XP — antes só dava
+  XP; Loja de Pontos com itens funcionais/cosméticos/prestígio; conversão
+  Pontos → MZN (100 Pontos = 1 MZN, mesmo teto diário do saque); página "Meus Recursos"
+  unificando itens temporários e permanentes com raridade automática (Comum/Raro/
+  Épico/Lendário) — ver `docs/modulo-gamificacao-quiz-missoes-carteira-trustscore.md`,
+  `CHANGELOG_meus_recursos_completo.md` e `CHANGELOG_raridade.md`
+✅ **Banco de perguntas ampliado — 1.614 perguntas** em `database/seeds/` (66 arquivos,
+  rodar manualmente e em ordem numérica). Distribuição atual:
+
+  | Categoria | Fácil | Médio | Difícil | Total |
+  |---|---|---|---|---|
+  | Inteligência Artificial | 100 | 100 | 136 | 336 |
+  | Tecnologia | 100 | 124 | 100 | 324 |
+  | Marketing Digital | 100 | 100 | 106 | 306 |
+  | Finanças | 100 | 100 | 101 | 301 |
+  | Produtividade | 148 | 100 | 99 | 347 |
+
+  Praticamente todo lote recebido tinha a mesma falha de qualidade no material
+  original (resposta certa sempre na alternativa "A") — corrigida em cada
+  arquivo com posições redistribuídas de forma reprodutível (seeds sequenciais
+  42 a 89, uma por arquivo, documentadas no cabeçalho de cada seed).
+
+  ⚠️ **Nota de reconciliação (arquivo 051)**: dois lotes de Inteligência
+  Artificial/Difícil foram enviados em sessões diferentes de trabalho no mesmo
+  período — `050_ia_dificil.sql` (49 perguntas, temática Transformers/RLHF) e
+  `051_ia_dificil_2.sql` (87 perguntas, temática fundamentos de ML + tópicos
+  avançados). Antes de gerar o `051`, foi feita deduplicação de texto contra
+  as 1.325 perguntas já existentes em TODO o banco (não só a mesma categoria),
+  removendo 13 repetições — incluindo 1 pergunta que já vinha do próprio `050`
+  ("O que é RAG..."). Os dois arquivos são complementares, não duplicados.
+
+  ⚠️ **Bug de sintaxe SQL corrigido** (arquivos 003, 004, 005): usavam
+  `CREATE TEMP TABLE x AS INSERT ... RETURNING`, sintaxe inválida no
+  PostgreSQL (`CREATE TABLE AS` só aceita SELECT/TABLE/VALUES). Corrigido para
+  `CREATE TEMP TABLE x AS WITH inserted AS (INSERT ... RETURNING ...) SELECT * FROM inserted`,
+  padrão usado em todos os seeds a partir do 006.
 
 ## O que ainda NÃO está implementado (próximas entregas)
 
@@ -124,13 +169,19 @@ Conforme a metodologia do Manual (Parte 2), cada módulo será entregue completo
 e documentado antes de avançar para o próximo. Pendentes:
 - Módulos: Publicidade/Webhooks de anúncios, IA/Personalização
 - Cache Redis aplicado apenas ao Ranking por enquanto (perfil e streak ainda não usam cache)
-- Filas (Queues) reais para tarefas assíncronas (os CRON são scripts standalone, sem
-  fila de mensagens; nenhum scheduler automático está configurado — precisa ser
-  registrado manualmente em produção, ex: Render Cron Jobs)
 - Login social via Google e validação OTP por SMS (frontend e backend)
 - Integração real de anúncios (AdSense/AdCash/efficientcpmnetwork) — hoje são placeholders visuais no frontend
 - App Mobile nativo (o frontend web é responsivo mobile-first, mas não é um app instalável de loja)
 - Integração automática de pagamento M-Pesa/e-Mola — o saque é 100% manual (ver `docs/fluxo-saque-manual-permissoes-admin-ui.md`)
+- Campanha de Boas-vindas (Jornada Inicial de 7 dias) — nenhuma tabela, migration ou
+  tipo de missão criada ainda; dias 4–7 também não têm valores de exemplo definidos
+  em nenhum documento oficial, então dependem de decisão do proprietário do projeto
+  antes de qualquer implementação
+- SOP formal de exclusão/portabilidade de dados (LGPD, Seção 16.4) — hoje só existe
+  como categoria genérica na Central de Reclamações, sem prazo/processo documentado
+- Endpoint público genérico de `system_config` — hoje cada valor exposto ao frontend
+  (ex.: taxa de conversão de Pontos) precisou de uma rota dedicada; `WITHDRAWAL_MIN_MZN`
+  em `Wallet.jsx` continua fixo no frontend, não vindo da API
 
 ## Requisitos
 

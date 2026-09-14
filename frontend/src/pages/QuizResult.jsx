@@ -91,6 +91,22 @@ export function QuizResult() {
             </span>
           </div>
 
+          {result.pointsAwarded > 0 && (
+            <div className="flex items-center justify-between">
+              <span className="text-body text-text-secondary">Pontos ganhos</span>
+              <span className="flex items-center gap-1.5">
+                <PointsIcon className="w-4 h-4 text-secondary" pulse />
+                <RewardBadge isNew>+{result.pointsAwarded} Pontos</RewardBadge>
+              </span>
+            </div>
+          )}
+
+          {result.pointsCappedByDailyLimit && (
+            <p className="text-caption text-warning">
+              Você atingiu o teto diário de Pontos — volte amanhã para ganhar mais.
+            </p>
+          )}
+
           {result.newLevel && (
             <div className="flex items-center justify-between">
               <span className="text-body text-text-secondary">Nível atual</span>

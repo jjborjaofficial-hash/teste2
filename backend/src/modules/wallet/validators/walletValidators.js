@@ -7,4 +7,11 @@ const withdrawalSchema = z.object({
   }),
 });
 
-module.exports = { withdrawalSchema };
+const conversionSchema = z.object({
+  pointsAmount: z
+    .number({ invalid_type_error: 'A quantidade de Pontos deve ser um número.' })
+    .int('A quantidade de Pontos deve ser um número inteiro.')
+    .positive('A quantidade de Pontos deve ser positiva.'),
+});
+
+module.exports = { withdrawalSchema, conversionSchema };

@@ -1,6 +1,7 @@
 const db = require('../../../config/database');
 const levelService = require('./levelService');
 const userCache = require('../../../common/cache/userCache');
+const userRepository = require('../../users/repositories/userRepository');
 const { NotFoundError } = require('../../../common/errors/AppError');
 
 /**
@@ -8,15 +9,21 @@ const { NotFoundError } = require('../../../common/errors/AppError');
  * Seção 6 — "Centro de Comando"). O streak usa cache-aside (docx "REDIS CACHE
  * E CRON JOBS", Seção 3): é lido a cada abertura do app, mas só muda uma vez
  * por dia de atividade real — caso ideal de cache.
+ *
+ * CORREÇÃO: antes, este endpoint lia `xp_total`/`points_balance` direto do
+ * banco a cada chamada, apesar de `xpService.addXpAndPoints` já invalidar
+ * `userCache.invalidateProfile(userId)` após todo crédito — ou seja, a
+ * invalidação já existia e funcionava, mas era órfã aqui: não tinha nenhum
+ * cache correspondente escutando essa chave neste service (só existia em
+ * `userService.getProfile`, endpoint diferente — `GET /users/me`). Ambos os
+ * endpoints agora leem exatamente do mesmo cache, sem duplicar dado nem
+ * lógica de invalidação nova.
  */
 async function getMyStatus(userId) {
-  const { rows } = await db.query(
-    'SELECT xp_total, points_balance FROM users WHERE id = $1 AND deleted_at IS NULL',
-    [userId]
-  );
-  if (!rows[0]) throw new NotFoundError('Usuário não encontrado.');
+  const profile = await userCache.getOrSetProfile(userId, () => userRepository.findProfileById(userId));
+  if (!profile) throw new NotFoundError('Usuário não encontrado.');
 
-  const levelInfo = await levelService.calculateLevel(Number(rows[0].xp_total));
+  const levelInfo = await levelService.calculateLevel(Number(profile.xp_total));
 
   const streak = await userCache.getOrSetStreak(userId, async () => {
     const streakResult = await db.query(
@@ -38,8 +45,8 @@ async function getMyStatus(userId) {
   });
 
   return {
-    xpTotal: Number(rows[0].xp_total),
-    pointsBalance: Number(rows[0].points_balance),
+    xpTotal: Number(profile.xp_total),
+    pointsBalance: Number(profile.points_balance),
     level: levelInfo.level,
     xpIntoCurrentLevel: levelInfo.xpIntoCurrentLevel,
     xpToNextLevel: levelInfo.xpToNextLevel,

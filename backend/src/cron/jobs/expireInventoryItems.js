@@ -26,9 +26,13 @@ async function run() {
   logger.info(`CRON: ${count} item(ns) de inventário marcado(s) como expirado(s)`);
 }
 
-run()
-  .catch((err) => {
-    logger.error('CRON: falha ao expirar itens de inventário', { error: err.message });
-    process.exitCode = 1;
-  })
-  .finally(() => pool.end());
+module.exports = run;
+
+if (require.main === module) {
+  run()
+    .catch((err) => {
+      logger.error('CRON: falha ao expirar itens de inventário', { error: err.message });
+      process.exitCode = 1;
+    })
+    .finally(() => pool.end());
+}

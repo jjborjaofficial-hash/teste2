@@ -47,6 +47,20 @@ POST /api/v1/quiz/answers
   submetidas em menos de 400ms reduzem o Trust Score em 5 pontos (heurística simples,
   ajustável — a Seção 20 registra que estratégias antifraude mais avançadas ainda
   precisam ser detalhadas).
+- **Pontos por acerto (migration 029 — antes uma lacuna crítica):** até a migration
+  029, `quizService.submitAnswer` chamava `xpService.addXpAndPoints` com
+  `pointsDelta: 0` fixo no código — o Quiz dava XP, mas **nunca** dava Pontos. Como o
+  Quiz é a atividade mais frequente da plataforma e Missões/Streak/Indicação eram as
+  únicas fontes de Pontos, isso deixava a Loja e a conversão Pontos→Dinheiro
+  (migration 028) praticamente inacessíveis para quem só joga quiz. Corrigido usando
+  exatamente a tabela de exemplo já documentada (Seção 5.9-B): fácil = 10 Pontos,
+  médio = 25, difícil = 50 (configurável via `system_config.quiz_points_reward_*`,
+  aplicado por cima da coluna `difficulty` que já existia em `questions`). Passa pelo
+  mesmo teto diário de Pontos e mesmo Coin Boost 2x já usados por Missões/Streak
+  (`xpService.addXpAndPoints`), sem nenhuma lógica nova de cap.
+  ⚠️ **Não implementado** (sem valor de exemplo definido na documentação): o "bônus de
+  pontos por sequência de acertos" citado na mesma Seção 5.9-B — fica registrado como
+  pendência de decisão de negócio, não implementado por falta de fórmula/valor oficial.
 
 ## Módulo Missões
 
@@ -89,6 +103,59 @@ POST /api/v1/quiz/answers
   pagamento não é imediato; passa por auditoria antes de ser liberado via integração de
   pagamento" — essa integração externa é um próximo passo, não coberto nesta entrega).
 
+### Conversão de Pontos em Dinheiro (migration 028)
+
+Anteriormente, a taxa "1.000 Pontos = 10 MZN" existia **só como exemplo** nos documentos
+de brainstorm (Seção 6.1 / Seção 5.9-B), explicitamente marcada como provisória
+("os valores precisam ser calculados... ainda não são valores finais"). Não havia
+rota, serviço nem tabela que de fato convertesse Pontos em MZN — só a Loja
+(`shop_items`), que gasta Pontos em itens funcionais/cosméticos, nunca em dinheiro.
+
+Esta migration ativa a conversão de verdade, usando exatamente a taxa do exemplo
+como valor vigente (configurável, não fixo no código):
+
+- `GET /api/v1/wallet/convert-points/rate` — retorna a taxa atual
+  (`points_conversion_rate_points` / `points_conversion_rate_mzn`), para o frontend
+  nunca precisar cravar o número.
+- `POST /api/v1/wallet/convert-points` — converte Pontos em MZN. Valida, na ordem:
+  1. Quantidade inteira e positiva.
+  2. Conta ativa.
+  3. Trust Score mínimo (`system_config.min_trust_score_for_conversion`, mesmo
+     racional do saque — Manual Parte 7).
+  4. Múltiplo exato da taxa vigente (mesma lógica do exemplo: só blocos "fechados",
+     nunca uma fração esquisita de Pontos).
+  5. **Conta para o mesmo teto de GANHO diário do saque** (`daily_earning_cap_mzn`,
+     7,20 MZN) — decisão explícita para fechar a pergunta em aberto da Seção 6.2
+     ("existe limite diário de conversão?"): sem isso, o teto de ganho vira
+     decorativo, bastando acumular Pontos e converter tudo de uma vez.
+- Debita `points_ledger` (source `points_conversion`) e credita `wallet_transactions`
+  (source `points_conversion`) na mesma transação — mesmo padrão de
+  `walletService.requestWithdrawal`/`shopService.purchase`.
+- Gera notificação `points_converted` ao usuário.
+- Correção incidental: ao recriar a constraint de tipos de notificação, restaurou-se
+  `withdrawal_sla_risk`, removido por engano na migration 027.
+
+**Continua em aberto (decisão de negócio, não técnica):** o valor exato da taxa
+(hoje 100 Pontos = 1 MZN) segue sem uma planilha de sustentabilidade financeira
+(receita de anúncios vs. custo de recompensas) formalizada — ver Recomendação do
+Arquiteto nº 15 no documento "Aprenda-e-Ganhe-Documentao-Oficial". Recalibrar é só
+atualizar `system_config`, sem deploy.
+
+**Conflito entre documentos oficiais — RESOLVIDO por decisão explícita (não é bug):**
+O documento "SISTEMA DE ECONOMIA E RECOMPENSAS" (recebido depois desta migration)
+define três recursos separados — XP, Moedas Virtuais e MZN — e afirma que *"Moedas
+virtuais NÃO podem ser sacadas. Moedas virtuais NÃO possuem valor financeiro
+direto."* Isso contradiz diretamente a conversão Pontos → MZN acima, já que
+"Pontos" nesta plataforma cumpre o mesmo papel que aquele documento chama de
+"Moedas Virtuais" (moeda ganha em missões/quiz, gasta na Loja).
+
+Apresentado o conflito ao proprietário do projeto: **decisão foi manter a
+conversão como está e avaliar o resultado na prática**, em vez de removê-la para
+seguir a restrição literal daquele documento. Isso não é uma inconsistência do
+código — é uma divergência consciente entre dois documentos de referência, com a
+decisão de negócio já tomada pelo dono do projeto. Não reabrir esta discussão sem
+pedido explícito dele.
+
 ## Dados de exemplo para testar
 
 Rode o seed (não é uma migration, é dado de exemplo apenas para dev/teste):
@@ -96,6 +163,30 @@ Rode o seed (não é uma migration, é dado de exemplo apenas para dev/teste):
 ```bash
 psql $DATABASE_URL -f database/seeds/001_sample_content.sql
 ```
+
+## Conteúdo real de perguntas (não é dado de teste)
+
+Diferente do `001_sample_content.sql` acima (2 perguntas, só para
+desenvolvimento), `database/seeds/003_tecnologia_facil.sql` é **conteúdo
+editorial de verdade**, fornecido pelo proprietário do projeto: 50 perguntas
+de Tecnologia, nível Fácil. Pode (e deve) ser rodado em produção:
+
+```bash
+psql $DATABASE_URL -f database/seeds/003_tecnologia_facil.sql
+```
+
+Idempotente (usa `questions.source = 'seed_tecnologia_facil_v1'` como
+marcador — rodar de novo não duplica nada).
+
+**Correção de qualidade aplicada, registrada no próprio arquivo:** no lote
+original, as 50 respostas corretas eram todas a alternativa "A". Isso foi
+corrigido redistribuindo a posição da resposta certa (~13/13/12/12 entre
+A/B/C/D, com seed fixa e reprodutível) — o conteúdo pedagógico em si não foi
+alterado, só a ordem de exibição de cada alternativa.
+
+**Ainda faltam**, deste mesmo lote de conteúdo: perguntas de Tecnologia nível
+médio/difícil, e as 4 categorias restantes (Finanças, IA, Marketing Digital,
+Produtividade) em todos os níveis — hoje só Tecnologia/Fácil tem volume real.
 
 Isso cria 3 categorias, 2 perguntas com alternativas, e 1 missão diária de exemplo.
 

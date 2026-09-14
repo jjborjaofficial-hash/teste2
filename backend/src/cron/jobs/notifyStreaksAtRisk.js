@@ -34,9 +34,13 @@ async function run() {
   logger.info(`CRON: ${notified} usuário(s) notificado(s) sobre streak em risco`);
 }
 
-run()
-  .catch((err) => {
-    logger.error('CRON: falha ao notificar streaks em risco', { error: err.message });
-    process.exitCode = 1;
-  })
-  .finally(() => pool.end());
+module.exports = run;
+
+if (require.main === module) {
+  run()
+    .catch((err) => {
+      logger.error('CRON: falha ao notificar streaks em risco', { error: err.message });
+      process.exitCode = 1;
+    })
+    .finally(() => pool.end());
+}

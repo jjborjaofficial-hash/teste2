@@ -222,6 +222,49 @@ export function ShopIcon({ className = '' }) {
 }
 
 /**
+ * Boost (⚡): usado em "Meus Recursos" para itens temporários que aceleram
+ * um recurso (ex: Coin Boost). Raio estilizado, mesma família de "progresso
+ * (animado)" da Seção 13.5 — pulsa quando o boost está ativo.
+ */
+export function BoostIcon({ className = '', active = false }) {
+  return (
+    <svg {...base} className={`${className} ${active ? 'animate-glow-pulse' : ''}`} stroke="currentColor">
+      <polygon points="36,6 14,36 28,36 24,58 50,26 34,26" strokeLinejoin="round" fill="none" />
+    </svg>
+  );
+}
+
+/**
+ * Personalização (🎨): três amostras de cor, referência direta às Molduras e
+ * Temas da Loja — não um pincel genérico, para ficar coerente com os itens
+ * reais que existem hoje na plataforma.
+ */
+export function PaletteIcon({ className = '' }) {
+  return (
+    <svg {...base} className={className} stroke="currentColor">
+      <circle cx="22" cy="26" r="10" />
+      <circle cx="42" cy="26" r="10" />
+      <circle cx="32" cy="44" r="10" />
+    </svg>
+  );
+}
+
+/**
+ * Eventos (🎁): caixa de presente clássica — laço no topo, fita vertical.
+ */
+export function GiftIcon({ className = '' }) {
+  return (
+    <svg {...base} className={className} stroke="currentColor">
+      <rect x="12" y="26" width="40" height="28" rx="2" />
+      <rect x="8" y="16" width="48" height="12" rx="2" />
+      <line x1="32" y1="16" x2="32" y2="54" />
+      <path d="M32,16 C24,16 20,6 26,4 C31,3 32,10 32,16" />
+      <path d="M32,16 C40,16 44,6 38,4 C33,3 32,10 32,16" />
+    </svg>
+  );
+}
+
+/**
  * Convites/Indicações: duas silhuetas ligadas por uma linha, representando o
  * vínculo entre quem indica e quem foi indicado (não fazia parte da ficha
  * técnica original de 12 ícones — adicionado seguindo as mesmas regras da

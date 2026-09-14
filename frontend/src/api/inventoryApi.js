@@ -7,7 +7,7 @@ import { api } from './client';
  * src/modules/shop/routes/inventoryRoutes.js).
  */
 export const inventoryApi = {
-  list: () => api.get('/inventory'),
+  list: (sort) => api.get(sort ? `/inventory?sort=${encodeURIComponent(sort)}` : '/inventory'),
   activate: (inventoryId) => api.post(`/inventory/${inventoryId}/activate`),
   use: (inventoryId) => api.post(`/inventory/${inventoryId}/use`),
 };

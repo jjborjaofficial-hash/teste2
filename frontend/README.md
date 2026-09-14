@@ -54,12 +54,14 @@ sistema de ícones (SVG inline, stroke-based) e acessibilidade (Seção 13.7:
   Banner Rodapé) são **placeholders visuais**. Nenhuma integração real com
   AdSense/AdCash/efficientcpmnetwork foi feita — isso depende de contrato e
   credenciais reais com essas redes.
-- **Teto de saque fixo no frontend** (`WITHDRAWAL_CAP_MZN` em `Wallet.jsx`): hoje é
-  um valor espelhado manualmente do placeholder do backend
-  (`system_config.withdrawal_daily_cap_mzn`). Se um admin mudar esse valor no banco,
-  o frontend não vai refletir automaticamente — falta um endpoint público de
-  configuração para isso ser dinâmico.
-- **Painel Administrativo**: sem interface — só a API existe (ver backend).
+- **Valores de `system_config` fixos no frontend**: `WITHDRAWAL_MIN_MZN` (100 MZN) em
+  `Wallet.jsx` continua espelhado manualmente do backend
+  (`system_config.withdrawal_min_mzn`). Se um admin mudar esse valor no banco, o
+  frontend não reflete automaticamente. A taxa de conversão Pontos→MZN já resolve
+  isso corretamente via `GET /wallet/convert-points/rate` — falta aplicar o mesmo
+  padrão (endpoint público de config) ao valor mínimo de saque.
+- **Painel Administrativo**: interface completa em `/admin` (React), com navegação
+  condicionada ao papel do admin logado (`admin_master`/`admin_financeiro`/`admin_suporte`).
 - **PWA / instalável**: não configurado (sem manifest.json nem service worker).
 - **Testes automatizados de frontend**: não incluídos nesta entrega (o backend
   tem testes de integração; o frontend ainda não).

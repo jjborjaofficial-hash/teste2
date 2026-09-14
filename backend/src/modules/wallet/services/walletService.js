@@ -1,6 +1,7 @@
 const db = require('../../../config/database');
 const repository = require('../repositories/walletRepository');
 const configRepository = require('../../../common/repositories/systemConfigRepository');
+const pointsLedgerRepository = require('../../gamification/repositories/pointsLedgerRepository');
 const notificationsService = require('../../notifications/services/notificationsService');
 const userCache = require('../../../common/cache/userCache');
 const { BusinessRuleError, ForbiddenError, NotFoundError } = require('../../../common/errors/AppError');
@@ -60,6 +61,9 @@ async function creditReward({ userId, amountMzn, source, referenceId, metadata }
     // Teto de ganho diário já atingido — nada é creditado hoje. Isso é uma
     // decisão silenciosa por padrão (o valor de MZN da missão/streak é só uma
     // estimativa; o efetivamente pago respeita sempre o teto diário).
+    // O usuário ainda assim é avisado (no máximo 1x/dia) — antes esse aviso
+    // não existia (ver docs/reaceite-termos-e-correcao-regras-saque.md).
+    await notificationsService.notifyDailyEarningCapReached(executor, userId, dailyCap);
     return null;
   }
 
@@ -72,6 +76,12 @@ async function creditReward({ userId, amountMzn, source, referenceId, metadata }
     referenceId,
     metadata: { ...metadata, requestedAmountMzn: amountMzn, cappedByDailyLimit: amountToCredit < amountMzn },
   });
+
+  // Se este crédito consumiu o restante do teto de hoje, avisa agora — não
+  // precisa esperar a próxima tentativa (que nem vai gerar crédito nenhum).
+  if (amountToCredit === remainingAllowance) {
+    await notificationsService.notifyDailyEarningCapReached(executor, userId, dailyCap);
+  }
 
   // Invalidação ativa do cache de perfil (docx "REDIS CACHE E CRON JOBS",
   // Seção 2): o saldo em MZN faz parte do perfil cacheado.
@@ -197,4 +207,153 @@ async function requestWithdrawal({ userId, amountMzn, method }) {
   }
 }
 
-module.exports = { getBalance, getHistory, creditReward, requestWithdrawal };
+/**
+ * Retorna a taxa de conversão vigente (docx "SISTEMA DE ECONOMIA E
+ * RECOMPENSAS", Seção 6.1). Existe como endpoint próprio para o frontend
+ * nunca precisar cravar o número no código — se um admin recalibrar a taxa
+ * em `system_config`, a tela de conversão reflete o novo valor sem deploy.
+ */
+async function getConversionRate() {
+  const ratePoints = Number(
+    (await configRepository.getConfigValue('points_conversion_rate_points')) ?? 1000
+  );
+  const rateMzn = Number(
+    (await configRepository.getConfigValue('points_conversion_rate_mzn')) ?? 10
+  );
+  return { ratePoints, rateMzn };
+}
+
+/**
+ * Converte Pontos em dinheiro real (MZN). A taxa e as regras seguem
+ * literalmente o exemplo já registrado na documentação (1.000 Pontos =
+ * 10 MZN / 10.000 Pontos = 100 MZN — mesma proporção), que até agora nunca
+ * tinha sido implementado, apenas descrito como possibilidade em conversa.
+ *
+ * Regras aplicadas:
+ * - conta precisa estar ativa;
+ * - Trust Score mínimo exigido (Manual Parte 7: "limites de conversão devem
+ *   respeitar o Trust Score do usuário");
+ * - a conversão só é aceita em múltiplos exatos da taxa (mesma lógica do
+ *   exemplo: nunca um valor fracionário de Pontos "quebrado");
+ * - conta para o mesmo teto de GANHO diário do saque — ver
+ *   walletRepository.sumEarningsToday.
+ */
+async function convertPointsToMoney({ userId, pointsAmount }) {
+  if (!Number.isInteger(pointsAmount) || pointsAmount <= 0) {
+    throw new BusinessRuleError('A quantidade de Pontos deve ser um número inteiro positivo.');
+  }
+
+  const { ratePoints, rateMzn } = await getConversionRate();
+
+  if (pointsAmount % ratePoints !== 0) {
+    throw new BusinessRuleError(
+      `A conversão só pode ser feita em múltiplos de ${ratePoints} Pontos ` +
+        `(ex.: ${ratePoints} Pontos = ${rateMzn.toFixed(2)} MZN).`
+    );
+  }
+
+  const amountMzn = Number(((pointsAmount / ratePoints) * rateMzn).toFixed(2));
+
+  const accountInfo = await repository.getUserStatusAndTrustScore(userId);
+  if (!accountInfo) throw new NotFoundError('Usuário não encontrado.');
+
+  if (accountInfo.status !== 'active') {
+    throw new ForbiddenError(
+      'Sua conta não está ativa no momento, por isso não é possível converter Pontos em dinheiro.'
+    );
+  }
+
+  const minTrustScore = Number(
+    (await configRepository.getConfigValue('min_trust_score_for_conversion')) ?? 60
+  );
+  if (accountInfo.trust_score < minTrustScore) {
+    throw new ForbiddenError(
+      'Sua conta está em análise de segurança. A conversão não pode ser processada no momento.'
+    );
+  }
+
+  const dailyCap = Number(
+    (await configRepository.getConfigValue('daily_earning_cap_mzn')) ?? 7.2
+  );
+  const earnedToday = await repository.sumEarningsToday(userId);
+  const remainingAllowance = Number((dailyCap - earnedToday).toFixed(2));
+
+  if (remainingAllowance <= 0) {
+    throw new BusinessRuleError(
+      `Você já atingiu o teto de ganho diário de ${dailyCap.toFixed(2)} MZN. Tente converter novamente amanhã.`
+    );
+  }
+  if (amountMzn > remainingAllowance) {
+    throw new BusinessRuleError(
+      `Esta conversão geraria ${amountMzn.toFixed(2)} MZN, mas você só pode ganhar mais ` +
+        `${remainingAllowance.toFixed(2)} MZN hoje. Converta uma quantidade menor de Pontos.`
+    );
+  }
+
+  const client = await db.getClient();
+  try {
+    await client.query('BEGIN');
+
+    let pointsEntry;
+    try {
+      pointsEntry = await pointsLedgerRepository.debitPoints(client, {
+        userId,
+        amountPoints: pointsAmount,
+        source: 'points_conversion',
+        metadata: { ratePoints, rateMzn, amountMzn },
+      });
+    } catch (err) {
+      if (err.code === 'INSUFFICIENT_BALANCE') {
+        throw new BusinessRuleError(
+          `Pontos insuficientes. Você precisa de ${pointsAmount} Pontos para esta conversão.`
+        );
+      }
+      throw err;
+    }
+
+    const walletEntry = await repository.creditWallet(client, {
+      userId,
+      amountMzn,
+      source: 'points_conversion',
+      metadata: {
+        pointsConverted: pointsAmount,
+        ratePoints,
+        rateMzn,
+        pointsLedgerId: pointsEntry.id,
+      },
+    });
+
+    await notificationsService.notifyPointsConverted(client, userId, {
+      pointsAmount,
+      amountMzn,
+    });
+
+    await client.query('COMMIT');
+
+    // Saldo de Pontos E de MZN mudaram — invalida o perfil cacheado (mesmo
+    // princípio já aplicado em creditReward/requestWithdrawal).
+    await userCache.invalidateProfile(userId);
+
+    return {
+      pointsConverted: pointsAmount,
+      amountMzn,
+      newPointsBalance: pointsEntry.balanceAfter,
+      newWalletBalanceMzn: Number(walletEntry.balance_after),
+      convertedAt: walletEntry.created_at,
+    };
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
+module.exports = {
+  getBalance,
+  getHistory,
+  creditReward,
+  requestWithdrawal,
+  getConversionRate,
+  convertPointsToMoney,
+};

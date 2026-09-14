@@ -1,0 +1,129 @@
+## Blueprint do Render (Infrastructure as Code) para o Aprenda e Ganhe.
+##
+## Como usar:
+## 1. Suba este repositório (com este arquivo na raiz) para o GitHub.
+## 2. No painel do Render: New -> Blueprint -> conecte o repositório.
+## 3. O Render lê este arquivo e cria os 5 recursos abaixo automaticamente,
+##    já conectados entre si (URLs e senhas geradas e injetadas sozinhas).
+## 4. Depois do primeiro deploy, rode as migrations uma única vez (ver
+##    docs/deploy-render.md) e promova seu usuário a admin_master.
+##
+## Tudo aqui usa o plano gratuito (Hobby) do Render.
+
+databases:
+  - name: aprenda-e-ganhe-db
+    plan: free
+    region: frankfurt
+    databaseName: aprenda_e_ganhe
+    user: aeg_app
+
+services:
+  # --- Cache / Rate Limiting (Redis) ---
+  - type: keyvalue
+    name: aprenda-e-ganhe-redis
+    plan: free
+    region: frankfurt
+    ipAllowList:
+      - source: 0.0.0.0/0
+        description: acesso liberado (uso interno entre serviços do mesmo workspace)
+
+  # --- Backend (API Node/Express) ---
+  - type: web
+    runtime: node
+    name: aprenda-e-ganhe-backend
+    plan: free
+    region: frankfurt
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: aprenda-e-ganhe-db
+          property: connectionString
+      - key: DATABASE_SSL
+        value: "true"
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: aprenda-e-ganhe-redis
+          property: connectionString
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: JWT_ACCESS_EXPIRES_IN
+        value: 15m
+      - key: JWT_REFRESH_EXPIRES_IN
+        value: 30d
+      - key: BCRYPT_SALT_ROUNDS
+        value: "12"
+      - key: RATE_LIMIT_WINDOW_MS
+        value: "60000"
+      - key: RATE_LIMIT_MAX_REQUESTS
+        value: "60"
+      - key: DEFAULT_COUNTRY
+        value: MZ
+      - key: DEFAULT_CURRENCY
+        value: MZN
+      - key: DEFAULT_LOCALE
+        value: pt-MZ
+      # Previsto a partir do nome do serviço abaixo (Render gera
+      # https://<nome-do-serviço>.onrender.com). Se você renomear o serviço
+      # do frontend ou usar domínio próprio, atualize este valor manualmente
+      # no painel (Environment) — sem isso, o frontend é bloqueado por CORS.
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://aprenda-e-ganhe-frontend.onrender.com
+
+  # --- Worker da fila (BullMQ): agenda e executa os CRON Jobs (missões diárias/
+  # semanais, ranking, expiração de itens, saques, relatório diário etc.) ---
+  # Sem este serviço, os jobs em backend/src/cron/jobs/ NUNCA rodam sozinhos em
+  # produção — ver docs/modulo-admin-e-lacunas-secao20.md e
+  # CHANGELOG_organizacao_expansao.md.
+  - type: worker
+    runtime: node
+    name: aprenda-e-ganhe-worker
+    plan: free
+    region: frankfurt
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm run worker
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: aprenda-e-ganhe-db
+          property: connectionString
+      - key: DATABASE_SSL
+        value: "true"
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: aprenda-e-ganhe-redis
+          property: connectionString
+
+  # --- Frontend (React + Vite, servido como site estático) ---
+  - type: web
+    runtime: static
+    name: aprenda-e-ganhe-frontend
+    rootDir: frontend
+    buildCommand: >
+      npm install &&
+      VITE_API_URL="https://${BACKEND_HOST}/api/v1" npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: BACKEND_HOST
+        fromService:
+          type: web
+          name: aprenda-e-ganhe-backend
+          property: host
+    routes:
+      # Necessário para o React Router funcionar em qualquer rota (ex: /dashboard,
+      # /quiz/:categoryId) mesmo em um recarregamento direto do navegador.
+      - type: rewrite
+        source: /*
+        destination: /index.html

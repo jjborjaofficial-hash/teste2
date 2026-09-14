@@ -34,9 +34,13 @@ async function run() {
   logger.info('CRON: relatório administrativo gerado', report);
 }
 
-run()
-  .catch((err) => {
-    logger.error('CRON: falha ao gerar relatório administrativo', { error: err.message });
-    process.exitCode = 1;
-  })
-  .finally(() => pool.end());
+module.exports = run;
+
+if (require.main === module) {
+  run()
+    .catch((err) => {
+      logger.error('CRON: falha ao gerar relatório administrativo', { error: err.message });
+      process.exitCode = 1;
+    })
+    .finally(() => pool.end());
+}

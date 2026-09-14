@@ -96,6 +96,29 @@ async function listOwnedCosmeticKeys(userId, executor = db) {
   return rows.map((r) => r.key);
 }
 
+/**
+ * Itens PERMANENTES (cosméticos e de prestígio) possuídos pelo usuário,
+ * formatados para entrar na mesma lista de "Meus Recursos" que os itens
+ * temporários/consumíveis de `user_inventory` (spec Seção 34: "a página não
+ * deve mostrar apenas os itens comprados na Loja" / Seção 45: "itens
+ * permanentes equipáveis"). Molduras usam o slot `frame`, temas usam
+ * `theme` — badges de prestígio não têm slot (só exibidos, nunca "vestidos").
+ */
+async function listOwnedPermanentItemsForInventory(userId, executor = db) {
+  const { rows } = await executor.query(
+    `SELECT up.id AS purchase_id, up.created_at AS acquired_at,
+            si.key, si.category, si.name, si.description, si.price_points, si.eligibility_rule,
+            u.equipped_avatar_frame, u.equipped_theme
+     FROM user_purchases up
+     JOIN shop_items si ON si.id = up.shop_item_id
+     JOIN users u ON u.id = up.user_id
+     WHERE up.user_id = $1 AND si.category IN ('cosmetic', 'prestige')
+     ORDER BY up.created_at DESC`,
+    [userId]
+  );
+  return rows;
+}
+
 async function listPurchasesAdmin({ limit = 50, offset = 0 } = {}) {
   const { rows } = await db.query(
     `SELECT up.id, up.price_paid_points, up.created_at, si.name AS item_name, si.category,
@@ -121,5 +144,6 @@ module.exports = {
   recordPurchase,
   listMyPurchases,
   listOwnedCosmeticKeys,
+  listOwnedPermanentItemsForInventory,
   listPurchasesAdmin,
 };

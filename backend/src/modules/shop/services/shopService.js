@@ -5,6 +5,7 @@ const pointsLedgerRepository = require('../../gamification/repositories/pointsLe
 const gamificationRepository = require('../../gamification/repositories/gamificationRepository');
 const rankingRepository = require('../../ranking/repositories/rankingRepository');
 const userCache = require('../../../common/cache/userCache');
+const { resolveRarity } = require('../rarity');
 const { BusinessRuleError, ForbiddenError, NotFoundError, ConflictError } = require('../../../common/errors/AppError');
 
 /**
@@ -24,6 +25,7 @@ function mapItem(item) {
     name: item.name,
     description: item.description,
     pricePoints: item.price_points,
+    rarity: resolveRarity(item.price_points, item.eligibility_rule),
   };
 }
 

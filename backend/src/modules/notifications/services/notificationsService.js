@@ -1,4 +1,6 @@
 const repository = require('../repositories/notificationsRepository');
+const { enqueueSms } = require('../../../queue/deliveryQueue');
+const db = require('../../../config/database');
 
 /**
  * Service de Notificações (Doc. Mestre Seção 9 — Notificações Inteligentes, Seção 6 —
@@ -59,6 +61,66 @@ async function notifyMissionCompleted(executor, userId, missionTitle) {
   });
 }
 
+/**
+ * Avisa o usuário quando ele atinge o teto de GANHO diário em dinheiro real
+ * (não confundir com teto de saque — Doc. Mestre Seção 16.3, esclarecido em
+ * docs/reaceite-termos-e-correcao-regras-saque.md). Antes desta função, o
+ * próprio documento registrava essa ausência como limitação conhecida: o
+ * usuário só percebia o teto olhando o histórico da Carteira.
+ *
+ * No máximo uma notificação deste tipo por dia por usuário — chamado a partir
+ * de walletService.creditReward, que pode ser acionado várias vezes ao dia
+ * pela mesma causa (várias missões/streak creditando na mesma janela).
+ */
+async function notifyDailyEarningCapReached(executor, userId, dailyCapMzn) {
+  const alreadyNotifiedToday = await repository.existsTodayByType(
+    userId,
+    'daily_earning_cap_reached',
+    executor
+  );
+  if (alreadyNotifiedToday) return null;
+
+  return repository.create(executor, {
+    userId,
+    type: 'daily_earning_cap_reached',
+    title: 'Você atingiu seu teto de ganho hoje',
+    body: `Parabéns pelo progresso! Você já ganhou o máximo de ${dailyCapMzn.toFixed(2)} MZN permitido por dia. Volte amanhã para continuar ganhando.`,
+    metadata: { dailyCapMzn },
+  });
+}
+
+/**
+ * Confirmação enviada ao usuário logo após converter Pontos em dinheiro real
+ * (docx "SISTEMA DE ECONOMIA E RECOMPENSAS", Seção 6.1). Ao contrário do
+ * saque, a conversão é instantânea — o dinheiro já cai na carteira na hora.
+ */
+async function notifyPointsConverted(executor, userId, { pointsAmount, amountMzn }) {
+  return repository.create(executor, {
+    userId,
+    type: 'points_converted',
+    title: 'Pontos convertidos em dinheiro!',
+    body: `Você converteu ${pointsAmount} Pontos em ${amountMzn.toFixed(2)} MZN. O valor já está disponível na sua Carteira.`,
+    metadata: { pointsAmount, amountMzn },
+  });
+}
+
+/**
+ * Aviso proativo de item prestes a expirar (spec "Meus Recursos" Seção 50:
+ * "Seu XP Boost expira em 10 minutos"). A spec é explícita: este alerta é só
+ * um aviso de conveniência — "não deve impedir o funcionamento da
+ * contagem", a expiração acontece de qualquer forma no horário certo,
+ * independente do usuário ter visto a notificação ou não.
+ */
+async function notifyItemExpiringSoon(executor, userId, { itemName, minutesRemaining }) {
+  return repository.create(executor, {
+    userId,
+    type: 'item_expiring_soon',
+    title: 'Um item seu está prestes a expirar',
+    body: `Seu ${itemName} expira em cerca de ${minutesRemaining} minutos. Aproveite antes que o tempo acabe!`,
+    metadata: { itemName, minutesRemaining },
+  });
+}
+
 async function notifyWithdrawalStatus(executor, userId, status, amountMzn) {
   // Texto de "paid" segue literalmente o documento "Sistema de Saques v1.0"
   // (Seção 9 — "Notificação de Pagamento").
@@ -75,13 +137,25 @@ async function notifyWithdrawalStatus(executor, userId, status, amountMzn) {
     rejected: 'Atualização do seu saque',
     paid: 'Pagamento realizado com sucesso!',
   };
-  return repository.create(executor, {
+  const notification = await repository.create(executor, {
     userId,
     type: 'withdrawal_status',
     title: titles[status] || 'Atualização do seu saque',
     body: messages[status] || `Status do seu saque atualizado: ${status}.`,
     metadata: { status, amountMzn },
   });
+
+  // SMS como canal extra só no evento de maior peso (dinheiro de verdade já
+  // saiu da plataforma) — não em "approved"/"rejected", para não gastar
+  // crédito de SMS em eventos menos críticos (o push+in-app já cobrem esses).
+  if (status === 'paid') {
+    const { rows } = await (executor || db).query('SELECT phone FROM users WHERE id = $1', [userId]);
+    if (rows[0]?.phone) {
+      await enqueueSms(rows[0].phone, messages.paid);
+    }
+  }
+
+  return notification;
 }
 
 /**
@@ -171,4 +245,7 @@ module.exports = {
   notifyWithdrawalRequested,
   notifyAdminsNewWithdrawal,
   notifyAdminsWithdrawalSlaRisk,
+  notifyDailyEarningCapReached,
+  notifyPointsConverted,
+  notifyItemExpiringSoon,
 };

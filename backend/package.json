@@ -7,6 +7,8 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
+    "worker": "node src/queue/worker.js",
+    "worker:dev": "nodemon src/queue/worker.js",
     "migrate": "node src/database/migrate.js up",
     "migrate:up": "node src/database/migrate.js up",
     "migrate:down": "node src/database/migrate.js down",
@@ -26,9 +28,12 @@
     "cookie-parser": "^1.4.6",
     "zod": "^3.23.8",
     "ioredis": "^5.4.1",
+    "bullmq": "^5.12.0",
     "winston": "^3.14.2",
     "uuid": "^9.0.1",
-    "compression": "^1.7.4"
+    "compression": "^1.7.4",
+    "firebase-admin": "^12.6.0",
+    "twilio": "^5.3.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.4",

@@ -83,9 +83,13 @@ async function run() {
   });
 }
 
-run()
-  .catch((err) => {
-    logger.error('CRON: falha na reconciliação de streaks', { error: err.message });
-    process.exitCode = 1;
-  })
-  .finally(() => pool.end());
+module.exports = run;
+
+if (require.main === module) {
+  run()
+    .catch((err) => {
+      logger.error('CRON: falha na reconciliação de streaks', { error: err.message });
+      process.exitCode = 1;
+    })
+    .finally(() => pool.end());
+}

@@ -48,9 +48,13 @@ async function run() {
   logger.info(`CRON: ${totalExpired} missão(ões) de usuário marcada(s) como expirada(s) (${byEndsAt.rowCount} por prazo do template, ${byPeriodDate.rowCount} por virada de dia)`);
 }
 
-run()
-  .catch((err) => {
-    logger.error('CRON: falha ao expirar missões', { error: err.message });
-    process.exitCode = 1;
-  })
-  .finally(() => pool.end());
+module.exports = run;
+
+if (require.main === module) {
+  run()
+    .catch((err) => {
+      logger.error('CRON: falha ao expirar missões', { error: err.message });
+      process.exitCode = 1;
+    })
+    .finally(() => pool.end());
+}

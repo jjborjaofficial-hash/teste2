@@ -34,4 +34,27 @@ async function requestWithdrawal(req, res, next) {
   }
 }
 
-module.exports = { getBalance, getHistory, requestWithdrawal };
+async function getConversionRate(req, res, next) {
+  try {
+    const rate = await walletService.getConversionRate();
+    return res.status(200).json({ status: 'success', message: null, data: rate });
+  } catch (err) {
+    return next(err);
+  }
+}
+
+async function convertPoints(req, res, next) {
+  try {
+    const { pointsAmount } = req.validatedBody;
+    const result = await walletService.convertPointsToMoney({ userId: req.user.id, pointsAmount });
+    return res.status(201).json({
+      status: 'success',
+      message: `Conversão realizada: ${result.pointsConverted} Pontos -> ${result.amountMzn.toFixed(2)} MZN.`,
+      data: result,
+    });
+  } catch (err) {
+    return next(err);
+  }
+}
+
+module.exports = { getBalance, getHistory, requestWithdrawal, getConversionRate, convertPoints };

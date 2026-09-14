@@ -66,14 +66,14 @@ confundido com um teto de saque.
 6.3. **O usuário nunca deposita ou transfere dinheiro para a plataforma, em
 nenhuma circunstância.** A plataforma nunca cobra valor monetário de ninguém.
 Estes valores podem ser ajustados pela plataforma sem aviso prévio.
-6.2. O processamento do pagamento **não é imediato**: passa por análise de
+6.4. O processamento do pagamento **não é imediato**: passa por análise de
 Trust Score e é processado manualmente pela equipe da plataforma.
-6.3. Prazo estimado de processamento: até 24 horas após a aprovação, sujeito a
+6.5. Prazo estimado de processamento: até 24 horas após a aprovação, sujeito a
 variações operacionais e ao tempo de processamento da instituição financeira
 (M-Pesa/e-Mola).
-6.4. Um usuário não pode ter mais de uma solicitação de saque em andamento ao
+6.6. Um usuário não pode ter mais de uma solicitação de saque em andamento ao
 mesmo tempo.
-6.5. A plataforma pode aprovar, rejeitar, suspender para revisão ou cancelar
+6.7. A plataforma pode aprovar, rejeitar, suspender para revisão ou cancelar
 qualquer solicitação de saque, a seu critério, especialmente em caso de
 suspeita de fraude.
 
@@ -87,8 +87,11 @@ qualquer momento, através do suporte.
 ### 8. Alterações nos Termos
 8.1. Estes Termos podem ser atualizados periodicamente.
 8.2. Alterações significativas serão comunicadas através da plataforma.
-8.3. *(Pendente de implementação técnica: hoje não há um mecanismo automático
-que force o usuário a reaceitar uma nova versão dos Termos.)*
+8.3. Mecanismo automático de reaceite: **implementado** (ver
+`docs/reaceite-termos-e-correcao-regras-saque.md`). `users.terms_version` é
+comparado com a versão vigente a cada requisição a `GET /users/me`; se
+divergente, o usuário é bloqueado em `/reaceitar-termos` até confirmar o
+aceite da versão atual.
 
 ### 9. Limitação de Responsabilidade
 9.1. O Aprenda e Ganhe é uma plataforma de tecnologia educacional e mídia.

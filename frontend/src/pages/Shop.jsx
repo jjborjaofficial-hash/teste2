@@ -25,6 +25,22 @@ const CATEGORY_LABELS = {
 
 const CATEGORY_ORDER = ['functional', 'cosmetic', 'prestige'];
 
+const RARITY_CLASSNAMES = {
+  comum: 'bg-text-secondary/12 text-text-secondary',
+  raro: 'bg-info/12 text-info',
+  epico: 'bg-primary/12 text-primary',
+  lendario: 'bg-gold/12 text-gold',
+};
+
+function RarityBadge({ rarity }) {
+  if (!rarity) return null;
+  return (
+    <span className={`text-caption font-semibold px-2 py-0.5 rounded-pill shrink-0 ${RARITY_CLASSNAMES[rarity.key] || RARITY_CLASSNAMES.comum}`}>
+      {rarity.label}
+    </span>
+  );
+}
+
 function ItemCard({ item, equippedKeys, onChanged }) {
   const { showToast } = useToast();
   const { refreshProfile } = useAuth();
@@ -72,7 +88,10 @@ function ItemCard({ item, equippedKeys, onChanged }) {
     <Card status={isEquipped ? 'completed' : 'normal'} className="space-y-2">
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1">
-          <p className="text-body font-semibold text-text">{item.name}</p>
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="text-body font-semibold text-text">{item.name}</p>
+            <RarityBadge rarity={item.rarity} />
+          </div>
           {item.description && <p className="text-caption text-text-secondary mt-0.5">{item.description}</p>}
         </div>
         {isEquipped && <CheckIcon className="w-5 h-5 text-success shrink-0" />}

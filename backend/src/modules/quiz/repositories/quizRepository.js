@@ -38,7 +38,7 @@ async function getRandomQuestion(categoryId, executor = db) {
 
 async function getQuestionWithCorrectAlternative(questionId, executor = db) {
   const { rows } = await executor.query(
-    `SELECT id, category_id, time_limit_seconds, xp_reward FROM questions WHERE id = $1 AND is_active = TRUE`,
+    `SELECT id, category_id, time_limit_seconds, xp_reward, difficulty FROM questions WHERE id = $1 AND is_active = TRUE`,
     [questionId]
   );
   if (!rows[0]) return null;
@@ -51,13 +51,13 @@ async function getQuestionWithCorrectAlternative(questionId, executor = db) {
   return { ...rows[0], alternatives: altResult.rows };
 }
 
-async function recordAttempt(executor, { userId, questionId, alternativeId, isCorrect, responseTimeMs, xpAwarded }) {
+async function recordAttempt(executor, { userId, questionId, alternativeId, isCorrect, responseTimeMs, xpAwarded, pointsAwarded = 0 }) {
   const { rows } = await executor.query(
     `INSERT INTO quiz_attempts
-        (user_id, question_id, alternative_id, is_correct, response_time_ms, xp_awarded)
-     VALUES ($1, $2, $3, $4, $5, $6)
+        (user_id, question_id, alternative_id, is_correct, response_time_ms, xp_awarded, points_awarded)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)
      RETURNING id, created_at`,
-    [userId, questionId, alternativeId, isCorrect, responseTimeMs, xpAwarded]
+    [userId, questionId, alternativeId, isCorrect, responseTimeMs, xpAwarded, pointsAwarded]
   );
   return rows[0];
 }

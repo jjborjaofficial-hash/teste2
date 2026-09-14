@@ -2,7 +2,7 @@ const inventoryService = require('../services/inventoryService');
 
 async function listInventory(req, res, next) {
   try {
-    const items = await inventoryService.listInventory(req.user.id);
+    const items = await inventoryService.listInventory(req.user.id, { sort: req.query.sort });
     return res.status(200).json({ status: 'success', message: null, data: items });
   } catch (err) {
     return next(err);

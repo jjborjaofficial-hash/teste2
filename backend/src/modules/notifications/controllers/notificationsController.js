@@ -41,4 +41,25 @@ async function markAsRead(req, res, next) {
   }
 }
 
-module.exports = { listMine, unreadCount, markAsRead };
+const pushTokensRepository = require('../repositories/pushTokensRepository');
+
+async function registerPushToken(req, res, next) {
+  try {
+    const { token, platform } = req.validatedBody;
+    await pushTokensRepository.upsertToken(req.user.id, token, platform);
+    return res.status(200).json({ status: 'success', message: 'Dispositivo registrado para notificações push.', data: null });
+  } catch (err) {
+    return next(err);
+  }
+}
+
+async function unregisterPushToken(req, res, next) {
+  try {
+    await pushTokensRepository.deleteToken(req.validatedBody.token);
+    return res.status(200).json({ status: 'success', message: 'Dispositivo removido das notificações push.', data: null });
+  } catch (err) {
+    return next(err);
+  }
+}
+
+module.exports = { listMine, unreadCount, markAsRead, registerPushToken, unregisterPushToken };

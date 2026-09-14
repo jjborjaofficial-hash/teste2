@@ -16,6 +16,10 @@ function topRankingCacheKey(weekStart) {
   return `ranking:weekly:${weekStart}:top`;
 }
 
+function myPositionCacheKey(weekStart, userId) {
+  return `ranking:weekly:${weekStart}:position:${userId}`;
+}
+
 async function getTopRanking(limit = 20) {
   const weekStart = repository.currentWeekStartDate();
   const cacheKey = topRankingCacheKey(weekStart);
@@ -64,9 +68,32 @@ async function getTopRanking(limit = 20) {
 
 async function getMyPosition(userId) {
   const weekStart = repository.currentWeekStartDate();
+  const cacheKey = myPositionCacheKey(weekStart, userId);
+
+  try {
+    const cached = await redis.get(cacheKey);
+    if (cached) {
+      return JSON.parse(cached);
+    }
+  } catch (err) {
+    logger.warn('Falha ao ler cache de posição no ranking, seguindo direto para o banco', { error: err.message });
+  }
+
   const row = await repository.getUserPosition(userId, weekStart);
-  if (!row) return { position: null, xpEarned: 0 };
-  return { position: row.position, xpEarned: Number(row.xp_earned) };
+  const result = row ? { position: row.position, xpEarned: Number(row.xp_earned) } : { position: null, xpEarned: 0 };
+
+  // Sem invalidação explícita aqui de propósito: `weekly_rankings` só muda
+  // pelo CRON de recomputeWeeklyRanking (a cada hora — ver src/queue/definitions.js),
+  // então a mesma janela de 5 min já usada em getTopRanking não piora a
+  // frescura dos dados. Invalidar ativamente exigiria varrer todas as chaves
+  // de posição por usuário a cada recálculo semanal, sem ganho real de UX.
+  try {
+    await redis.set(cacheKey, JSON.stringify(result), 'EX', CACHE_TTL_SECONDS);
+  } catch (err) {
+    logger.warn('Falha ao gravar cache de posição no ranking', { error: err.message });
+  }
+
+  return result;
 }
 
 /**
