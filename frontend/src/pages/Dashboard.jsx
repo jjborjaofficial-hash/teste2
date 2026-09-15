@@ -5,7 +5,7 @@ import { gamificationApi } from '../api/profileApi';
 import { missionsApi, notificationsApi } from '../api/gameplayApi';
 import { Card } from '../components/Card';
 import { XpProgressBar } from '../components/XpProgressBar';
-import { LivePlatformStats } from '../components/LivePlatformStats';
+import { SocialProofActivity } from '../components/SocialProofActivity';
 import { FireIcon, WalletIcon, XpIcon, ChevronRightIcon, NotificationIcon, MissionsIcon, PointsIcon } from '../icons';
 
 /**
@@ -112,7 +112,7 @@ export function Dashboard() {
       )}
 
       <Card className="bg-gold/5 border-gold/20 text-center">
-        <LivePlatformStats variant="compact" />
+        <SocialProofActivity variant="compact" />
       </Card>
 
       {/* Anúncio Estratégico 1 — Banner Nativo (Seção 19.2). Placeholder até a

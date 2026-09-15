@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PrimaryButton, SecondaryButton } from '../components/Button';
 import { XpIcon } from '../icons';
-import { LivePlatformStats } from '../components/LivePlatformStats';
+import { SocialProofActivity } from '../components/SocialProofActivity';
 
 /**
  * Onboarding Persuasivo (Doc. Mestre Seção 19.1).
@@ -13,16 +13,16 @@ import { LivePlatformStats } from '../components/LivePlatformStats';
  */
 const slides = [
   {
-    title: 'O seu tempo na internet vale muito.',
-    body: 'O seu conhecimento vale mais ainda. Transforme seus minutos livres em evolução.',
+    title: 'Aprenda. Evolua. Ganhe.',
+    body: 'Transforme alguns minutos do seu dia em conhecimento, progresso e recompensas. Cada desafio é uma oportunidade para aprender algo novo.',
   },
   {
-    title: 'Estude apenas alguns minutos por dia.',
-    body: 'Responda a quizzes rápidos sobre Finanças e Tecnologia e seja recompensado.',
+    title: 'Aprenda através de desafios rápidos',
+    body: 'Responda a quizzes de diferentes categorias, complete missões diárias, acompanhe o seu progresso e desenvolva os seus conhecimentos de forma simples e divertida.',
   },
   {
-    title: 'Junte-se a outros estudantes em Moçambique.',
-    body: 'O progresso é seu, a recompensa também. Saques rápidos e automáticos via M-Pesa e e-Mola.',
+    title: 'Junte-se a outros estudantes em Moçambique',
+    body: 'Comece a sua jornada de aprendizagem, evolua no ranking e conquiste recompensas através da sua participação e consistência.',
   },
 ];
 
@@ -84,7 +84,7 @@ export function Onboarding() {
             </p>
 
             <div className="bg-gold/10 rounded-card p-4 text-center mb-8">
-              <LivePlatformStats />
+              <SocialProofActivity />
             </div>
 
             <div className="flex gap-3">

@@ -197,6 +197,18 @@ body {
 .animate-glow-pulse {
   animation: glow-pulse 1.5s ease-in-out infinite;
 }
+/* Indicador "ao vivo" da Prova Social (SocialProofActivity): expande e
+   reduz ligeiramente, com opacidade variando suavemente — sensação de
+   atividade contínua, sem ser um flash abrupto. Cor --success (verde),
+   não --gold, para não se confundir semanticamente com recompensa. */
+@keyframes live-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.35); opacity: 0.55; }
+}
+.animate-live-pulse {
+  animation: live-pulse 1.8s ease-in-out infinite;
+}
+
 @keyframes confetti-fall {
   0% { transform: translateY(-6px) rotate(0deg); opacity: 1; }
   100% { transform: translateY(18px) rotate(180deg); opacity: 0; }
