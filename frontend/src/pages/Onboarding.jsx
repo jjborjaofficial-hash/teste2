@@ -14,7 +14,7 @@ import { SocialProofActivity } from '../components/SocialProofActivity';
 const slides = [
   {
     title: 'Aprenda. Evolua. Ganhe.',
-    body: 'Transforme alguns minutos do seu dia em conhecimento, progresso e recompensas. Cada desafio é uma oportunidade para aprender algo novo.',
+    body: 'Transforme alguns minutos do seu dia em conhecimento, progresso e recompensas em Metical. Cada desafio é uma oportunidade para aprender algo novo.',
   },
   {
     title: 'Aprenda através de desafios rápidos',
