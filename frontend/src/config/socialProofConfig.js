@@ -23,8 +23,17 @@ export const socialProofConfig = {
   valorInicial: 1250,
   valorMinimo: 1100,
   valorMaximo: 1400,
-  intervaloAtualizacaoMsMin: 4000, // cada "passo" ocorre entre 4s e 8s (jitter, para não parecer robótico)
-  intervaloAtualizacaoMsMax: 8000,
-  passoMaximoPercentual: 0.03, // cada passo move no máx. 3% do intervalo [min,max] — mantém a variação "suave"
-  duracaoTransicaoMs: 900, // velocidade da troca visual do número
+  intervaloAtualizacaoMsMin: 2500, // cada "passo" ocorre entre 2,5s e 5s — frequente o suficiente para parecer vivo, sem ser irritante
+  intervaloAtualizacaoMsMax: 5000,
+  passoMaximoPercentual: 0.012, // passos pequenos e frequentes parecem mais reais do que saltos grandes e raros
+  duracaoTransicaoMs: 900, // duração da animação de "subir/descer contando", não uma troca instantânea
+
+  // Viés de tendência: a esmagadora maioria dos passos deve ser de
+  // crescimento (ou neutro/estável) — uma plataforma "viva" perdendo
+  // usuários visivelmente transmite a sensação errada (desmotiva quem
+  // está decidindo se cria conta). Quedas continuam acontecendo (para
+  // não parecer uma contagem artificialmente só-sobe), mas raras e
+  // sempre bem menores que os aumentos.
+  chanceDePassoPositivo: 0.78, // ~78% dos passos sobem ou ficam estáveis
+  passoNegativoFatorReducao: 0.35, // quando desce, desce no máx. 35% do passo máximo normal
 };
