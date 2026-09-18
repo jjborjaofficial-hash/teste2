@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { quizApi } from '../api/quizApi';
 import { Card } from '../components/Card';
 import { QuizIcon, ChevronRightIcon } from '../icons';
+import { DisplayAds } from '../ads';
 
 /**
  * Hub de Estudos (Doc. Mestre Seção 19.3). Lista de categorias clicáveis.
@@ -55,9 +56,7 @@ export function HubEstudos() {
         {categories.slice(0, midpoint).map(renderCategory)}
 
         {categories.length > 0 && (
-          <div className="bg-border/40 rounded-card h-20 flex items-center justify-center text-caption text-text-secondary">
-            Espaço de anúncio (Feed Ad)
-          </div>
+          <DisplayAds location="content" className="bg-border/40 rounded-card h-20 flex items-center justify-center" />
         )}
 
         {categories.slice(midpoint).map(renderCategory)}

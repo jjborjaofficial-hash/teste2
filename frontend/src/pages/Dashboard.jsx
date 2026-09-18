@@ -6,6 +6,7 @@ import { missionsApi, notificationsApi } from '../api/gameplayApi';
 import { Card } from '../components/Card';
 import { XpProgressBar } from '../components/XpProgressBar';
 import { SocialProofActivity } from '../components/SocialProofActivity';
+import { DisplayAds } from '../ads';
 import { FireIcon, WalletIcon, XpIcon, ChevronRightIcon, NotificationIcon, MissionsIcon, PointsIcon } from '../icons';
 
 /**
@@ -115,11 +116,10 @@ export function Dashboard() {
         <SocialProofActivity variant="compact" />
       </Card>
 
-      {/* Anúncio Estratégico 1 — Banner Nativo (Seção 19.2). Placeholder até a
-          integração real com AdSense/AdCash ser implementada. */}
-      <div className="bg-border/40 rounded-card h-20 flex items-center justify-center text-caption text-text-secondary">
-        Espaço de anúncio (Banner Nativo)
-      </div>
+      {/* Anúncio Estratégico 1 — Banner Nativo (Seção 19.2). Integração real
+          via AdManager (frontend/src/ads) — não renderiza nada até o Zone ID
+          e o consentimento de cookies de publicidade estarem presentes. */}
+      <DisplayAds location="dashboard" className="bg-border/40 rounded-card h-20 flex items-center justify-center" />
 
       <div>
         <div className="flex items-center justify-between mb-2">

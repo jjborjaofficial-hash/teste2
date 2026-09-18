@@ -5,6 +5,7 @@ import { Card } from '../components/Card';
 import { PrimaryButton, SecondaryButton } from '../components/Button';
 import { useToast } from '../components/Toast';
 import { ApiError } from '../api/client';
+import { DisplayAds } from '../ads';
 
 // Regras confirmadas pelo proprietário do projeto (documentadas em
 // docs/fluxo-saque-manual-permissoes-admin-ui.md e no backend, system_config):
@@ -228,9 +229,7 @@ export function Wallet() {
       </div>
 
       {/* Anúncio Estratégico 4 — Banner Rodapé (Seção 19.6) */}
-      <div className="bg-border/40 rounded-card h-16 flex items-center justify-center text-caption text-text-secondary">
-        Espaço de anúncio (Banner Rodapé)
-      </div>
+      <DisplayAds location="wallet" className="bg-border/40 rounded-card h-16 flex items-center justify-center" />
     </div>
   );
 }
