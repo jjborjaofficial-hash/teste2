@@ -229,7 +229,7 @@ export function Wallet() {
       </div>
 
       {/* Anúncio Estratégico 4 — Banner Rodapé (Seção 19.6) */}
-      <DisplayAds location="wallet" className="bg-border/40 rounded-card h-16 flex items-center justify-center" />
+      <DisplayAds location="wallet" className="my-1" />
     </div>
   );
 }

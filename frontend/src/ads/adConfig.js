@@ -53,6 +53,16 @@ export const adConfig = {
     inPagePush: import.meta.env.VITE_ADCASH_ZONE_INPAGEPUSH || '',
   },
 
+  // Dimensão real de cada zona de Display criada no painel do Adcash
+  // (o Zone ID já "vem" com um tamanho fixo definido lá — isto é só
+  // para o container do frontend caber certo, sem cortar nem sobrar
+  // espaço vazio em volta do anúncio).
+  displayDimensions: {
+    dashboard: { width: 300, height: 100 },
+    content: { width: 250, height: 250 },
+    wallet: { width: 300, height: 100 },
+  },
+
   // Trava simples contra "mostrar anúncios repetidamente a cada clique"
   // (regra explícita do produto) — aplica-se ao Interstitial, que é o
   // único formato que pode repetir por ação do usuário (terminar vários

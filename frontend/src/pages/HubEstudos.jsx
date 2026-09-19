@@ -55,9 +55,7 @@ export function HubEstudos() {
       <div className="space-y-2">
         {categories.slice(0, midpoint).map(renderCategory)}
 
-        {categories.length > 0 && (
-          <DisplayAds location="content" className="bg-border/40 rounded-card h-20 flex items-center justify-center" />
-        )}
+        {categories.length > 0 && <DisplayAds location="content" className="my-1" />}
 
         {categories.slice(midpoint).map(renderCategory)}
       </div>

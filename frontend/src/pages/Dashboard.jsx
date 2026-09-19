@@ -116,10 +116,9 @@ export function Dashboard() {
         <SocialProofActivity variant="compact" />
       </Card>
 
-      {/* Anúncio Estratégico 1 — Banner Nativo (Seção 19.2). Integração real
-          via AdManager (frontend/src/ads) — não renderiza nada até o Zone ID
-          e o consentimento de cookies de publicidade estarem presentes. */}
-      <DisplayAds location="dashboard" className="bg-border/40 rounded-card h-20 flex items-center justify-center" />
+      {/* Anúncio Estratégico 1 — Banner Nativo (Seção 19.2). Zona real:
+          300x100, Zone ID via VITE_ADCASH_ZONE_DASHBOARD. */}
+      <DisplayAds location="dashboard" className="my-1" />
 
       <div>
         <div className="flex items-center justify-between mb-2">

@@ -1,18 +1,25 @@
 /**
- * Carregador do script `aclib` do Adcash. Injeta a tag <script> uma
- * única vez na página (idempotente — vários componentes de anúncio
- * podem chamar isto, só a primeira chamada efetivamente adiciona o
- * script), e devolve uma Promise que resolve quando `window.aclib`
- * estiver disponível para uso.
+ * Carregador do script `aclib` do Adcash — equivalente funcional de:
  *
- * API confirmada do Adcash (suporte oficial, formatos Banner e
- * Pop-Under): window.aclib.runBanner({ zoneId }) e
- * window.aclib.runPop({ zoneId }). Para Interstitial/Video/In-Page
- * Push, a Adcash fornece o nome exato da função e o Zone ID quando a
- * zona correspondente é criada no painel — ver comentário em cada
- * componente desse formato.
+ *   <script id="aclib" type="text/javascript" src="//acscdn.com/script/aclib.js"></script>
+ *
+ * colocado uma única vez no <head>. Aqui a mesma garantia de "só uma
+ * vez" é feita via JavaScript (idempotente — vários componentes de
+ * anúncio podem chamar isto, só a primeira chamada efetivamente
+ * adiciona o script) em vez de uma tag estática, de propósito: assim
+ * o script de terceiros só é solicitado quando um anúncio realmente
+ * vai aparecer E o usuário já consentiu cookies de publicidade — nunca
+ * antes disso, para todo visitante, como uma tag fixa no HTML faria.
+ *
+ * Devolve uma Promise que resolve quando `window.aclib` estiver
+ * disponível para uso.
+ *
+ * API confirmada do Adcash (suporte oficial, formatos Banner, Pop-Under,
+ * Interstitial e In-Page Push): window.aclib.runBanner({ zoneId }),
+ * window.aclib.runPop({ zoneId }), window.aclib.runInterstitial({ zoneId }),
+ * window.aclib.runInPagePush({ zoneId, ... }).
  */
-const ACLIB_SRC = 'https://acscdn.com/script/aclib.js';
+const ACLIB_SRC = '//acscdn.com/script/aclib.js';
 
 let loadPromise = null;
 
@@ -30,7 +37,7 @@ export function loadAclib() {
   }
 
   loadPromise = new Promise((resolve, reject) => {
-    const existing = document.querySelector(`script[src="${ACLIB_SRC}"]`);
+    const existing = document.getElementById('aclib');
     if (existing) {
       existing.addEventListener('load', () => resolve(window.aclib));
       existing.addEventListener('error', () => reject(new Error('Falha ao carregar o script do Adcash.')));
@@ -38,6 +45,8 @@ export function loadAclib() {
     }
 
     const script = document.createElement('script');
+    script.id = 'aclib';
+    script.type = 'text/javascript';
     script.src = ACLIB_SRC;
     script.async = true;
     script.onload = () => resolve(window.aclib);
