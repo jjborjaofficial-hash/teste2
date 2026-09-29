@@ -6,6 +6,7 @@ export const usersApi = {
 
 export const gamificationApi = {
   me: () => api.get('/gamification/me'),
+  welcomeBonus: () => api.get('/gamification/welcome-bonus'),
 };
 
 export const trustScoreApi = {

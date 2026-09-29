@@ -48,8 +48,23 @@ async function getHistory(userId, pagination) {
  * existente quando possível — nunca aceita depósito do usuário, só credita
  * recompensas que a própria plataforma decidiu conceder.
  */
-async function creditReward({ userId, amountMzn, source, referenceId, metadata }, executor = db) {
+async function creditReward({ userId, amountMzn, source, referenceId, metadata, ignoreDailyCap = false }, executor = db) {
   if (amountMzn <= 0) return null;
+
+  // Promoções únicas (ex.: bónus de boas-vindas) não entram no teto de ganho diário
+  // de missões/streak: creditam o valor inteiro. As fontes delas também NÃO são
+  // somadas em sumEarningsToday, então não consomem o teto de ninguém.
+  if (ignoreDailyCap) {
+    const credited = await repository.creditWallet(executor, {
+      userId,
+      amountMzn,
+      source,
+      referenceId,
+      metadata: { ...metadata, requestedAmountMzn: amountMzn, cappedByDailyLimit: false },
+    });
+    await userCache.invalidateProfile(userId);
+    return { ...credited, amountCreditedMzn: amountMzn };
+  }
 
   const dailyCap = Number(
     (await configRepository.getConfigValue('daily_earning_cap_mzn', executor)) ?? 7.2

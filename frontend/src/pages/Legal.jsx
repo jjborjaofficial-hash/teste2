@@ -316,6 +316,10 @@ const FAQ_GROUPS = [
         a: 'É o teto de quanto você pode GANHAR em dinheiro real por dia através de missões e streak — não tem relação com o saque em si.',
       },
       {
+        q: 'O bónus de boas-vindas conta no limite de 7,20 MZN por dia?',
+        a: 'Não. O bónus de boas-vindas é uma promoção única para os 7 primeiros dias da conta: você ganha um valor por cada dia em que acerta perguntas e um extra ao estudar em 5 dos 7 dias. Ele é pago à parte e não consome o seu limite diário de missões e streak.',
+      },
+      {
         q: 'Por que meu saque está demorando?',
         a: 'O pagamento é processado manualmente pela nossa equipe e pode levar até 24 horas após a aprovação.',
       },

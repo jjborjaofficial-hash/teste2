@@ -8,6 +8,7 @@ import { XpProgressBar } from '../components/XpProgressBar';
 import { SocialProofActivity } from '../components/SocialProofActivity';
 import { DisplayAds } from '../ads';
 import { StreakBrokenModal } from '../components/StreakBrokenModal';
+import { WelcomeBonusCard } from '../components/WelcomeBonusCard';
 import { FireIcon, WalletIcon, XpIcon, ChevronRightIcon, NotificationIcon, MissionsIcon, PointsIcon } from '../icons';
 
 /**
@@ -20,19 +21,22 @@ export function Dashboard() {
   const [missions, setMissions] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showStreakBroken, setShowStreakBroken] = useState(false);
+  const [welcomeBonus, setWelcomeBonus] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
     async function load() {
       try {
-        const [gamResult, missionsResult, unreadResult] = await Promise.all([
+        const [gamResult, missionsResult, unreadResult, welcomeResult] = await Promise.all([
           gamificationApi.me(),
           missionsApi.listMine(),
           notificationsApi.unreadCount(),
+          gamificationApi.welcomeBonus().catch(() => null),
         ]);
         if (!mounted) return;
         setGamification(gamResult.data);
+        setWelcomeBonus(welcomeResult ? welcomeResult.data : null);
         // Missões já resgatadas hoje não aparecem no atalho do painel.
         setMissions(missionsResult.data.filter((m) => m.status !== 'reward_claimed').slice(0, 3));
 
@@ -120,6 +124,8 @@ export function Dashboard() {
           <p className="text-caption text-text-secondary">moeda soft</p>
         </Card>
       </div>
+
+      <WelcomeBonusCard bonus={welcomeBonus} />
 
       {gamification && (
         <div>
