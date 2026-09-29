@@ -11,11 +11,15 @@ const { NotFoundError, BusinessRuleError, ConflictError } = require('../../../co
  * Missões alimentam XP e Carteira quando concluídas e resgatadas (Mapa de Módulos, Seção 4).
  */
 
-async function listMyMissions(userId) {
-  // Garante que o usuário tenha as missões ativas atribuídas (auto-atribuição simples;
-  // uma versão futura fará isso via CRON job diário — ver Manual Parte 3: CRON Jobs).
+/**
+ * Garante que o usuário tenha as missões ativas atribuídas hoje (o CRON diário
+ * faz isso em lote à meia-noite; aqui cobrimos quem entra antes do CRON rodar
+ * ou se cadastrou durante o dia). Só missões 'daily' — as demais têm ciclo próprio.
+ */
+async function ensureAssigned(userId) {
   const activeMissions = await repository.listActiveMissions();
   for (const mission of activeMissions) {
+    if (mission.type !== 'daily') continue;
     // eslint-disable-next-line no-await-in-loop
     await repository.assignMissionIfNotPresent(db, {
       userId,
@@ -23,6 +27,10 @@ async function listMyMissions(userId) {
       targetSnapshot: mission.target_quiz_count,
     });
   }
+}
+
+async function listMyMissions(userId) {
+  await ensureAssigned(userId);
 
   const progress = await repository.getUserMissionProgress(userId);
   return progress.map((p) => ({
@@ -30,8 +38,9 @@ async function listMyMissions(userId) {
     title: p.title,
     description: p.description,
     type: p.type,
+    activityType: p.activity_type,
     progress: p.progress_count,
-    target: p.target_quiz_count,
+    target: p.target_snapshot ?? p.target_quiz_count,
     status: p.status,
     rewards: {
       xp: p.xp_reward,
@@ -82,8 +91,9 @@ async function claimReward(userId, userMissionId) {
       });
     }
 
+    let moneyCreditedMzn = 0;
     if (Number(userMission.money_reward_mzn) > 0) {
-      await walletService.creditReward(
+      const credit = await walletService.creditReward(
         {
           userId,
           amountMzn: Number(userMission.money_reward_mzn),
@@ -92,6 +102,8 @@ async function claimReward(userId, userMissionId) {
         },
         client
       );
+      // Valor REAL creditado (pode ser menor que o nominal se o teto diário de 7,20 MZN cortar).
+      moneyCreditedMzn = credit ? Number(credit.amountCreditedMzn) : 0;
     }
 
     await repository.markRewardClaimed(client, userMissionId);
@@ -104,7 +116,8 @@ async function claimReward(userId, userMissionId) {
       rewardsGranted: {
         xp: xpResult ? xpResult.xpCredited : 0,
         points: xpResult ? xpResult.pointsCredited : 0,
-        moneyMzn: Number(userMission.money_reward_mzn),
+        moneyMzn: moneyCreditedMzn,
+        moneyNominalMzn: Number(userMission.money_reward_mzn),
         pointsBoostApplied: xpResult ? xpResult.pointsBoostApplied : false,
       },
     };
@@ -116,4 +129,26 @@ async function claimReward(userId, userMissionId) {
   }
 }
 
-module.exports = { listMyMissions, incrementProgressForCategory, claimReward };
+/**
+ * Heartbeat de atividade (missão de 12 minutos). Chamado pelo frontend a cada
+ * ~30s com a aba visível. O servidor é a única fonte do tempo (ver
+ * repository.addActiveTime). Devolve o estado da missão de tempo do dia.
+ */
+async function registerHeartbeat(userId) {
+  let updated = await progressEngine.updateAfterHeartbeat(db, { userId });
+  if (updated.length === 0) {
+    // Nenhuma missão de tempo em andamento: ou ainda não foi atribuída hoje, ou já foi concluída.
+    await ensureAssigned(userId);
+    updated = await progressEngine.updateAfterHeartbeat(db, { userId });
+  }
+
+  const mission = updated[0] || null;
+  return {
+    tracking: mission !== null,
+    justCompleted: mission ? mission.status === 'completed' : false,
+    minutes: mission ? mission.progress_count : null,
+    targetMinutes: mission ? mission.target_snapshot : null,
+  };
+}
+
+module.exports = { listMyMissions, incrementProgressForCategory, claimReward, registerHeartbeat };

@@ -116,17 +116,26 @@ export function Quiz() {
 
   return (
     <div className="flex-1 flex flex-col">
+      <div
+        className="h-1 w-full bg-border rounded-full overflow-hidden mb-4"
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={question.time_limit_seconds}
+        aria-valuenow={secondsLeft ?? 0}
+      >
+        <div
+          className={`h-full rounded-full transition-[width] duration-1000 ease-linear ${
+            timeIsRunningOut ? 'bg-danger' : 'bg-primary'
+          }`}
+          style={{ width: `${Math.max(0, ((secondsLeft ?? 0) / question.time_limit_seconds) * 100)}%` }}
+        />
+      </div>
+
       <header className="flex items-center justify-between mb-8">
         <span className="text-caption text-text-secondary uppercase tracking-wide">
           Pergunta atual
         </span>
-        <div
-          className={`font-display font-semibold text-h2 tabular-nums ${
-            timeIsRunningOut ? 'text-danger' : 'text-primary'
-          }`}
-        >
-          00:{String(secondsLeft ?? 0).padStart(2, '0')}
-        </div>
+        <span className="sr-only" aria-live="polite">{secondsLeft ?? 0} segundos restantes</span>
       </header>
 
       <h1 className="font-display text-h1 text-text mb-8">{question.statement}</h1>

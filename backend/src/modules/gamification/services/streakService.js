@@ -152,4 +152,60 @@ function normalizeStreak(row) {
   };
 }
 
-module.exports = { registerDailyActivity, MILESTONES };
+/**
+ * Quebra o streak de forma PROATIVA quando o usuário ficou pelo menos um dia
+ * inteiro sem atividade. Antes, o streak só era recalculado na próxima
+ * atividade (registerDailyActivity) ou no CRON da meia-noite — se o CRON não
+ * rodasse, o usuário que pulou um dia continuava vendo o streak "vivo" na tela.
+ * Agora esta função também é chamada na leitura do status (getMyStatus), então
+ * a tela sempre reflete a realidade.
+ *
+ * Idempotente e segura para chamadas repetidas. Regras iguais às do CRON
+ * (enforceStreakExpiry): o item de proteção perdoa exatamente UM dia perdido.
+ *
+ * @returns {Promise<{changed: boolean, broken: boolean, protectionConsumed: boolean}>}
+ */
+async function reconcileExpiredStreak(executor, userId) {
+  const streak = await repository.getStreak(userId, executor);
+  if (!streak || !streak.last_activity_date || streak.current_streak_days <= 0) {
+    return { changed: false, broken: false, protectionConsumed: false };
+  }
+
+  const daysSince = diffInCalendarDays(
+    todayInPlatformTz(),
+    dateOnlyStringOf(streak.last_activity_date)
+  );
+  if (daysSince <= 1) return { changed: false, broken: false, protectionConsumed: false };
+
+  if (streak.protection_active && daysSince === 2) {
+    // Perdeu exatamente um dia e tem proteção: mantém o streak e consome o item.
+    const previous = new Date(streak.last_activity_date);
+    previous.setUTCDate(previous.getUTCDate() + 1);
+    await repository.updateStreak(executor, {
+      userId,
+      currentStreakDays: streak.current_streak_days,
+      longestStreakDays: streak.longest_streak_days,
+      lastActivityDate: dateOnlyStringOf(previous),
+      protectionActive: false,
+      brokenAt: streak.broken_at,
+    });
+    await userCache.invalidateStreak(userId);
+    return { changed: true, broken: false, protectionConsumed: true };
+  }
+
+  // Registra broken_at/pre_break_streak_days: habilita "Recuperar Streak" na Loja (24h)
+  // e a animação de streak quebrado no frontend.
+  await repository.updateStreak(executor, {
+    userId,
+    currentStreakDays: 0,
+    longestStreakDays: streak.longest_streak_days,
+    lastActivityDate: dateOnlyStringOf(streak.last_activity_date),
+    protectionActive: streak.protection_active,
+    brokenAt: new Date().toISOString(),
+    preBreakStreakDays: streak.current_streak_days,
+  });
+  await userCache.invalidateStreak(userId);
+  return { changed: true, broken: true, protectionConsumed: false };
+}
+
+module.exports = { registerDailyActivity, reconcileExpiredStreak, MILESTONES };

@@ -16,11 +16,22 @@ import { MissionsIcon, XpIcon, PointsIcon, WalletIcon, CheckIcon } from '../icon
 
 const STATUS_ORDER = { completed: 0, in_progress: 1, reward_claimed: 2, expired: 3 };
 
+const UNIT_BY_ACTIVITY = {
+  quiz_count: 'quizzes',
+  time_active_minutes: 'min',
+  category_exploration: 'categorias',
+  login: '',
+};
+
+export function formatMzn(value) {
+  return `${Number(value).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MZN`;
+}
+
 function RewardChips({ rewards }) {
   const chips = [];
   if (rewards.xp > 0) chips.push({ key: 'xp', icon: XpIcon, label: `${rewards.xp} XP` });
   if (rewards.points > 0) chips.push({ key: 'points', icon: PointsIcon, label: `${rewards.points} Pontos` });
-  if (rewards.moneyMzn > 0) chips.push({ key: 'money', icon: WalletIcon, label: `${rewards.moneyMzn.toFixed(2)} MZN` });
+  if (rewards.moneyMzn > 0) chips.push({ key: 'money', icon: WalletIcon, label: formatMzn(rewards.moneyMzn) });
 
   if (chips.length === 0) return null;
 
@@ -52,7 +63,13 @@ function MissionCard({ mission, onClaimed }) {
     setClaiming(true);
     try {
       const res = await missionsApi.claim(mission.userMissionId);
-      showToast(`Recompensa resgatada: ${res.data.title}!`, 'success');
+      const credited = res.data.rewardsGranted?.moneyMzn ?? 0;
+      showToast(
+        credited > 0
+          ? `Recompensa resgatada: +${formatMzn(credited)}`
+          : `Recompensa resgatada: ${res.data.title}!`,
+        'success'
+      );
       onClaimed?.();
     } catch (err) {
       showToast(err instanceof ApiError ? err.message : 'Não foi possível resgatar a recompensa.', 'error');
@@ -76,7 +93,7 @@ function MissionCard({ mission, onClaimed }) {
       {!isClaimed && !isExpired && (
         <div className="mt-3">
           <div className="flex justify-between text-caption text-text-secondary mb-1">
-            <span>{mission.progress}/{mission.target} quizzes</span>
+            <span>{mission.progress}/{mission.target} {UNIT_BY_ACTIVITY[mission.activityType] ?? ''}</span>
             <span>{progressPercent}%</span>
           </div>
           <div className="h-2 bg-border rounded-full overflow-hidden">
@@ -126,12 +143,34 @@ export function Missions() {
 
   const claimableCount = missions?.filter((m) => m.status === 'completed').length ?? 0;
 
+  // Resumo do dia: valores somados a partir do que o servidor devolve (nada inventado no cliente).
+  const daily = (missions ?? []).filter((m) => m.type === 'daily');
+  const dailyPotential = daily.reduce((sum, m) => sum + m.rewards.moneyMzn, 0);
+  const dailyClaimed = daily
+    .filter((m) => m.status === 'reward_claimed')
+    .reduce((sum, m) => sum + m.rewards.moneyMzn, 0);
+  const dailyPercent = dailyPotential > 0 ? Math.min(100, Math.round((dailyClaimed / dailyPotential) * 100)) : 0;
+
   return (
     <div className="space-y-4 pb-4">
       <header className="pt-2 flex items-center gap-2">
         <MissionsIcon className="w-6 h-6 text-primary" hasNew={claimableCount > 0} />
         <h1 className="font-display text-h1 text-text">Missões</h1>
       </header>
+
+      {dailyPotential > 0 && (
+        <Card>
+          <div className="flex justify-between items-baseline">
+            <span className="text-caption text-text-secondary">Ganhos de hoje</span>
+            <span className="font-display text-gold font-semibold">
+              {formatMzn(dailyClaimed)} <span className="text-caption text-text-secondary">/ {formatMzn(dailyPotential)}</span>
+            </span>
+          </div>
+          <div className="h-1 bg-border rounded-full overflow-hidden mt-2">
+            <div className="h-full bg-gradient-to-r from-gold to-warning transition-all duration-500" style={{ width: `${dailyPercent}%` }} />
+          </div>
+        </Card>
+      )}
 
       {claimableCount > 0 && (
         <Card className="bg-gold/5 border-gold/20">

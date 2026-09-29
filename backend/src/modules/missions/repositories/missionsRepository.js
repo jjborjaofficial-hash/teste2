@@ -16,12 +16,18 @@ async function listActiveMissions(executor = db) {
 async function getUserMissionProgress(userId, executor = db) {
   const { rows } = await executor.query(
     `SELECT um.id, um.mission_id, um.progress_count, um.status, um.assigned_at, um.completed_at,
+            um.target_snapshot, m.activity_type,
             m.title, m.description, m.type, m.category_id, m.target_quiz_count,
             m.xp_reward, m.points_reward, m.money_reward_mzn
      FROM user_missions um
      JOIN missions m ON m.id = um.mission_id
-     WHERE um.user_id = $1 AND um.status IN ('in_progress', 'completed')
-     ORDER BY um.assigned_at DESC`,
+     WHERE um.user_id = $1
+       AND (
+         um.status IN ('in_progress', 'completed')
+         -- Missões já resgatadas HOJE continuam visíveis (progresso do dia 6/6).
+         OR (um.status = 'reward_claimed' AND um.period_date = ${dateInPlatformTz('now()')})
+       )
+     ORDER BY m.created_at ASC, um.assigned_at DESC`,
     [userId]
   );
   return rows;
@@ -122,6 +128,49 @@ async function incrementCategoryExploration(executor, { userId, categoryId }) {
   return rows;
 }
 
+
+/**
+ * Progresso de missões activity_type='time_active_minutes' (heartbeat).
+ *
+ * Anti-fraude: o cliente NÃO envia tempo nenhum. O servidor soma o intervalo
+ * entre este heartbeat e o anterior, mas só se for <= 60s (o cliente envia a
+ * cada 30s com a aba visível). Intervalos maiores (aba em segundo plano, app
+ * fechado) valem 0 — não dá para "acumular" tempo sem estar realmente ativo.
+ */
+const HEARTBEAT_MAX_GAP_SECONDS = 60;
+const HEARTBEAT_DELTA_SQL = `(CASE
+    WHEN um.last_heartbeat_at IS NULL THEN 0
+    WHEN EXTRACT(EPOCH FROM (now() - um.last_heartbeat_at)) <= ${HEARTBEAT_MAX_GAP_SECONDS}
+      THEN FLOOR(EXTRACT(EPOCH FROM (now() - um.last_heartbeat_at)))::int
+    ELSE 0
+  END)`;
+
+async function addActiveTime(executor, { userId }) {
+  const { rows } = await executor.query(
+    `UPDATE user_missions um
+     SET active_seconds = um.active_seconds + ${HEARTBEAT_DELTA_SQL},
+         last_heartbeat_at = now(),
+         progress_count = LEAST(um.target_snapshot, (um.active_seconds + ${HEARTBEAT_DELTA_SQL}) / 60),
+         status = CASE
+             WHEN (um.active_seconds + ${HEARTBEAT_DELTA_SQL}) / 60 >= um.target_snapshot THEN 'completed'
+             ELSE um.status
+         END,
+         completed_at = CASE
+             WHEN (um.active_seconds + ${HEARTBEAT_DELTA_SQL}) / 60 >= um.target_snapshot THEN now()
+             ELSE um.completed_at
+         END
+     FROM missions m
+     WHERE um.mission_id = m.id
+       AND um.user_id = $1
+       AND um.status = 'in_progress'
+       AND m.activity_type = 'time_active_minutes'
+       AND um.period_date = ${dateInPlatformTz('now()')}
+     RETURNING um.id, um.mission_id, um.status, um.progress_count, um.target_snapshot, m.title`,
+    [userId]
+  );
+  return rows;
+}
+
 async function getUserMissionById(userId, userMissionId, executor = db) {
   const { rows } = await executor.query(
     `SELECT um.id, um.status, um.progress_count,
@@ -149,6 +198,7 @@ module.exports = {
   incrementProgressForCategory,
   completeLoginMissions,
   incrementCategoryExploration,
+  addActiveTime,
   getUserMissionById,
   markRewardClaimed,
 };

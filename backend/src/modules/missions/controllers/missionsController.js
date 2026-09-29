@@ -22,4 +22,13 @@ async function claimReward(req, res, next) {
   }
 }
 
-module.exports = { listMine, claimReward };
+async function heartbeat(req, res, next) {
+  try {
+    const result = await missionsService.registerHeartbeat(req.user.id);
+    return res.status(200).json({ status: 'success', message: null, data: result });
+  } catch (err) {
+    return next(err);
+  }
+}
+
+module.exports = { listMine, claimReward, heartbeat };

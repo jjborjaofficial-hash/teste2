@@ -1,4 +1,5 @@
 import { Outlet } from 'react-router-dom';
+import { ActivityHeartbeat } from '../components/ActivityHeartbeat';
 
 /**
  * Layout de foco absoluto (Doc. Mestre Seção 19.4: "Esta página deve ter foco
@@ -8,6 +9,7 @@ import { Outlet } from 'react-router-dom';
 export function FocusLayout() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <ActivityHeartbeat />
       <main className="flex-1 max-w-md mx-auto w-full px-4 py-6 flex flex-col">
         <Outlet />
       </main>

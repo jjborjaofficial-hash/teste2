@@ -3,6 +3,7 @@ import { api } from './client';
 export const missionsApi = {
   listMine: () => api.get('/missions'),
   claim: (userMissionId) => api.post(`/missions/${userMissionId}/claim`),
+  heartbeat: () => api.post('/missions/heartbeat'),
 };
 
 export const walletApi = {

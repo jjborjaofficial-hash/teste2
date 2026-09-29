@@ -55,7 +55,8 @@ async function creditReward({ userId, amountMzn, source, referenceId, metadata }
     (await configRepository.getConfigValue('daily_earning_cap_mzn', executor)) ?? 7.2
   );
   const earnedToday = await repository.sumEarningsToday(userId, executor);
-  const remainingAllowance = Math.max(0, dailyCap - earnedToday);
+  // Arredonda a 2 casas para não acumular ruído de ponto flutuante (ex.: 7,2 - 6,0).
+  const remainingAllowance = Math.max(0, Math.round((dailyCap - earnedToday) * 100) / 100);
 
   if (remainingAllowance <= 0) {
     // Teto de ganho diário já atingido — nada é creditado hoje. Isso é uma
@@ -67,7 +68,7 @@ async function creditReward({ userId, amountMzn, source, referenceId, metadata }
     return null;
   }
 
-  const amountToCredit = Math.min(amountMzn, remainingAllowance);
+  const amountToCredit = Math.round(Math.min(amountMzn, remainingAllowance) * 100) / 100;
 
   const result = await repository.creditWallet(executor, {
     userId,
@@ -87,7 +88,7 @@ async function creditReward({ userId, amountMzn, source, referenceId, metadata }
   // Seção 2): o saldo em MZN faz parte do perfil cacheado.
   await userCache.invalidateProfile(userId);
 
-  return result;
+  return { ...result, amountCreditedMzn: amountToCredit };
 }
 
 /**

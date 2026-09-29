@@ -8,7 +8,8 @@ const notificationsService = require('../../notifications/services/notifications
  *
  * Cada `updateAfterX` corresponde a um `activity_type` de missões
  * (migration 022): login, quiz_count, category_exploration hoje têm lógica
- * real. lesson_complete e time_active_minutes ainda não têm — dependem de
+ * real, e time_active_minutes agora também (heartbeat, migration 104).
+ * lesson_complete ainda não tem — dependem de
  * módulos que não existem na plataforma (microaulas e rastreamento de
  * heartbeat de atividade), então missões desses tipos podem ser criadas pelo
  * admin mas nunca vão progredir sozinhas até esses módulos existirem. Isso é
@@ -59,4 +60,19 @@ async function updateAfterCategoryExploration(executor, { userId, categoryId }) 
   return updated;
 }
 
-module.exports = { updateAfterQuiz, updateAfterLogin, updateAfterCategoryExploration };
+/**
+ * Chamado pelo heartbeat do frontend (a cada ~30s com a aba visível).
+ * Missões 'time_active_minutes' passam a ter progresso real (12 minutos ativos).
+ */
+async function updateAfterHeartbeat(executor, { userId }) {
+  const updated = await repository.addActiveTime(executor, { userId });
+  await notifyCompleted(executor, userId, updated.filter((m) => m.status === 'completed'));
+  return updated;
+}
+
+module.exports = {
+  updateAfterQuiz,
+  updateAfterLogin,
+  updateAfterCategoryExploration,
+  updateAfterHeartbeat,
+};

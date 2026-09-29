@@ -2,6 +2,8 @@ const db = require('../../../config/database');
 const levelService = require('./levelService');
 const userCache = require('../../../common/cache/userCache');
 const userRepository = require('../../users/repositories/userRepository');
+const streakService = require('./streakService');
+const { todayInPlatformTz, diffInCalendarDays } = require('../../../common/time/platformTimezone');
 const { NotFoundError } = require('../../../common/errors/AppError');
 
 /**
@@ -25,9 +27,11 @@ async function getMyStatus(userId) {
 
   const levelInfo = await levelService.calculateLevel(Number(profile.xp_total));
 
-  const streak = await userCache.getOrSetStreak(userId, async () => {
+  const loadStreak = () => userCache.getOrSetStreak(userId, async () => {
     const streakResult = await db.query(
-      'SELECT current_streak_days, longest_streak_days, protection_active, last_activity_date FROM streaks WHERE user_id = $1',
+      `SELECT current_streak_days, longest_streak_days, protection_active, last_activity_date,
+              broken_at, pre_break_streak_days
+       FROM streaks WHERE user_id = $1`,
       [userId]
     );
     const row = streakResult.rows[0] || {
@@ -35,14 +39,31 @@ async function getMyStatus(userId) {
       longest_streak_days: 0,
       protection_active: false,
       last_activity_date: null,
+      broken_at: null,
+      pre_break_streak_days: null,
     };
     return {
       currentDays: row.current_streak_days,
       longestDays: row.longest_streak_days,
       protectionActive: row.protection_active,
       lastActivityDate: row.last_activity_date,
+      brokenAt: row.broken_at,
+      preBreakDays: row.pre_break_streak_days,
     };
   });
+
+  let streak = await loadStreak();
+
+  // Streak com mais de 1 dia sem atividade: quebra AGORA (não espera o CRON nem a
+  // próxima atividade). O cache guarda lastActivityDate, então a checagem é barata.
+  if (streak.currentDays > 0 && streak.lastActivityDate) {
+    const d = new Date(streak.lastActivityDate);
+    const lastStr = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+    if (diffInCalendarDays(todayInPlatformTz(), lastStr) > 1) {
+      await streakService.reconcileExpiredStreak(db, userId);
+      streak = await loadStreak();
+    }
+  }
 
   return {
     xpTotal: Number(profile.xp_total),
@@ -55,6 +76,10 @@ async function getMyStatus(userId) {
       currentDays: streak.currentDays,
       longestDays: streak.longestDays,
       protectionActive: streak.protectionActive,
+      // Só preenchidos enquanto o streak está quebrado (broken_at é limpo na próxima
+      // atividade). O frontend usa isso para mostrar a animação de streak se partindo.
+      brokenAt: streak.currentDays === 0 ? streak.brokenAt : null,
+      brokenStreakDays: streak.currentDays === 0 ? streak.preBreakDays : null,
     },
   };
 }

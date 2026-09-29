@@ -7,6 +7,7 @@ import { Card } from '../components/Card';
 import { XpProgressBar } from '../components/XpProgressBar';
 import { SocialProofActivity } from '../components/SocialProofActivity';
 import { DisplayAds } from '../ads';
+import { StreakBrokenModal } from '../components/StreakBrokenModal';
 import { FireIcon, WalletIcon, XpIcon, ChevronRightIcon, NotificationIcon, MissionsIcon, PointsIcon } from '../icons';
 
 /**
@@ -18,6 +19,7 @@ export function Dashboard() {
   const [gamification, setGamification] = useState(null);
   const [missions, setMissions] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [showStreakBroken, setShowStreakBroken] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -31,7 +33,16 @@ export function Dashboard() {
         ]);
         if (!mounted) return;
         setGamification(gamResult.data);
-        setMissions(missionsResult.data.slice(0, 3));
+        // Missões já resgatadas hoje não aparecem no atalho do painel.
+        setMissions(missionsResult.data.filter((m) => m.status !== 'reward_claimed').slice(0, 3));
+
+        // Animação de ofensiva quebrada: uma única vez por quebra.
+        const brokenAt = gamResult.data?.streak?.brokenAt;
+        if (brokenAt) {
+          let seen = null;
+          try { seen = localStorage.getItem('streakBrokenSeen'); } catch { /* storage indisponível */ }
+          if (seen !== String(brokenAt)) setShowStreakBroken(true);
+        }
         setUnreadCount(unreadResult.data.count);
       } finally {
         if (mounted) setLoading(false);
@@ -41,6 +52,11 @@ export function Dashboard() {
     return () => { mounted = false; };
   }, []);
 
+  function closeStreakBroken() {
+    try { localStorage.setItem('streakBrokenSeen', String(gamification?.streak?.brokenAt)); } catch { /* storage indisponível */ }
+    setShowStreakBroken(false);
+  }
+
   const firstName = user?.name?.split(' ')[0] || '';
   const xpPercent = gamification && gamification.xpStep
     ? Math.round((gamification.xpIntoCurrentLevel / gamification.xpStep) * 100)
@@ -48,6 +64,9 @@ export function Dashboard() {
 
   return (
     <div className="space-y-5 pb-4">
+      {showStreakBroken && (
+        <StreakBrokenModal days={gamification?.streak?.brokenStreakDays ?? 0} onClose={closeStreakBroken} />
+      )}
       <header className="flex items-center justify-between pt-2">
         <div>
           <p className="text-caption text-text-secondary">Olá,</p>
