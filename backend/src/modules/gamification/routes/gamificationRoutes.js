@@ -6,5 +6,6 @@ const router = Router();
 
 router.get('/me', authenticate, controller.myStatus);
 router.get('/welcome-bonus', authenticate, controller.welcomeBonus);
+router.post('/welcome-bonus/claim', authenticate, controller.claimWelcomeBonus);
 
 module.exports = router;

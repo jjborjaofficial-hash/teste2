@@ -19,4 +19,13 @@ async function welcomeBonus(req, res, next) {
   }
 }
 
-module.exports = { myStatus, welcomeBonus };
+async function claimWelcomeBonus(req, res, next) {
+  try {
+    const data = await welcomeBonusService.claimToday(req.user.id);
+    return res.status(200).json({ status: 'success', message: null, data });
+  } catch (err) {
+    return next(err);
+  }
+}
+
+module.exports = { myStatus, welcomeBonus, claimWelcomeBonus };

@@ -16,7 +16,7 @@ import { FireIcon, WalletIcon, XpIcon, ChevronRightIcon, NotificationIcon, Missi
  * Prioriza: Nível (XP), Ganhos Totais, Ofensiva atual, Missões Pendentes.
  */
 export function Dashboard() {
-  const { user } = useAuth();
+  const { user, refreshProfile } = useAuth();
   const [gamification, setGamification] = useState(null);
   const [missions, setMissions] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -55,6 +55,12 @@ export function Dashboard() {
     load();
     return () => { mounted = false; };
   }, []);
+
+  async function reloadAfterWelcomeClaim() {
+    const res = await gamificationApi.welcomeBonus();
+    setWelcomeBonus(res.data);
+    await refreshProfile();
+  }
 
   function closeStreakBroken() {
     try { localStorage.setItem('streakBrokenSeen', String(gamification?.streak?.brokenAt)); } catch { /* storage indisponível */ }
@@ -125,7 +131,7 @@ export function Dashboard() {
         </Card>
       </div>
 
-      <WelcomeBonusCard bonus={welcomeBonus} />
+      <WelcomeBonusCard bonus={welcomeBonus} onClaimed={reloadAfterWelcomeClaim} />
 
       {gamification && (
         <div>

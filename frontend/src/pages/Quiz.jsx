@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { quizApi } from '../api/quizApi';
 import { ApiError } from '../api/client';
-import { useToast } from '../components/Toast';
 
 /**
  * Tela de Quiz Ativo (Doc. Mestre Seção 19.4 — "O Coração do Sistema").
@@ -19,7 +18,6 @@ import { useToast } from '../components/Toast';
 export function Quiz() {
   const { categoryId } = useParams();
   const navigate = useNavigate();
-  const { showToast } = useToast();
 
   const [question, setQuestion] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -79,15 +77,6 @@ export function Quiz() {
         questionId: question.id,
         alternativeId,
       });
-      const bonus = result.data?.welcomeBonus;
-      if (bonus) {
-        showToast(
-          bonus.completed
-            ? `Semana de boas-vindas concluída! +${bonus.creditedMzn.toFixed(2).replace('.', ',')} MZN`
-            : `Bónus de boas-vindas: +${bonus.creditedMzn.toFixed(2).replace('.', ',')} MZN (dia ${bonus.dayNumber} de 7)`,
-          'success'
-        );
-      }
       navigate(`/quiz/${categoryId}/resultado`, { state: { result: result.data, message: result.message } });
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Não foi possível enviar sua resposta.');

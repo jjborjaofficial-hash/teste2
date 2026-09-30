@@ -3,7 +3,6 @@ const repository = require('../repositories/quizRepository');
 const quizTimerService = require('./quizTimerService');
 const xpService = require('../../gamification/services/xpService');
 const streakService = require('../../gamification/services/streakService');
-const welcomeBonusService = require('../../gamification/services/welcomeBonusService');
 const missionsService = require('../../missions/services/missionsService');
 const referralsService = require('../../referrals/services/referralsService');
 const trustScoreService = require('../../trustscore/services/trustScoreService');
@@ -100,7 +99,6 @@ async function submitAnswer({ userId, questionId, alternativeId }) {
     let xpResult = null;
     let streakResult = null;
     let missionsProgress = [];
-    let welcomeBonus = null;
 
     if (isCorrect) {
       xpResult = await xpService.addXpAndPoints(client, {
@@ -117,8 +115,6 @@ async function submitAnswer({ userId, questionId, alternativeId }) {
         categoryId: question.category_id,
       });
       await referralsService.checkAndRewardQualification(client, userId);
-      // Bónus de boas-vindas (7 primeiros dias): paga no 1º acerto de cada dia.
-      welcomeBonus = await welcomeBonusService.registerStudyDay(client, userId);
     }
 
     // Antifraude: resposta certa E suspeitosamente rápida reduz o Trust Score,
@@ -147,7 +143,6 @@ async function submitAnswer({ userId, questionId, alternativeId }) {
       streak: streakResult ? streakResult.streak : undefined,
       streakMilestoneReached: streakResult ? streakResult.milestoneReached : undefined,
       missionsUpdated: missionsProgress.length,
-      welcomeBonus: welcomeBonus || undefined,
     };
   } catch (err) {
     await client.query('ROLLBACK');

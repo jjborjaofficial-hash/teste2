@@ -316,8 +316,8 @@ const FAQ_GROUPS = [
         a: 'É o teto de quanto você pode GANHAR em dinheiro real por dia através de missões e streak — não tem relação com o saque em si.',
       },
       {
-        q: 'O bónus de boas-vindas conta no limite de 7,20 MZN por dia?',
-        a: 'Não. O bónus de boas-vindas é uma promoção única para os 7 primeiros dias da conta: você ganha um valor por cada dia em que acerta perguntas e um extra ao estudar em 5 dos 7 dias. Ele é pago à parte e não consome o seu limite diário de missões e streak.',
+        q: 'Como funciona o bónus de boas-vindas dos 7 primeiros dias?',
+        a: 'Durante os 7 primeiros dias da conta há uma recompensa por dia, e o dia 1 vale 2,00 MZN. Cada dia só pode ser coletado no próprio dia: se você faltar, esse dia fica bloqueado e o calendário segue para o dia seguinte. O bónus é pago à parte e não conta no limite de 7,20 MZN por dia de missões e streak.',
       },
       {
         q: 'Por que meu saque está demorando?',
