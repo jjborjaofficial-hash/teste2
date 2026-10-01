@@ -19,6 +19,7 @@ import { Quiz } from './pages/Quiz';
 import { QuizResult } from './pages/QuizResult';
 import { Wallet } from './pages/Wallet';
 import { Profile } from './pages/Profile';
+import { Settings } from './pages/Settings';
 import { Ranking } from './pages/Ranking';
 import { Notifications } from './pages/Notifications';
 import { ReacceptTerms } from './pages/ReacceptTerms';
@@ -89,6 +90,7 @@ export default function App() {
               <Route path="/ranking" element={<Ranking />} />
               <Route path="/notificacoes" element={<Notifications />} />
               <Route path="/perfil" element={<Profile />} />
+              <Route path="/configuracoes" element={<Settings />} />
             </Route>
 
             {/* Protegido, foco absoluto — sem nav/rodapé (Seção 19.4 e 19.5) */}

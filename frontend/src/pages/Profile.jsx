@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { trustScoreApi } from '../api/profileApi';
+import { trustScoreApi, gamificationApi } from '../api/profileApi';
 import { referralsApi } from '../api/referralsApi';
 import { Card } from '../components/Card';
+import { WelcomeBonusCard } from '../components/WelcomeBonusCard';
 import { PrimaryButton, SecondaryButton } from '../components/Button';
 import { useToast } from '../components/Toast';
 import { ApiError } from '../api/client';
-import { TrustShieldIcon, ProfileIcon, SettingsIcon, InviteIcon, ChevronRightIcon, ShopIcon, PointsIcon, AchievementIcon } from '../icons';
+import { TrustShieldIcon, ProfileIcon, SettingsIcon, InviteIcon, ChevronRightIcon, ShopIcon, PointsIcon, AchievementIcon, FireIcon, XpIcon, WalletIcon } from '../icons';
 import { AVATAR_FRAME_CLASSES } from '../constants/shopCosmetics';
 
 const BADGE_LABELS = {
@@ -139,15 +140,25 @@ function ReferralsSection() {
  * ícone reflete a faixa (badge), não o número — ver TrustShieldIcon.
  */
 export function Profile() {
-  const { user, logout } = useAuth();
+  const { user, logout, refreshProfile } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
   const [badge, setBadge] = useState(null);
   const [settingsSpinKey, setSettingsSpinKey] = useState(0);
+  const [gamification, setGamification] = useState(null);
+  const [welcomeBonus, setWelcomeBonus] = useState(null);
 
   useEffect(() => {
     trustScoreApi.me().then((res) => setBadge(res.data.badge)).catch(() => setBadge(null));
+    gamificationApi.me().then((res) => setGamification(res.data)).catch(() => setGamification(null));
+    gamificationApi.welcomeBonus().then((res) => setWelcomeBonus(res.data)).catch(() => setWelcomeBonus(null));
   }, []);
+
+  async function reloadAfterWelcomeClaim() {
+    const res = await gamificationApi.welcomeBonus();
+    setWelcomeBonus(res.data);
+    await refreshProfile();
+  }
 
   async function handleLogout() {
     await logout();
@@ -157,7 +168,7 @@ export function Profile() {
   function handleSettingsTap() {
     // Seção 13.6: "Configurações — rotação suave só durante o toque, sem loop".
     setSettingsSpinKey((k) => k + 1);
-    showToast('Configurações avançadas em breve.', 'success');
+    navigate('/configuracoes');
   }
 
   return (
@@ -180,7 +191,43 @@ export function Profile() {
         </div>
         <h1 className="font-display text-h1 text-text">{user?.name}</h1>
         <p className="text-caption text-text-secondary">{user?.phone}</p>
+        {user?.memberSince && (
+          <p className="text-caption text-text-secondary">
+            Membro desde {new Date(user.memberSince).toLocaleDateString('pt-PT', { month: 'long', year: 'numeric' })}
+          </p>
+        )}
       </header>
+
+      <div className="grid grid-cols-2 gap-3">
+        <Card className="!p-3">
+          <div className="flex items-center gap-1.5 mb-1">
+            <XpIcon className="w-4 h-4 text-primary shrink-0" />
+            <span className="text-caption text-text-secondary">Nível {gamification?.level ?? 1}</span>
+          </div>
+          <p className="font-display text-h2 text-primary leading-tight">{gamification?.xpTotal ?? user?.xpTotal ?? 0}</p>
+          <p className="text-caption text-text-secondary">XP</p>
+        </Card>
+        <Card className="!p-3">
+          <div className="flex items-center gap-1.5 mb-1">
+            <FireIcon className="w-4 h-4 text-warning shrink-0" />
+            <span className="text-caption text-text-secondary">Streak</span>
+          </div>
+          <p className="font-display text-h2 text-warning leading-tight">{gamification?.streak?.currentDays ?? 0}</p>
+          <p className="text-caption text-text-secondary">recorde: {gamification?.streak?.longestDays ?? 0} dias</p>
+        </Card>
+        <Card className="!p-3 col-span-2">
+          <div className="flex items-center justify-between">
+            <span className="flex items-center gap-1.5 text-caption text-text-secondary">
+              <WalletIcon className="w-4 h-4 text-gold shrink-0" /> Saldo
+            </span>
+            <Link to="/carteira" className="font-display text-h2 text-gold">
+              {Number(user?.walletBalanceMzn ?? 0).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MZN
+            </Link>
+          </div>
+        </Card>
+      </div>
+
+      <WelcomeBonusCard bonus={welcomeBonus} onClaimed={reloadAfterWelcomeClaim} />
 
       {badge && (
         <Card className="flex items-center gap-3">

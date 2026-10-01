@@ -13,7 +13,7 @@ import { DisplayAds } from '../ads';
 // - Teto de GANHO diário: 7,20 MZN (não é teto de saque).
 // - Não existe teto diário de SAQUE — pode sacar quando quiser, qualquer valor
 //   acima do mínimo, respeitado o saldo disponível.
-const WITHDRAWAL_MIN_MZN = 100;
+export const WITHDRAWAL_MIN_MZN = 100;
 
 /**
  * Carteira (Doc. Mestre Seção 19.6). Saldo, resgate M-Pesa/e-Mola, histórico
