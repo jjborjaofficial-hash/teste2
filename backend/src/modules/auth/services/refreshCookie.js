@@ -16,11 +16,23 @@ function refreshTokenMaxAgeMs() {
   return days * 24 * 60 * 60 * 1000;
 }
 
+// SameSite do cookie: 'strict' (padrão) quando frontend e backend estão no mesmo
+// site. Se estiverem em endereços diferentes (ex.: dois subdomínios de
+// onrender.com, que o navegador trata como sites distintos), o cookie não seria
+// enviado e a sessão se perderia ao recarregar a página: nesse caso defina
+// COOKIE_SAMESITE=none (o cookie continua httpOnly e, com 'none', sempre Secure).
+function resolveSameSite() {
+  const value = String(process.env.COOKIE_SAMESITE || 'strict').toLowerCase();
+  return ['strict', 'lax', 'none'].includes(value) ? value : 'strict';
+}
+
 function cookieOptions() {
+  const sameSite = resolveSameSite();
   return {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production', // exige HTTPS em produção
-    sameSite: 'strict',
+    // exige HTTPS em produção; SameSite=None só é aceito pelo navegador com Secure
+    secure: process.env.NODE_ENV === 'production' || sameSite === 'none',
+    sameSite,
     domain: process.env.COOKIE_DOMAIN || undefined,
     path: '/api/v1/auth', // só é enviado para as próprias rotas de autenticação
     maxAge: refreshTokenMaxAgeMs(),
