@@ -21,6 +21,11 @@ por fazer fica escrito aqui e nos ficheiros `PENDENTE.md` de cada área.
 7. **Publicar.** O `git push` precisa de um token do GitHub que o dono cria só para isso
    (Fine-grained, só este repositório, **Contents: Read and write**, validade curta) e apaga
    depois. O token **nunca** é escrito neste repositório.
+8. **Um push por tarefa concluída.** Assim que UMA tarefa estiver feita e testada, faça o
+   commit e o `git push` dela, antes de começar a seguinte. Nunca acumule várias tarefas para
+   publicar tudo no fim. Motivo: se a sessão acabar ou o limite de uso for atingido a meio, o
+   que já foi concluído já está no GitHub (e pode ser testado ao vivo), e o que falta continua
+   escrito no `PENDENTE.md` para a próxima sessão retomar sem o dono explicar de novo.
 
 ## Onde ficam as instruções
 
