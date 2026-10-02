@@ -4,6 +4,7 @@ import { PrimaryButton, SecondaryButton } from '../components/Button';
 import { RewardBadge } from '../components/RewardBadge';
 import { CheckIcon, CloseDrawIcon, FireIcon, XpIcon, WalletIcon, PointsIcon, AchievementIcon } from '../icons';
 import { InterstitialAds } from '../ads';
+import { QUIZ_ROUND_SIZE } from '../lib/quizRound';
 
 /**
  * Tela de Resultados (Doc. Mestre Seção 19.5). "Momento de maior pico de dopamina."
@@ -16,7 +17,8 @@ export function QuizResult() {
   const { categoryId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const { result, message } = location.state || {};
+  const { result, message, round } = location.state || {};
+  const roundFinished = Boolean(round) && round.answered >= QUIZ_ROUND_SIZE;
 
   const [showAd, setShowAd] = useState(true);
   const [adSecondsLeft, setAdSecondsLeft] = useState(5);
@@ -173,13 +175,41 @@ export function QuizResult() {
         </div>
       )}
 
+      {roundFinished && (
+        <div className="bg-surface border border-border rounded-card p-5 text-center space-y-1">
+          <p className="font-display font-semibold text-text">Rodada concluída!</p>
+          <p className="text-body text-text-secondary">
+            Você acertou {round.correct} de {QUIZ_ROUND_SIZE} perguntas
+            {round.xp > 0 ? ` e ganhou ${round.xp} XP` : ''}.
+          </p>
+          <p className="text-caption text-text-secondary">
+            Para responder de novo, abra a categoria outra vez no Hub de Estudos.
+          </p>
+        </div>
+      )}
+
+      {!roundFinished && round && (
+        <p className="text-caption text-text-secondary text-center">
+          Pergunta {round.answered} de {QUIZ_ROUND_SIZE} respondida
+        </p>
+      )}
+
       <div className="flex gap-3 pt-2">
         <SecondaryButton onClick={() => navigate('/dashboard')} className="flex-1">
           Painel
         </SecondaryButton>
-        <PrimaryButton onClick={() => navigate(`/quiz/${categoryId}`, { replace: true })} className="flex-1">
-          Tentar outra
-        </PrimaryButton>
+        {roundFinished ? (
+          <PrimaryButton onClick={() => navigate('/hub-estudos', { replace: true })} className="flex-1">
+            Hub de Estudos
+          </PrimaryButton>
+        ) : (
+          <PrimaryButton
+            onClick={() => navigate(`/quiz/${categoryId}`, { replace: true, state: { round } })}
+            className="flex-1"
+          >
+            Próxima pergunta
+          </PrimaryButton>
+        )}
       </div>
     </div>
   );

@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { quizApi } from '../api/quizApi';
 import { ApiError } from '../api/client';
+import { EMPTY_ROUND, QUIZ_ROUND_SIZE, nextRound } from '../lib/quizRound';
 
 /**
  * Tela de Quiz Ativo (Doc. Mestre Seção 19.4 — "O Coração do Sistema").
@@ -18,6 +19,8 @@ import { ApiError } from '../api/client';
 export function Quiz() {
   const { categoryId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const round = location.state?.round || EMPTY_ROUND;
 
   const [question, setQuestion] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -43,8 +46,14 @@ export function Quiz() {
   }, [categoryId]);
 
   useEffect(() => {
+    if (round.answered >= QUIZ_ROUND_SIZE) {
+      // Rodada já terminada: para jogar de novo é preciso abrir a categoria outra vez.
+      navigate('/hub-estudos', { replace: true });
+      return undefined;
+    }
     loadQuestion();
     return () => clearInterval(timerRef.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadQuestion]);
 
   useEffect(() => {
@@ -77,7 +86,11 @@ export function Quiz() {
         questionId: question.id,
         alternativeId,
       });
-      navigate(`/quiz/${categoryId}/resultado`, { state: { result: result.data, message: result.message } });
+      // replace: o botão voltar não reabre uma pergunta já respondida (não dá para passar das 10).
+      navigate(`/quiz/${categoryId}/resultado`, {
+        replace: true,
+        state: { result: result.data, message: result.message, round: nextRound(round, result.data) },
+      });
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Não foi possível enviar sua resposta.');
       setSelecting(false);
@@ -133,7 +146,7 @@ export function Quiz() {
 
       <header className="flex items-center justify-between mb-8">
         <span className="text-caption text-text-secondary uppercase tracking-wide">
-          Pergunta atual
+          Pergunta {round.answered + 1} de {QUIZ_ROUND_SIZE}
         </span>
         {/* Segundos visíveis a decrescer (a barra fina continua acima). aria-hidden para o
             leitor de ecrã não anunciar a cada segundo; o texto sr-only abaixo cobre isso. */}
