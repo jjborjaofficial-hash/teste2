@@ -141,6 +141,9 @@ async function submitAnswer({ userId, questionId, alternativeId }) {
       leveledUp: xpResult ? xpResult.leveledUp : false,
       pointsCappedByDailyLimit: xpResult ? xpResult.pointsCappedByDailyLimit : false,
       streak: streakResult ? streakResult.streak : undefined,
+      // true só na 1ª resposta correta do dia (quando a ofensiva realmente aumenta);
+      // nas seguintes o front não repete o aviso "+1 ofensiva".
+      streakIncreasedToday: streakResult ? !streakResult.alreadyRegisteredToday : undefined,
       streakMilestoneReached: streakResult ? streakResult.milestoneReached : undefined,
       missionsUpdated: missionsProgress.length,
     };

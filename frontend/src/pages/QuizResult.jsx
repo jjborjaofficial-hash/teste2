@@ -128,11 +128,14 @@ export function QuizResult() {
             </div>
           )}
 
-          {result.streak && (
+          {/* Só aparece quando a ofensiva realmente aumentou (1ª resposta correta do dia);
+              nas respostas seguintes do mesmo dia não se repete. */}
+          {result.streak && result.streakIncreasedToday && (
             <div className="flex items-center justify-between">
               <span className="text-body text-text-secondary">Ofensiva</span>
               <span className="flex items-center gap-1 font-display font-semibold text-warning">
                 <FireIcon className="w-4 h-4" /> {result.streak.currentStreakDays} dias
+                <span className="ml-1 text-caption text-success">+1</span>
               </span>
             </div>
           )}
