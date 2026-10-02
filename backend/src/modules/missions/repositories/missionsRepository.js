@@ -23,7 +23,10 @@ async function getUserMissionProgress(userId, executor = db) {
      JOIN missions m ON m.id = um.mission_id
      WHERE um.user_id = $1
        AND (
-         um.status IN ('in_progress', 'completed')
+         -- Missões diárias reiniciam a cada dia: o que ficou em andamento ontem expira.
+         (um.status = 'in_progress' AND um.period_date = ${dateInPlatformTz('now()')})
+         -- Concluídas e ainda não resgatadas continuam disponíveis para resgate.
+         OR um.status = 'completed'
          -- Missões já resgatadas HOJE continuam visíveis (progresso do dia 6/6).
          OR (um.status = 'reward_claimed' AND um.period_date = ${dateInPlatformTz('now()')})
        )
@@ -68,6 +71,7 @@ async function incrementProgressForCategory(executor, { userId, categoryId }) {
      WHERE um.mission_id = m.id
        AND um.user_id = $1
        AND um.status = 'in_progress'
+       AND um.period_date = ${dateInPlatformTz('now()')}
        AND m.activity_type = 'quiz_count'
        AND (m.category_id IS NULL OR m.category_id = $2)
      RETURNING um.id, um.mission_id, um.status, m.title`,
@@ -91,6 +95,7 @@ async function completeLoginMissions(executor, { userId }) {
      WHERE um.mission_id = m.id
        AND um.user_id = $1
        AND um.status = 'in_progress'
+       AND um.period_date = ${dateInPlatformTz('now()')}
        AND m.activity_type = 'login'
      RETURNING um.id, um.mission_id, um.status, m.title`,
     [userId]
@@ -120,6 +125,7 @@ async function incrementCategoryExploration(executor, { userId, categoryId }) {
      WHERE um.mission_id = m.id
        AND um.user_id = $1
        AND um.status = 'in_progress'
+       AND um.period_date = ${dateInPlatformTz('now()')}
        AND m.activity_type = 'category_exploration'
        AND NOT ($2::uuid = ANY(um.visited_categories))
      RETURNING um.id, um.mission_id, um.status, m.title`,
