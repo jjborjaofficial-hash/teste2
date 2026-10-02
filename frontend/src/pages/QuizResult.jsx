@@ -183,7 +183,7 @@ export function QuizResult() {
             {round.xp > 0 ? ` e ganhou ${round.xp} XP` : ''}.
           </p>
           <p className="text-caption text-text-secondary">
-            Para responder de novo, abra a categoria outra vez no Hub de Estudos.
+            Para responder de novo, escolha a categoria outra vez em "Escolher categoria".
           </p>
         </div>
       )}
@@ -200,7 +200,7 @@ export function QuizResult() {
         </SecondaryButton>
         {roundFinished ? (
           <PrimaryButton onClick={() => navigate('/hub-estudos', { replace: true })} className="flex-1">
-            Hub de Estudos
+            Escolher categoria
           </PrimaryButton>
         ) : (
           <PrimaryButton

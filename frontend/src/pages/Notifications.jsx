@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { notificationsApi } from '../api/gameplayApi';
 import { Card } from '../components/Card';
 import { PrimaryButton } from '../components/Button';
 import { useToast } from '../components/Toast';
 import { NotificationIcon } from '../icons';
 import { requestPushPermission } from '../lib/pushNotifications';
+import { notificationRoute } from '../lib/notificationRoute';
 
 const PUSH_STATUS_MESSAGES = {
   unsupported: 'Seu navegador não suporta notificações push.',
@@ -16,6 +17,7 @@ const PUSH_STATUS_MESSAGES = {
 
 export function Notifications() {
   const { showToast } = useToast();
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pushLoading, setPushLoading] = useState(false);
@@ -30,12 +32,21 @@ export function Notifications() {
   }, []);
 
   async function handleOpen(notification) {
+    const destination = notificationRoute(notification);
+
     if (!notification.read) {
-      await notificationsApi.markAsRead(notification.id);
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === notification.id ? { ...n, read: true } : n))
-      );
+      // Marca como lida sem bloquear a navegação: se falhar, o utilizador ainda chega ao destino.
+      try {
+        await notificationsApi.markAsRead(notification.id);
+        setNotifications((prev) =>
+          prev.map((n) => (n.id === notification.id ? { ...n, read: true } : n))
+        );
+      } catch {
+        /* segue para o destino mesmo assim */
+      }
     }
+
+    if (destination) navigate(destination);
   }
 
   async function handleEnablePush() {
@@ -75,8 +86,9 @@ export function Notifications() {
               {!n.read && <span className="w-2 h-2 rounded-full bg-primary mt-1.5 shrink-0" />}
             </div>
             <p className="text-caption text-text-secondary mt-0.5">{n.body}</p>
-            <p className="text-caption text-text-secondary mt-1">
-              {new Date(n.createdAt).toLocaleString('pt-MZ')}
+            <p className="text-caption text-text-secondary mt-1 flex items-center justify-between gap-2">
+              <span>{new Date(n.createdAt).toLocaleString('pt-MZ')}</span>
+              {notificationRoute(n) && <span className="text-primary font-semibold">Ver ›</span>}
             </p>
           </Card>
         ))}
