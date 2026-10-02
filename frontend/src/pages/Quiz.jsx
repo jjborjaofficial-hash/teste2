@@ -135,6 +135,16 @@ export function Quiz() {
         <span className="text-caption text-text-secondary uppercase tracking-wide">
           Pergunta atual
         </span>
+        {/* Segundos visíveis a decrescer (a barra fina continua acima). aria-hidden para o
+            leitor de ecrã não anunciar a cada segundo; o texto sr-only abaixo cobre isso. */}
+        <span
+          aria-hidden="true"
+          className={`font-display font-semibold tabular-nums text-body ${
+            timeIsRunningOut ? 'text-danger' : 'text-text-secondary'
+          }`}
+        >
+          {secondsLeft ?? 0}s
+        </span>
         <span className="sr-only" aria-live="polite">{secondsLeft ?? 0} segundos restantes</span>
       </header>
 
