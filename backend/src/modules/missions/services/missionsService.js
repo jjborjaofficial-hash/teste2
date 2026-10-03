@@ -1,4 +1,6 @@
 const db = require('../../../config/database');
+const cacheService = require('../../../common/cache/cacheService');
+const { todayInPlatformTz } = require('../../../common/time/platformTimezone');
 const repository = require('../repositories/missionsRepository');
 const progressEngine = require('./missionProgressService');
 const xpService = require('../../gamification/services/xpService');
@@ -151,4 +153,39 @@ async function registerHeartbeat(userId) {
   };
 }
 
-module.exports = { listMyMissions, incrementProgressForCategory, claimReward, registerHeartbeat };
+/**
+ * Missão \"Entrar na plataforma\" (activity_type = 'login'). Antes (BE-001) ninguém
+ * chamava `updateAfterLogin`, então a missão ficava 0/1 para todos os utilizadores.
+ * Garante as missões do dia (podem ainda não existir, pois são atribuídas sob
+ * demanda ou pelo CRON) e completa a de login. Idempotente por dia.
+ */
+async function registerPresence(userId) {
+  await ensureAssigned(userId);
+  return progressEngine.updateAfterLogin(db, { userId });
+}
+
+/**
+ * Versão para renovação de sessão (refresh do token): o app renova o acesso a cada
+ * poucos minutos, então limitamos a uma execução por utilizador por dia (Redis) para
+ * não repetir a atribuição das missões em todo refresh. Se o Redis falhar, executa
+ * normalmente (a operação é idempotente).
+ */
+async function registerPresenceOncePerDay(userId) {
+  return cacheService.getOrSet(
+    `missions:presence:${userId}:${todayInPlatformTz()}`,
+    86400,
+    async () => {
+      await registerPresence(userId);
+      return true;
+    }
+  );
+}
+
+module.exports = {
+  listMyMissions,
+  incrementProgressForCategory,
+  claimReward,
+  registerHeartbeat,
+  registerPresence,
+  registerPresenceOncePerDay,
+};

@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { gamificationApi } from '../api/profileApi';
 import { missionsApi, notificationsApi } from '../api/gameplayApi';
 import { Card } from '../components/Card';
+import { PrimaryButton } from '../components/Button';
 import { XpProgressBar } from '../components/XpProgressBar';
 import { SocialProofActivity } from '../components/SocialProofActivity';
 import { DisplayAds } from '../ads';
@@ -17,6 +18,7 @@ import { FireIcon, WalletIcon, XpIcon, ChevronRightIcon, NotificationIcon, Missi
  */
 export function Dashboard() {
   const { user, refreshProfile } = useAuth();
+  const navigate = useNavigate();
   const [gamification, setGamification] = useState(null);
   const [missions, setMissions] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -142,6 +144,11 @@ export function Dashboard() {
           <XpProgressBar percent={xpPercent} />
         </div>
       )}
+
+      {/* FE-002: a ação principal do painel (estudar) precisa de um botão visível. */}
+      <PrimaryButton onClick={() => navigate('/hub-estudos')} className="w-full">
+        Estudar agora
+      </PrimaryButton>
 
       <Card className="bg-gold/5 border-gold/20 text-center">
         <SocialProofActivity variant="compact" />

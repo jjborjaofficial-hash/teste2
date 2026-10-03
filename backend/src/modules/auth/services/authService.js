@@ -4,6 +4,8 @@ const crypto = require('crypto');
 const repository = require('../repositories/authRepository');
 const referralsService = require('../../referrals/services/referralsService');
 const legalService = require('../../legal/services/legalService');
+const missionsService = require('../../missions/services/missionsService');
+const logger = require('../../../common/logger');
 const userCache = require('../../../common/cache/userCache');
 const {
   ConflictError,
@@ -124,6 +126,19 @@ async function register({ name, phone, password, isAdultDeclared, referralCode }
   return { user: sanitizeUser(user), ...tokens };
 }
 
+/**
+ * Conta o acesso de hoje para a missão \"Entrar na plataforma\". Melhor esforço:
+ * uma falha aqui NUNCA pode impedir o login do utilizador.
+ */
+async function markDailyPresence(userId, { once = false } = {}) {
+  try {
+    if (once) await missionsService.registerPresenceOncePerDay(userId);
+    else await missionsService.registerPresence(userId);
+  } catch (err) {
+    logger.warn(`Falha ao registrar a missão de login (user ${userId}): ${err.message}`);
+  }
+}
+
 async function login({ phone, password }, context) {
   // Antifraude / força bruta (Seção 7 e 12 do Doc. Mestre)
   const recentFailures = await repository.countRecentFailedAttempts(phone);
@@ -159,6 +174,7 @@ async function login({ phone, password }, context) {
   });
 
   const tokens = await issueTokenPair(user, context);
+  await markDailyPresence(user.id);
 
   return { user: sanitizeUser(user), ...tokens };
 }
@@ -179,6 +195,8 @@ async function refresh({ refreshToken }, context) {
   // Rotação de refresh token: revoga o antigo e emite um novo par (mitiga replay)
   await repository.revokeRefreshToken(tokenHash);
   const tokens = await issueTokenPair(user, context);
+  // Sessão restaurada (ex.: abriu o app com o login ainda válido) também conta como entrar hoje.
+  await markDailyPresence(user.id, { once: true });
 
   return { user: sanitizeUser(user), ...tokens };
 }
