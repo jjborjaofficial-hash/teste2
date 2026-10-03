@@ -46,8 +46,10 @@ async function grantMilestoneReward(executor, userId, days) {
     });
   }
   if (moneyMzn > 0) {
+    // O teto diário de 7,20 MZN vale só para as missões: o prémio de streak em
+    // dinheiro é pago por inteiro e não entra na soma do teto.
     await walletService.creditReward(
-      { userId, amountMzn: moneyMzn, source: `streak_milestone_${days}` },
+      { userId, amountMzn: moneyMzn, source: `streak_milestone_${days}`, ignoreDailyCap: true },
       executor
     );
   }

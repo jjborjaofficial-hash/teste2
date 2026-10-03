@@ -51,7 +51,7 @@ Se uma tarefa nova não encaixar em nenhuma área, crie um `PENDENTE.md` na past
 
 ## Regras fixas do projeto (não quebrar sem o dono pedir)
 
-- **Teto de ganho diário: 7,20 MZN, só das missões** (o utilizador só chega a 7,20 se completar as 6 missões; o valor não é garantido). Prémios de streak em dinheiro e conversão de Pontos em MZN ficam **fora** do teto. Chave `daily_earning_cap_mzn` em `system_config`. (O código ainda segue a regra antiga até a BE-001 ser feita.)
+- **Teto de ganho diário: 7,20 MZN, só das missões** (o utilizador só chega a 7,20 se completar as 6 missões; o valor não é garantido). Prémios de streak em dinheiro e conversão de Pontos em MZN ficam **fora** do teto. Chave `daily_earning_cap_mzn` em `system_config`.
 - **Missões diárias:** 6 por dia, 1,20 MZN cada (login, 12 minutos ativos e 4 desafios de quiz).
   O tempo ativo é medido só pelo servidor (heartbeat); o cliente nunca envia tempo.
 - **Quiz:** 30 segundos por pergunta, barra fina horizontal.
@@ -78,7 +78,6 @@ Quando ele aprovar um, passa a ser uma instrução na área certa.
 - Editar nome, foto e provedor de pagamento (M-Pesa / e-Mola) no perfil — precisa de endpoint novo e regras de segurança, porque o provedor define para onde o dinheiro vai.
 - Eliminar a conta do utilizador.
 - Conferir se os valores do calendário de boas-vindas (total 12,00 MZN por utilizador) cabem na receita real do Adcash.
-- Carteira: trocar os nomes crus do histórico ("mission reward", "streak milestone 7") por rótulos amigáveis (ex.: "Missão diária", "Streak de 7 dias", "Bónus de boas-vindas", "Conversão de pontos", "Saque").
 - Carteira/Legal: ler o saque mínimo da API (`withdrawal_min_mzn`) em vez de fixar 100 MZN no código.
 - Cadastro: verificar o telefone por SMS (Twilio já está nas dependências) para evitar contas falsas.
 - Teto diário: bloquear a linha do utilizador antes de somar os ganhos do dia, para dois pedidos simultâneos não furarem o teto das missões.

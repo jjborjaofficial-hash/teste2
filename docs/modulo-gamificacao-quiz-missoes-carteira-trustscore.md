@@ -96,8 +96,9 @@ POST /api/v1/quiz/answers
   ⚠️ **Não existe teto diário de saque.** O usuário pode solicitar quando quiser,
   qualquer valor acima do mínimo. O que existe é um **teto de GANHO diário**
   (`system_config.daily_earning_cap_mzn` = 7,20 MZN), aplicado em `walletService.creditReward`
-  sempre que uma missão ou marco de streak credita dinheiro real — isso limita
-  quanto o usuário pode *ganhar* por dia, não quanto pode *sacar* de uma vez.
+  **só às missões** (prémios de streak em dinheiro, conversão de Pontos e bónus de
+  boas-vindas ficam fora do teto) — isso limita quanto o usuário pode *ganhar*
+  com missões por dia, não quanto pode *sacar* de uma vez.
 - O saque fica em status `pending_review` — **o processamento real via M-Pesa/e-Mola
   (gateway de pagamento) ainda não está implementado** (Seção 16.3: "o processamento do
   pagamento não é imediato; passa por auditoria antes de ser liberado via integração de
@@ -124,10 +125,9 @@ como valor vigente (configurável, não fixo no código):
      racional do saque — Manual Parte 7).
   4. Múltiplo exato da taxa vigente (mesma lógica do exemplo: só blocos "fechados",
      nunca uma fração esquisita de Pontos).
-  5. **Conta para o mesmo teto de GANHO diário do saque** (`daily_earning_cap_mzn`,
-     7,20 MZN) — decisão explícita para fechar a pergunta em aberto da Seção 6.2
-     ("existe limite diário de conversão?"): sem isso, o teto de ganho vira
-     decorativo, bastando acumular Pontos e converter tudo de uma vez.
+  5. **Não conta para o teto de GANHO diário** (`daily_earning_cap_mzn`, 7,20 MZN):
+     decisão do dono do projeto — o teto vale só para as missões. O volume de
+     Pontos já é limitado pelo teto diário de Pontos.
 - Debita `points_ledger` (source `points_conversion`) e credita `wallet_transactions`
   (source `points_conversion`) na mesma transação — mesmo padrão de
   `walletService.requestWithdrawal`/`shopService.purchase`.

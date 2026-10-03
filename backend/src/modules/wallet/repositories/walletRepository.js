@@ -125,16 +125,14 @@ async function getTransactionHistory(userId, { limit = 20, offset = 0 } = {}, ex
 }
 
 /**
- * Soma quanto o usuário já GANHOU em dinheiro real hoje (missões + streak +
- * conversão de Pontos), para aplicar o teto de ganho diário (não confundir
- * com teto de saque — saque não tem teto diário, só valor mínimo de 100
- * MZN). Refunds/estornos não contam como ganho, por isso são excluídos
- * explicitamente.
+ * Soma quanto o usuário já GANHOU hoje em MISSÕES, para aplicar o teto de ganho
+ * diário de 7,20 MZN (não confundir com teto de saque — saque não tem teto
+ * diário, só valor mínimo de 100 MZN).
  *
- * `points_conversion` entrou aqui na migration 028: converter Pontos em MZN
- * também é "ganhar dinheiro real", então precisa respeitar o mesmo teto —
- * senão o teto vira decorativo (o usuário só precisaria acumular Pontos e
- * converter tudo de uma vez para contornar o limite diário).
+ * Regra do dono do projeto: o teto vale SÓ para as missões (o utilizador só
+ * chega a 7,20 se completar as 6; o valor não é garantido). Ficam FORA do teto:
+ * prémios de streak em dinheiro, conversão de Pontos em MZN e o bónus de
+ * boas-vindas. Por isso só `source = 'mission_reward'` é somado aqui.
  */
 async function sumEarningsToday(userId, executor = db) {
   const { rows } = await executor.query(
@@ -143,7 +141,7 @@ async function sumEarningsToday(userId, executor = db) {
      WHERE user_id = $1
        AND type = 'credit'
        AND ${dateInPlatformTz('created_at')} = ${dateInPlatformTz('now()')}
-       AND (source = 'mission_reward' OR source = 'points_conversion' OR source LIKE 'streak_milestone_%')`,
+       AND source = 'mission_reward'`,
     [userId]
   );
   return Number(rows[0].total);

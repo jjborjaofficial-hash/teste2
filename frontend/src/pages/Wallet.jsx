@@ -6,11 +6,12 @@ import { PrimaryButton, SecondaryButton } from '../components/Button';
 import { useToast } from '../components/Toast';
 import { ApiError } from '../api/client';
 import { DisplayAds } from '../ads';
+import { transactionInfo } from '../lib/walletLabels';
 
 // Regras confirmadas pelo proprietário do projeto (documentadas em
 // docs/fluxo-saque-manual-permissoes-admin-ui.md e no backend, system_config):
 // - Saque mínimo: 100 MZN acumulado (sem depósito — só o que já foi ganho).
-// - Teto de GANHO diário: 7,20 MZN (não é teto de saque).
+// - Teto de GANHO diário: 7,20 MZN, só das missões (não é teto de saque).
 // - Não existe teto diário de SAQUE — pode sacar quando quiser, qualquer valor
 //   acima do mínimo, respeitado o saldo disponível.
 export const WITHDRAWAL_MIN_MZN = 100;
@@ -130,7 +131,7 @@ export function Wallet() {
         {conversionRate && (
           <p className="text-caption text-text-secondary mb-3">
             Taxa atual: {conversionRate.ratePoints} Pontos = {conversionRate.rateMzn.toFixed(2)} MZN.
-            A conversão entra no seu teto de ganho diário, igual a missões e streak.
+            A conversão não entra no teto diário de 7,20 MZN das missões.
           </p>
         )}
 
@@ -215,7 +216,7 @@ export function Wallet() {
           {history.map((t) => (
             <Card key={t.id} className="flex items-center justify-between !py-3">
               <div>
-                <p className="text-body text-text capitalize">{t.source.replace(/_/g, ' ')}</p>
+                <p className="text-body text-text">{transactionInfo(t.source).label}</p>
                 <p className="text-caption text-text-secondary">
                   {new Date(t.createdAt).toLocaleDateString('pt-MZ')}
                 </p>

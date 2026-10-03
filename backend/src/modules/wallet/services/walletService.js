@@ -12,8 +12,9 @@ const { BusinessRuleError, ForbiddenError, NotFoundError } = require('../../../c
  * REGRAS ECONÔMICAS CONFIRMADAS PELO PROPRIETÁRIO DO PROJETO:
  * - O usuário NUNCA deposita ou transfere dinheiro para a plataforma.
  * - A plataforma NUNCA cobra valor monetário de ninguém.
- * - O usuário só pode GANHAR até `daily_earning_cap_mzn` (7,20 MZN) em dinheiro
- *   real por dia, via missões/streak — isso é um teto de GANHO, não de saque.
+ * - O usuário só pode GANHAR até `daily_earning_cap_mzn` (7,20 MZN) por dia com as
+ *   MISSÕES (valor não garantido) — isso é um teto de GANHO, não de saque. Streak em
+ *   dinheiro, conversão de Pontos e boas-vindas ficam fora do teto.
  * - O SAQUE não tem teto diário: o usuário pode solicitar a qualquer momento,
  *   qualquer valor, desde que tenha o mínimo de `withdrawal_min_mzn` (100 MZN)
  *   acumulado. Não existe "esperar até amanhã para sacar mais".
@@ -39,21 +40,23 @@ async function getHistory(userId, pagination) {
 }
 
 /**
- * Credita uma recompensa (missão ou marco de streak) na carteira do usuário.
- * Aplica automaticamente o teto de GANHO diário: se o valor solicitado exceder
- * o quanto ainda resta hoje, o crédito é reduzido para caber no teto (nunca
- * excede). Se o teto já foi atingido, nada é creditado.
+ * Credita uma recompensa na carteira do usuário.
+ * O teto de GANHO diário (7,20 MZN) vale SÓ para as missões: por padrão, se o
+ * valor solicitado exceder o quanto ainda resta hoje, o crédito é reduzido para
+ * caber no teto (nunca excede); se o teto já foi atingido, nada é creditado.
+ * Prémios fora do teto (marcos de streak em dinheiro, bónus de boas-vindas)
+ * passam `ignoreDailyCap: true` e são creditados por inteiro.
  *
- * Chamado por outros módulos (Missões, Streak), sempre dentro de uma transação
+ * Chamado por outros módulos (Missões, Streak, Boas-vindas), sempre dentro de uma transação
  * existente quando possível — nunca aceita depósito do usuário, só credita
  * recompensas que a própria plataforma decidiu conceder.
  */
 async function creditReward({ userId, amountMzn, source, referenceId, metadata, ignoreDailyCap = false }, executor = db) {
   if (amountMzn <= 0) return null;
 
-  // Promoções únicas (ex.: bónus de boas-vindas) não entram no teto de ganho diário
-  // de missões/streak: creditam o valor inteiro. As fontes delas também NÃO são
-  // somadas em sumEarningsToday, então não consomem o teto de ninguém.
+  // Prémios fora do teto (bónus de boas-vindas, marcos de streak em dinheiro) creditam
+  // o valor inteiro. O teto de 7,20 MZN é só das missões: sumEarningsToday soma apenas
+  // `mission_reward`, então estas fontes não consomem o teto de ninguém.
   if (ignoreDailyCap) {
     const credited = await repository.creditWallet(executor, {
       userId,
@@ -251,8 +254,9 @@ async function getConversionRate() {
  *   respeitar o Trust Score do usuário");
  * - a conversão só é aceita em múltiplos exatos da taxa (mesma lógica do
  *   exemplo: nunca um valor fracionário de Pontos "quebrado");
- * - conta para o mesmo teto de GANHO diário do saque — ver
- *   walletRepository.sumEarningsToday.
+ * - NÃO conta para o teto de ganho diário de 7,20 MZN: esse teto vale só para as
+ *   missões (ver walletRepository.sumEarningsToday). O volume de Pontos já é
+ *   limitado pelo teto diário de Pontos.
  */
 async function convertPointsToMoney({ userId, pointsAmount }) {
   if (!Number.isInteger(pointsAmount) || pointsAmount <= 0) {
@@ -285,24 +289,6 @@ async function convertPointsToMoney({ userId, pointsAmount }) {
   if (accountInfo.trust_score < minTrustScore) {
     throw new ForbiddenError(
       'Sua conta está em análise de segurança. A conversão não pode ser processada no momento.'
-    );
-  }
-
-  const dailyCap = Number(
-    (await configRepository.getConfigValue('daily_earning_cap_mzn')) ?? 7.2
-  );
-  const earnedToday = await repository.sumEarningsToday(userId);
-  const remainingAllowance = Number((dailyCap - earnedToday).toFixed(2));
-
-  if (remainingAllowance <= 0) {
-    throw new BusinessRuleError(
-      `Você já atingiu o teto de ganho diário de ${dailyCap.toFixed(2)} MZN. Tente converter novamente amanhã.`
-    );
-  }
-  if (amountMzn > remainingAllowance) {
-    throw new BusinessRuleError(
-      `Esta conversão geraria ${amountMzn.toFixed(2)} MZN, mas você só pode ganhar mais ` +
-        `${remainingAllowance.toFixed(2)} MZN hoje. Converta uma quantidade menor de Pontos.`
     );
   }
 

@@ -313,11 +313,11 @@ const FAQ_GROUPS = [
       },
       {
         q: 'Então o que é o valor de 7,20 MZN que aparece às vezes?',
-        a: 'É o teto de quanto você pode GANHAR em dinheiro real por dia através de missões e streak — não tem relação com o saque em si.',
+        a: 'É o máximo que você pode GANHAR por dia completando as missões diárias. Não é garantido: depende de quantas missões você completar. Não tem relação com o saque em si.',
       },
       {
         q: 'Como funciona o bónus de boas-vindas dos 7 primeiros dias?',
-        a: 'Durante os 7 primeiros dias da conta há uma recompensa por dia, e o dia 1 vale 2,00 MZN. Cada dia só pode ser coletado no próprio dia: se você faltar, esse dia fica bloqueado e o calendário segue para o dia seguinte. O bónus é pago à parte e não conta no limite de 7,20 MZN por dia de missões e streak.',
+        a: 'Durante os 7 primeiros dias da conta há uma recompensa por dia, e o dia 1 vale 2,00 MZN. Cada dia só pode ser coletado no próprio dia: se você faltar, esse dia fica bloqueado e o calendário segue para o dia seguinte. O bónus é pago à parte e não conta no limite de 7,20 MZN por dia das missões.',
       },
       {
         q: 'Por que meu saque está demorando?',

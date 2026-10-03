@@ -1,25 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Card } from './Card';
 import { walletApi } from '../api/gameplayApi';
+import { transactionInfo, isEarningSource } from '../lib/walletLabels';
 
 const PAGE_SIZE = 10;
 
 function mzn(v) {
   return `${Number(v).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MZN`;
-}
-
-/**
- * Converte a origem do crédito (`wallet_transactions.source`) no rótulo que o
- * utilizador vê. Devolve `null` para o que NÃO é ganho de missão, boas-vindas,
- * streak ou conversão de pontos (saques, compras na loja...), que fica de fora.
- */
-function earningLabel(source) {
-  if (source === 'mission_reward') return { label: 'Missão diária', kind: 'Missões' };
-  if (source === 'welcome_reward') return { label: 'Bónus de boas-vindas', kind: 'Boas-vindas' };
-  if (source === 'points_conversion') return { label: 'Conversão de pontos', kind: 'Pontos' };
-  const streak = /^streak_milestone_(\d+)$/.exec(source || '');
-  if (streak) return { label: `Streak de ${streak[1]} dias`, kind: 'Streak' };
-  return null;
 }
 
 /**
@@ -35,9 +22,8 @@ export function EarningsHistory() {
     walletApi.getRecentTransactions()
       .then((res) => {
         const earnings = (res.data || [])
-          .filter((t) => t.type === 'credit')
-          .map((t) => ({ ...t, info: earningLabel(t.source) }))
-          .filter((t) => t.info);
+          .filter((t) => t.type === 'credit' && isEarningSource(t.source))
+          .map((t) => ({ ...t, info: transactionInfo(t.source) }));
         setItems(earnings);
       })
       .catch(() => setItems([]));

@@ -61,8 +61,9 @@ sustentabilidade do ecossistema.
 nunca depositado pelo usuário). Não há teto diário para SOLICITAR saque: o
 usuário pode pedir quando quiser, qualquer valor acima do mínimo.
 6.2. Existe, isso sim, um teto de **quanto o usuário pode GANHAR em dinheiro
-real por dia** (7,20 MZN/dia, via missões e marcos de streak) — não deve ser
-confundido com um teto de saque.
+real por dia com as missões** (até 7,20 MZN/dia, valor não garantido: depende das
+missões completadas) — não deve ser confundido com um teto de saque. Prémios de
+streak em dinheiro, conversão de Pontos e bónus de boas-vindas ficam fora desse teto.
 6.3. **O usuário nunca deposita ou transfere dinheiro para a plataforma, em
 nenhuma circunstância.** A plataforma nunca cobra valor monetário de ninguém.
 Estes valores podem ser ajustados pela plataforma sem aviso prévio.
