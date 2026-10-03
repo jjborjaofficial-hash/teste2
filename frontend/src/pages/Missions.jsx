@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { missionsApi } from '../api/gameplayApi';
 import { Card } from '../components/Card';
 import { PrimaryButton } from '../components/Button';
@@ -50,14 +50,30 @@ function RewardChips({ rewards }) {
   );
 }
 
+/**
+ * Botão de ação das missões EM ANDAMENTO (FE-001). Só apresentação: não muda regra
+ * nem valores. Missão de login é automática (sem botão). Missão de tempo é medida
+ * pelo servidor (heartbeat), então o botão só leva ao Hub de Estudos.
+ */
+function actionFor(mission) {
+  if (mission.activityType === 'login') return null;
+  if (mission.activityType === 'time_active_minutes') return { label: 'Estudar agora' };
+  return { label: mission.progress > 0 ? 'Continuar' : 'Começar missão' };
+}
+
 function MissionCard({ mission, onClaimed }) {
   const { showToast } = useToast();
+  const navigate = useNavigate();
   const [claiming, setClaiming] = useState(false);
 
   const isCompleted = mission.status === 'completed';
   const isClaimed = mission.status === 'reward_claimed';
   const isExpired = mission.status === 'expired';
   const progressPercent = Math.min(100, Math.round((mission.progress / mission.target) * 100));
+  const inProgress = mission.status === 'in_progress';
+  const action = inProgress ? actionFor(mission) : null;
+  const remaining = Math.max(0, mission.target - mission.progress);
+  const unit = UNIT_BY_ACTIVITY[mission.activityType] ?? '';
 
   async function handleClaim() {
     setClaiming(true);
@@ -107,14 +123,24 @@ function MissionCard({ mission, onClaimed }) {
 
       <RewardChips rewards={mission.rewards} />
 
+      {inProgress && remaining > 0 && unit && (
+        <p className="text-caption text-text-secondary mt-2">Faltam {remaining} {unit}</p>
+      )}
+
+      {inProgress && action && (
+        <PrimaryButton onClick={() => navigate('/hub-estudos')} className="w-full mt-3">
+          {action.label}
+        </PrimaryButton>
+      )}
+
       {isCompleted && (
-        <PrimaryButton onClick={handleClaim} loading={claiming} className="w-full mt-3 !py-2 text-caption">
+        <PrimaryButton onClick={handleClaim} loading={claiming} className="w-full mt-3 shadow-md">
           Resgatar recompensa
         </PrimaryButton>
       )}
 
       {isClaimed && (
-        <p className="text-caption text-success font-semibold mt-2">Recompensa já resgatada</p>
+        <p className="text-caption text-success font-semibold mt-2">Concluída · recompensa já resgatada</p>
       )}
 
       {isExpired && (
