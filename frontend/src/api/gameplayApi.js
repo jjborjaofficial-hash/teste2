@@ -9,6 +9,8 @@ export const missionsApi = {
 export const walletApi = {
   getBalance: () => api.get('/wallet'),
   getHistory: () => api.get('/wallet/transactions'),
+  // Últimas 100 transações (máximo aceito pela API); o perfil filtra só os ganhos.
+  getRecentTransactions: () => api.get('/wallet/transactions?limit=100'),
   requestWithdrawal: (data) => api.post('/wallet/withdrawals', data),
   getConversionRate: () => api.get('/wallet/convert-points/rate'),
   convertPoints: (data) => api.post('/wallet/convert-points', data),

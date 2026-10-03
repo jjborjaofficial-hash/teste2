@@ -5,6 +5,7 @@ import { trustScoreApi, gamificationApi } from '../api/profileApi';
 import { referralsApi } from '../api/referralsApi';
 import { Card } from '../components/Card';
 import { WelcomeBonusCard } from '../components/WelcomeBonusCard';
+import { EarningsHistory } from '../components/EarningsHistory';
 import { PrimaryButton, SecondaryButton } from '../components/Button';
 import { useToast } from '../components/Toast';
 import { ApiError } from '../api/client';
@@ -260,6 +261,8 @@ export function Profile() {
         </span>
         <ChevronRightIcon className="w-4 h-4 text-text-secondary" />
       </Link>
+
+      <EarningsHistory />
 
       <ReferralsSection />
 

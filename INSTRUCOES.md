@@ -77,5 +77,4 @@ Quando ele aprovar um, passa a ser uma instrução na área certa.
 
 - Editar nome, foto e provedor de pagamento (M-Pesa / e-Mola) no perfil — precisa de endpoint novo e regras de segurança, porque o provedor define para onde o dinheiro vai.
 - Eliminar a conta do utilizador.
-- Histórico de ganhos no perfil (missões, boas-vindas, streak).
 - Conferir se os valores do calendário de boas-vindas (total 12,00 MZN por utilizador) cabem na receita real do Adcash.
