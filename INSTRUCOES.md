@@ -60,8 +60,11 @@ Se uma tarefa nova não encaixar em nenhuma área, crie um `PENDENTE.md` na past
   próprio dia, dia perdido fica bloqueado. Valores em `system_config` (`welcome_rewards_mzn`).
   Fica fora do teto diário e é independente de missões e streak. **Não misturar** as duas coisas.
 - **Saque mínimo:** 100 MZN. O utilizador nunca deposita, só levanta o que ganhou.
-- **Migrations não correm sozinhas no deploy** (Render): depois de publicar código que traz uma
-  migration nova, rodar `npm run migrate:up` no backend (ver `docs/deploy-render.md`).
+- **Deploys no Render são manuais**: o auto-deploy está ligado, mas na prática nenhum push
+  dispara deploy sozinho (todos os deploys recentes foram manuais). Depois de dar push, é preciso
+  fazer o deploy de `teste2-backend` e `teste2-frontend`.
+- **Migrations rodam sozinhas no deploy do backend**: o comando de início do `teste2-backend` é
+  `npm run migrate:up && npm start`. Não é preciso rodar migrations à mão (ver `docs/deploy-render.md`).
 - Dinheiro creditado passa sempre por `walletService.creditReward` (promoções únicas usam
   `ignoreDailyCap`).
 - Este repositório é **público**: nunca escrever senhas, chaves ou tokens em nenhum ficheiro.
@@ -95,6 +98,6 @@ ordem de prioridade sugerida. Quando ele aprovar um, passa a ser uma instrução
 2. Carteira/Legal: ler o saque mínimo da API (`withdrawal_min_mzn`) em vez de fixar 100 MZN no código.
 3. Cadastro: verificar o telefone por SMS (Twilio já está nas dependências) para evitar contas falsas.
 4. Economia: conferir se o bónus de boas-vindas (12,00 MZN por utilizador) e a conversão de Pontos (até ~50 MZN/dia por utilizador no teto de 5.000 Pontos) cabem na receita real de anúncios (Adcash).
-5. Testes para boas-vindas e carteira; automatizar as migrations no deploy.
+5. Testes para boas-vindas e carteira; fazer o push disparar o deploy sozinho (hoje é manual) e pôr um `healthCheckPath` no backend.
 6. Editar nome, foto e provedor de pagamento (M-Pesa / e-Mola) no perfil — precisa de endpoint novo e regras de segurança, porque o provedor define para onde o dinheiro vai.
 7. Eliminar a conta do utilizador.
