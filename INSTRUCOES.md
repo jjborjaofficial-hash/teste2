@@ -68,7 +68,22 @@ Se uma tarefa nova não encaixar em nenhuma área, crie um `PENDENTE.md` na past
 
 ## Pendente — geral (GER-)
 
-Nenhuma instrução pendente.
+## GER-001 — Confirmar em produção que a sessão não se perde ao atualizar a página (F5)
+- Pedido: o bug mais importante apontado pelo dono e por um amigo testador: depois do login,
+  ao atualizar a página (F5), o app voltava para "Iniciar sessão".
+- Já feito (não repetir): causa = cookie do refresh token com `SameSite=strict` enquanto
+  frontend e backend ficam em subdomínios diferentes de `onrender.com`. Corrigido com
+  `COOKIE_SAMESITE=none` no `render.yaml` (commit `4fc79ad`), nota em `docs/deploy-render.md`,
+  e a variável já foi aplicada no serviço `teste2-backend` do Render (deploy Live).
+- Falta: o dono (e o amigo) confirmarem no ar: sair, entrar de novo (obrigatório, cookie
+  antigo), atualizar a página em várias telas e continuar logado.
+- Se ainda cair no login só no Safari/iPhone: navegadores bloqueiam cookies entre sites mesmo
+  com `none`. Solução definitiva = domínio próprio com frontend e API no mesmo site (ex.:
+  `app.dominio.com` e `api.dominio.com`) e `COOKIE_SAMESITE=lax`/`strict`. Explicar o passo a
+  passo ao dono antes de mexer em DNS ou serviços.
+- Cuidados: nunca escrever tokens neste repositório. Os nomes dos serviços reais no Render são
+  `teste2-backend` e `teste2-frontend` (diferentes dos do `render.yaml`); confira
+  `CORS_ALLOWED_ORIGINS` no painel antes de supor algo.
 
 ## Próximos passos sugeridos (ainda NÃO decididos — não implementar até o dono pedir)
 
