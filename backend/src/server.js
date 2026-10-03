@@ -2,6 +2,7 @@ require('dotenv').config();
 const app = require('./app');
 const logger = require('./common/logger');
 const { pool, verifyConnection } = require('./config/database');
+const { findJwtSecretProblems } = require('./config/validateSecrets');
 
 const PORT = process.env.PORT || 3000;
 
@@ -11,6 +12,15 @@ const PORT = process.env.PORT || 3000;
 // processo de rotação), o processo falha alto e cedo, em vez de aceitar
 // requisições que vão falhar silenciosamente depois.
 async function start() {
+  // Segredos JWT fracos/de exemplo em produção permitem forjar logins: não arranca.
+  const secretProblems = findJwtSecretProblems();
+  if (secretProblems.length > 0) {
+    logger.error(
+      `Segredos JWT inválidos para produção: ${secretProblems.join(' ')} Encerrando processo.`
+    );
+    process.exit(1);
+  }
+
   const connected = await verifyConnection();
   if (!connected) {
     logger.error(

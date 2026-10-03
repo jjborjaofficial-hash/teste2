@@ -80,7 +80,6 @@ Quando ele aprovar um, passa a ser uma instrução na área certa.
 - Conferir se os valores do calendário de boas-vindas (total 12,00 MZN por utilizador) cabem na receita real do Adcash.
 - Carteira: trocar os nomes crus do histórico ("mission reward", "streak milestone 7") por rótulos amigáveis (ex.: "Missão diária", "Streak de 7 dias", "Bónus de boas-vindas", "Conversão de pontos", "Saque").
 - Carteira/Legal: ler o saque mínimo da API (`withdrawal_min_mzn`) em vez de fixar 100 MZN no código.
-- Segurança: o servidor deve recusar arrancar em produção se `JWT_ACCESS_SECRET`/`JWT_REFRESH_SECRET` estiverem vazios ou com o valor de exemplo.
 - Cadastro: verificar o telefone por SMS (Twilio já está nas dependências) para evitar contas falsas.
 - Teto diário: bloquear a linha do utilizador antes de somar os ganhos do dia, para dois pedidos simultâneos não furarem o teto das missões.
 - Testes para boas-vindas e teto diário; automatizar as migrations no deploy.
