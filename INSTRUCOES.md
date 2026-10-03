@@ -70,15 +70,16 @@ Se uma tarefa nova não encaixar em nenhuma área, crie um `PENDENTE.md` na past
 
 Nenhuma instrução pendente.
 
-## Ideias ainda NÃO decididas (não implementar até o dono pedir)
+## Próximos passos sugeridos (ainda NÃO decididos — não implementar até o dono pedir)
 
-Isto não são instruções: são pontos já conversados que o dono ainda não aprovou.
-Quando ele aprovar um, passa a ser uma instrução na área certa.
+Isto não são instruções: são pontos já conversados que o dono ainda não aprovou, na
+ordem de prioridade sugerida. Quando ele aprovar um, passa a ser uma instrução na área certa
+(`BE-`, `FE-`, `ADS-` ou `GER-`) e sai desta lista.
 
-- Editar nome, foto e provedor de pagamento (M-Pesa / e-Mola) no perfil — precisa de endpoint novo e regras de segurança, porque o provedor define para onde o dinheiro vai.
-- Eliminar a conta do utilizador.
-- Conferir se os valores do calendário de boas-vindas (total 12,00 MZN por utilizador) cabem na receita real do Adcash.
-- Carteira/Legal: ler o saque mínimo da API (`withdrawal_min_mzn`) em vez de fixar 100 MZN no código.
-- Cadastro: verificar o telefone por SMS (Twilio já está nas dependências) para evitar contas falsas.
-- Teto diário: bloquear a linha do utilizador antes de somar os ganhos do dia, para dois pedidos simultâneos não furarem o teto das missões.
-- Testes para boas-vindas e teto diário; automatizar as migrations no deploy.
+1. Teto diário das missões: bloquear a linha do utilizador antes de somar os ganhos do dia, para dois pedidos simultâneos não furarem o teto (dinheiro).
+2. Carteira/Legal: ler o saque mínimo da API (`withdrawal_min_mzn`) em vez de fixar 100 MZN no código.
+3. Cadastro: verificar o telefone por SMS (Twilio já está nas dependências) para evitar contas falsas.
+4. Economia: conferir se o bónus de boas-vindas (12,00 MZN por utilizador) e a conversão de Pontos (até ~50 MZN/dia por utilizador no teto de 5.000 Pontos) cabem na receita real de anúncios (Adcash).
+5. Testes para boas-vindas e carteira; automatizar as migrations no deploy.
+6. Editar nome, foto e provedor de pagamento (M-Pesa / e-Mola) no perfil — precisa de endpoint novo e regras de segurança, porque o provedor define para onde o dinheiro vai.
+7. Eliminar a conta do utilizador.
