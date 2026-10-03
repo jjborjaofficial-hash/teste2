@@ -87,8 +87,11 @@ async function registerDailyActivity(executor, userId) {
 
     if (daysSince === 1) {
       newCurrentStreak = streak.current_streak_days + 1;
-    } else if (streak.protection_active) {
-      // Item de proteção (marco de 15 dias) evita a quebra do streak uma vez.
+    } else if (streak.protection_active && daysSince === 2) {
+      // Item de proteção (marco de 15 dias): perdoa exatamente UM dia perdido
+      // (última atividade há 2 dias = faltou só ontem). Mesma regra do CRON e de
+      // reconcileExpiredStreak. Se faltou 2 dias ou mais, o streak quebra e o
+      // item continua guardado (não foi usado).
       newCurrentStreak = streak.current_streak_days + 1;
       protectionConsumed = true;
     } else {

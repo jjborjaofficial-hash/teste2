@@ -34,7 +34,8 @@ async function run() {
   // streak "vivo" (current_streak_days > 0). "Ontem"/"hoje" calculados no
   // fuso oficial da plataforma (Moçambique), não no fuso do servidor.
   const { rows } = await db.query(
-    `SELECT user_id, current_streak_days, protection_active, last_activity_date
+    `SELECT user_id, current_streak_days, protection_active, last_activity_date,
+            (${dateInPlatformTz('now()')} - last_activity_date)::int AS days_since
      FROM streaks
      WHERE current_streak_days > 0
        AND last_activity_date < (${dateInPlatformTz('now()')} - INTERVAL '1 day')::date`
@@ -44,12 +45,12 @@ async function run() {
   let protectedCount = 0;
 
   for (const row of rows) {
-    if (row.protection_active) {
+    if (row.protection_active && row.days_since === 2) {
       // Item de proteção do marco de 15 dias (Doc. Mestre Seção 5): perdoa
-      // exatamente UM dia perdido. Avançamos last_activity_date em um dia
-      // (em vez de para hoje) para preservar a contagem correta caso o
-      // usuário tenha pulado só um único dia; se ele pulou mais de um dia
-      // mesmo com proteção, o streak quebra normalmente no próximo cálculo.
+      // exatamente UM dia perdido (última atividade há 2 dias). Avançamos
+      // last_activity_date em um dia (em vez de para hoje) para preservar a
+      // contagem correta. Se ele pulou 2 dias ou mais, o streak quebra já
+      // aqui e o item de proteção continua guardado, sem ser consumido.
       // eslint-disable-next-line no-await-in-loop
       await db.query(
         `UPDATE streaks

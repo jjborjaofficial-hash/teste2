@@ -296,7 +296,7 @@ const FAQ_GROUPS = [
       },
       {
         q: 'Se eu faltar um dia, perco minha ofensiva?',
-        a: 'Sim, normalmente. Mas ao atingir 15 dias de ofensiva você ganha um item de proteção que evita a quebra uma única vez.',
+        a: 'Sim, normalmente. Mas ao atingir 15 dias de ofensiva você ganha um item de proteção que perdoa um único dia perdido, uma só vez.',
       },
     ],
   },
