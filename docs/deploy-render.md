@@ -102,3 +102,12 @@ em 30 dias.
   **aprenda-e-ganhe-backend**) — precisa ser a URL completa e exata do
   frontend, com `https://`. Se você renomeou o serviço do frontend ou usa
   domínio próprio, o valor padrão do `render.yaml` não vai bater.
+- **Login funciona, mas ao atualizar a página (F5) volta para "Iniciar
+  sessão"**: o cookie do refresh token não está sendo enviado. Confira, na aba
+  Environment do **aprenda-e-ganhe-backend**, se existe `COOKIE_SAMESITE` com o
+  valor `none` (frontend e backend são subdomínios diferentes de onrender.com,
+  então o padrão `strict` bloqueia o cookie). Depois de salvar, o Render
+  reinicia o backend; faça login de novo para receber o cookie novo.
+  Nota: alguns navegadores de celular (Safari/iPhone) bloqueiam cookies entre
+  sites mesmo com `none`; a solução definitiva é usar um domínio próprio, com
+  frontend e API no mesmo site (ex.: `app.seudominio.com` e `api.seudominio.com`).

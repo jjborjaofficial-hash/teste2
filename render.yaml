@@ -77,6 +77,14 @@ services:
       # no painel (Environment) — sem isso, o frontend é bloqueado por CORS.
       - key: CORS_ALLOWED_ORIGINS
         value: https://aprenda-e-ganhe-frontend.onrender.com
+      # Frontend e backend ficam em subdomínios diferentes de onrender.com, que o
+      # navegador trata como sites distintos. Com o padrão 'strict' o cookie do
+      # refresh token não é enviado e, ao atualizar a página (F5), a sessão se
+      # perde e o usuário volta ao login. 'none' resolve (o cookie continua
+      # httpOnly e Secure). Se um dia usarem domínio próprio com frontend e API
+      # no mesmo site, pode voltar para 'strict'.
+      - key: COOKIE_SAMESITE
+        value: none
 
   # --- Worker da fila (BullMQ): agenda e executa os CRON Jobs (missões diárias/
   # semanais, ranking, expiração de itens, saques, relatório diário etc.) ---
