@@ -55,7 +55,7 @@ Se uma tarefa nova não encaixar em nenhuma área, crie um `PENDENTE.md` na past
 - **Missões diárias:** 6 por dia, 1,20 MZN cada (login, 12 minutos ativos e 4 desafios de quiz).
   O tempo ativo é medido só pelo servidor (heartbeat); o cliente nunca envia tempo.
 - **Quiz:** 30 segundos por pergunta, barra fina horizontal.
-- **Streak:** quebra de verdade quando o utilizador falta um dia. O item de proteção (marco de 15 dias) perdoa **um único dia perdido, uma só vez**; faltando 2 dias ou mais, o streak quebra e o item continua guardado.
+- **Streak:** quebra de verdade quando o utilizador falta um dia. O item de proteção (marco de 15 dias) perdoa **um único dia perdido, uma só vez**; faltando 2 dias ou mais, o streak quebra e o item continua guardado. Os prémios de streak são um mecanismo de **retenção**: pagam **sempre** que o marco (7, 15, 30, 60, 100 dias) é atingido de novo, sem limite de uma vez por utilizador.
 - **Bónus de boas-vindas:** calendário de 7 dias, dia 1 = 2,00 MZN, cada dia só é coletado no
   próprio dia, dia perdido fica bloqueado. Valores em `system_config` (`welcome_rewards_mzn`).
   Fica fora do teto diário e é independente de missões e streak. **Não misturar** as duas coisas.
