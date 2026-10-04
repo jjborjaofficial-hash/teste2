@@ -7,6 +7,12 @@ const { z } = require('zod');
 const submitAnswerSchema = z.object({
   questionId: z.string().uuid('ID de pergunta inválido'),
   alternativeId: z.string().uuid('ID de alternativa inválido'),
+  // Quiz v2: quando a resposta pertence a uma rodada, o servidor valida que é a pergunta atual.
+  roundId: z.string().uuid('ID de rodada inválido').optional(),
 });
 
-module.exports = { submitAnswerSchema };
+const startRoundSchema = z.object({
+  categoryId: z.string().uuid('ID de categoria inválido'),
+});
+
+module.exports = { submitAnswerSchema, startRoundSchema };
