@@ -11,8 +11,7 @@ Estado do trabalho e lista de pedaços pequenos: [`PROGRESSO_QUIZ.md`](./PROGRES
 Como preparar o ambiente, testar e subir cada pedaço: [`FLUXO_DE_TRABALHO.md`](./FLUXO_DE_TRABALHO.md).
 **Leia os três ficheiros antes de editar.**
 
-> Nota: o 3.º briefing recebido terminou no "TESTE 9" (cortado). Se existia mais texto
-> (testes 9 e 10 e o fecho), pedir ao proprietário para reenviar.
+> O 3.º briefing foi recebido completo (testes 1 a 16, regras de Git e 22 critérios finais).
 
 ---
 
@@ -205,23 +204,59 @@ ESCOLHER 1 pedaço pequeno -> IMPLEMENTAR -> TESTAR -> COMMIT -> PUSH -> REGISTA
 - Não commitar ficheiros gerados (ex.: dumps do Redis, `dist`, `.env`).
 - Commits claros, por exemplo `feat(quiz): ...`, `test(quiz): ...`, `docs(quiz): ...`.
 
-Relatório curto após cada push: IMPLEMENTADO, TESTADO, COMMIT, PUSH, PRÓXIMO PEDAÇO.
+Antes de cada push: `git status`, confirmar a branch certa, rever `git diff`, correr os
+testes, procurar erros, confirmar que não há alterações acidentais e **nenhum segredo**.
+NUNCA enviar passwords, API keys, tokens, credenciais, `.env` reais ou informação privada.
 
-## 18. Testes obrigatórios
+Commits claros e descritivos (`feat(quiz): improve learning feedback`,
+`feat(quiz): implement ten-question rounds`, `feat(quiz): add round summary`,
+`feat(quiz): improve answer validation`, `feat(quiz): integrate mission navigation`,
+`fix(quiz): prevent answer pattern leakage`). Nunca "update", "changes", "fix", "stuff".
 
-1. Entrar numa categoria inicia rodada de 10 perguntas.
+A regra dos 5 é de **desenvolvimento/Git**, não tem nada a ver com 5 perguntas do quiz.
+Funcionalidade ou etapa estrutural importante concluída antes de 5 alterações: testar,
+commit e push na mesma. Não acumular código instável para chegar a 5.
+
+Relatório depois de cada commit/push:
+
+```
+CHECKPOINT: <quantidade de alterações>
+IMPLEMENTADO: ...   TESTADO: ...   COMMIT: <hash e mensagem>   PUSH: sucesso/erro
+PRÓXIMO BLOCO: ...
+```
+
+Relatório final (quando tudo estiver concluído): arquivos modificados, funcionalidades
+implementadas, fluxo final do quiz, testes executados, problemas encontrados e corrigidos,
+commits realizados, push para o GitHub.
+
+## 18. Testes obrigatórios (16)
+
+1. Entrar numa categoria inicia uma rodada de 10 perguntas.
 2. Acertar: feedback correto + complemento/aprendizagem.
 3. Errar: correção + explicação + aprendizagem.
 4. Chegar à 5.ª: continua normalmente, sem resumo.
-5. Responder a 10.ª: feedback, rodada concluída, resumo.
-6. Resumo com exatamente os dados daquela rodada.
-7. Botão "Painel inicial" abre o Dashboard.
-8. Botão "Escolher novamente uma categoria" abre a seleção de categorias.
-9. Botão "Ver missões em andamento" abre as missões (com progresso atualizado).
-10. Validador: correta muito maior, posição previsível, alternativas duplicadas.
-11. Recarregar a página a meio recupera o estado.
+5. Responder a 10.ª: feedback da pergunta, rodada concluída, resumo.
+6. O resumo traz exatamente os dados daquela rodada.
+7. "Painel inicial" abre o Dashboard.
+8. "Escolher novamente uma categoria" abre a seleção de categorias.
+9. "Ver missões em andamento" abre as Missões com o progresso atualizado; não cria missão
+   nem inicia rodada.
+10. Depois do resumo, escolher categoria abre a seleção; só depois da escolha começa a nova
+    rodada, com 10 novas perguntas selecionadas/recomendadas.
+11. Correta muito MAIOR que as outras: o validador sinaliza viés e marca para revisão/rejeição;
+    nada enviesado é publicado automaticamente.
+12. Correta muito MENOR: o validador analisa o desequilíbrio e marca para revisão quando o
+    padrão é evidente.
+13. Alternativas duplicadas ou quase iguais: rejeitada ou enviada para revisão.
+14. Várias perguntas seguidas: posição da correta bem distribuída, sem padrão; o backend
+    continua a ser a fonte de verdade.
+15. Recarregar a meio da rodada: estado recuperado, sem duplicar respostas, progresso e
+    contador corretos.
+16. Rodada que contribui para uma missão: progresso atualizado sem duplicar recompensa nem
+    progresso; "Ver missões em andamento" mostra o novo progresso.
 
 Dizer claramente quando um teste não puder correr no ambiente. Nunca afirmar que passou sem ter corrido.
+A matriz de estado destes testes está em `PROGRESSO_QUIZ.md`.
 
 ## 19. Token do GitHub (segurança)
 
@@ -230,9 +265,29 @@ um fine-grained token de 7 dias, só para este repositório, com **Contents: Rea
 e apaga-o depois. O token nunca é gravado em ficheiros, `.git/config`, memória ou repositório;
 usa-se só por comando (header HTTP temporário).
 
-## 20. Critérios de conclusão
+## 20. Critérios finais de conclusão (22)
 
-Concluído quando: erros ensinam e acertos complementam; contador 1/10 a 10/10 sem resumo aos
-5; resumo só depois da 10.ª com os 3 botões corretos; cada rodada independente e registada;
-missões atualizadas; alternativas sem pistas; validador ativo; testes a passar; tudo no
-GitHub; relatório final apresentado.
+Não basta compilar. Só está concluído quando:
+
+1. Cada rodada tem 10 perguntas.
+2. As 10 perguntas são selecionadas/recomendadas pelo sistema.
+3. Cada resposta gera feedback.
+4. Um erro gera explicação e aprendizagem.
+5. Um acerto gera confirmação e complemento.
+6. O contador funciona de 1/10 a 10/10.
+7. Não existe resumo depois de 5 perguntas.
+8. O resumo só aparece depois da 10.ª pergunta.
+9. O resumo representa exclusivamente aquela rodada.
+10. Existem os três botões: Painel inicial; Escolher novamente uma categoria; Ver missões em andamento.
+11. Nenhum desses botões inicia automaticamente uma nova rodada.
+12. Uma nova rodada só começa depois de o utilizador escolher uma categoria.
+13. Respostas e progresso são registados corretamente.
+14. As missões recebem o progresso correto.
+15. As alternativas não denunciam a correta pelo tamanho ou estilo.
+16. A posição da correta não segue padrões previsíveis.
+17. Perguntas de baixa qualidade são rejeitadas ou enviadas para revisão.
+18. O estado da rodada é preservado.
+19. Os testes passam.
+20. As alterações estão registadas no Git.
+21. As alterações estão no GitHub.
+22. O relatório final foi apresentado.

@@ -29,13 +29,13 @@ Marcar `[x]` ao concluir e enviar. Pegar sempre o primeiro `[ ]`.
 - [ ] P7. Histórico da rodada: tempo total, XP e recompensas guardados na rodada.
 
 **Missões**
-- [ ] P8. Analisar a integração atual do quiz com missões e testar que a rodada concluída atualiza `/missoes`.
+- [ ] P8. Analisar a integração atual do quiz com missões; testar que a rodada concluída atualiza `/missoes` sem duplicar progresso nem recompensa (teste 16).
 
 **Validador de perguntas (16 controlos)**
 - [ ] P9. Módulo validador: contagem, uma só correta, duplicadas e quase iguais (controlos 1 a 5) + testes.
-- [ ] P10. Validador de tamanho (caracteres e palavras) (controlo 6) + teste da correta muito maior.
+- [ ] P10. Validador de tamanho (caracteres e palavras) (controlo 6): correta muito MAIOR (teste 11) e muito MENOR (teste 12).
 - [ ] P11. Validador de estrutura e pistas (controlos 7 a 9, 11, 12): pontuação, termos técnicos, absolutos, explicação embutida.
-- [ ] P12. Validador de posição (controlo 10), explicação presente e coerente (13, 14), categoria e dificuldade (15, 16).
+- [ ] P12. Validador de posição (controlo 10; teste 14 com várias perguntas seguidas), explicação presente e coerente (13, 14), categoria e dificuldade (15, 16).
 - [ ] P13. Script de auditoria do banco com relatório de viés por categoria e dificuldade.
 - [ ] P14. Gancho do validador nos pontos de entrada de novas perguntas (importação/admin, se existirem).
 
@@ -47,6 +47,30 @@ Marcar `[x]` ao concluir e enviar. Pegar sempre o primeiro `[ ]`.
 - [ ] P17. Acessibilidade: `prefers-reduced-motion` e navegação por teclado nas alternativas.
 - [ ] P18. Teste manual no navegador e relatório final.
 
+## Matriz dos 16 testes obrigatórios (estado real)
+
+Legenda: OK = testado e a passar; PARCIAL = parte feita; PENDENTE = por fazer.
+"Não visto no navegador" = o frontend só foi compilado (sem executor de testes), ver P18.
+
+| # | Teste | Estado |
+|---|---|---|
+| 1 | Entrar na categoria inicia rodada de 10 | PARCIAL: a rodada abre (integração OK), mas as 10 perguntas ainda não são selecionadas de uma vez (P4 a P6) |
+| 2 | Acerto: confirmação + complemento | OK (unitário); explicações ainda vazias no banco (P15) |
+| 3 | Erro: correção + explicação + aprendizagem | OK (unitário); idem |
+| 4 | Na 5.ª continua, sem resumo | OK (integração: checkpoint só na 5.ª, sem resumo); não visto no navegador |
+| 5 | 10.ª: feedback, conclusão, resumo | OK (integração); não visto no navegador |
+| 6 | Resumo só daquela rodada | OK (integração: 80% em 10) |
+| 7 | Painel inicial | PARCIAL: botão feito (P1), não visto no navegador |
+| 8 | Escolher novamente uma categoria | PARCIAL: botão feito (P1), não visto no navegador |
+| 9 | Ver missões em andamento | PARCIAL: botão feito (P1); progresso atualizado por testar (P8) |
+| 10 | Nova categoria -> nova rodada, 10 novas perguntas | PARCIAL: nova rodada abre ao entrar (OK); seleção das 10 pendente (P5) |
+| 11 | Correta muito maior detetada | PENDENTE (P10) |
+| 12 | Correta muito menor detetada | PENDENTE (P10) |
+| 13 | Alternativas duplicadas rejeitadas | PENDENTE (P9) |
+| 14 | Posição da correta sem padrão | PENDENTE: distribuição atual ~25% por posição; falta teste automático (P12) |
+| 15 | Recarregar a meio da rodada | OK (integração); não visto no navegador |
+| 16 | Rodada atualiza missão sem duplicar | PENDENTE (P8) |
+
 ## Decisões e pontos em aberto
 
 - **Resolvido:** cada rodada é independente; sem quiz completo e sem resumo final (briefing 3).
@@ -54,7 +78,7 @@ Marcar `[x]` ao concluir e enviar. Pegar sempre o primeiro `[ ]`.
   com o proprietário, por afetar a monetização.
 - **Risco conhecido:** errar de propósito revela a resposta correta de uma pergunta que pode
   voltar a sair. É inerente a um feedback que ensina; evitar repetições reduz o efeito (P5).
-- **Briefing 3 cortado** no "TESTE 9": confirmar se havia mais texto.
+- O briefing 3 foi recebido completo (16 testes e 22 critérios); ver a matriz abaixo.
 
 ---
 
