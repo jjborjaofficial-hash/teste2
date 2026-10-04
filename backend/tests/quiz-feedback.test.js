@@ -62,6 +62,8 @@ function buildQuestion(overrides = {}) {
     xp_reward: 10,
     difficulty: 'easy',
     explanation: 'Amortizar é reduzir a dívida aos poucos, com pagamentos.',
+    learn_point: 'Amortizar diminui o saldo devedor.',
+    memory_tip: 'Amortizar lembra "morto": a dívida vai morrendo.',
     alternatives: [
       { id: 'alt-a', label: 'Aumento do valor devido', is_correct: false },
       { id: 'alt-b', label: 'Redução gradual da dívida', is_correct: true },
@@ -113,6 +115,23 @@ describe('quizService.submitAnswer: feedback pedagógico', () => {
     expect(res.isCorrect).toBe(false);
     expect(res.correctAlternative).toBeNull();
     expect(res.explanation).toBeNull();
+  });
+
+  it('devolve "Aprenda" e "Dica" quando existem; vazios viram null', async () => {
+    let res = await quizService.submitAnswer({ userId: 'u1', questionId: 'q1', alternativeId: 'alt-a' });
+    expect(res.learnPoint).toMatch(/saldo devedor/);
+    expect(res.memoryTip).toMatch(/morrendo/);
+    repository.getQuestionWithCorrectAlternative.mockResolvedValue(buildQuestion({ learn_point: '  ', memory_tip: null }));
+    res = await quizService.submitAnswer({ userId: 'u1', questionId: 'q1', alternativeId: 'alt-a' });
+    expect(res.learnPoint).toBeNull();
+    expect(res.memoryTip).toBeNull();
+  });
+
+  it('anti-colheita também esconde "Aprenda" e "Dica"', async () => {
+    timer.consumeElapsedMs.mockResolvedValue(null);
+    const res = await quizService.submitAnswer({ userId: 'u1', questionId: 'q1', alternativeId: 'alt-a' });
+    expect(res.learnPoint).toBeNull();
+    expect(res.memoryTip).toBeNull();
   });
 
   it('pergunta sem explicação: explanation é null (nada é inventado)', async () => {

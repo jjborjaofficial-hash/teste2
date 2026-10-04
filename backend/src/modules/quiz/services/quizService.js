@@ -62,13 +62,17 @@ function buildLearningFeedback(question, chosenAlternative, { questionWasIssued 
     categoryId: question.category_id,
   };
   if (!questionWasIssued) {
-    return { ...base, correctAlternative: null, explanation: null };
+    return { ...base, correctAlternative: null, explanation: null, learnPoint: null, memoryTip: null };
   }
   const correct = question.alternatives.find((a) => a.is_correct);
+  const clean = (text) => (text ? String(text).trim() || null : null);
   return {
     ...base,
     correctAlternative: correct ? { id: correct.id, label: correct.label } : null,
-    explanation: question.explanation ? String(question.explanation).trim() || null : null,
+    explanation: clean(question.explanation),
+    // "Aprenda:" / "O que aprender:" e "Dica:" (opcionais; nada é inventado quando faltam).
+    learnPoint: clean(question.learn_point),
+    memoryTip: clean(question.memory_tip),
   };
 }
 

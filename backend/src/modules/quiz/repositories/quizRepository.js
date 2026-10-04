@@ -53,7 +53,7 @@ async function categoryExists(categoryId, executor = db) {
 
 async function getQuestionWithCorrectAlternative(questionId, executor = db) {
   const { rows } = await executor.query(
-    `SELECT id, category_id, time_limit_seconds, xp_reward, difficulty, explanation FROM questions WHERE id = $1 AND is_active = TRUE`,
+    `SELECT id, category_id, time_limit_seconds, xp_reward, difficulty, explanation, learn_point, memory_tip FROM questions WHERE id = $1 AND is_active = TRUE`,
     [questionId]
   );
   if (!rows[0]) return null;

@@ -8,7 +8,8 @@ briefings do proprietário. **Onde houver conflito, vale o briefing mais recente
 - O resumo da rodada tem **exatamente 3 botões** (secção 8).
 
 Estado do trabalho e lista de pedaços pequenos: [`PROGRESSO_QUIZ.md`](./PROGRESSO_QUIZ.md).
-**Leia os dois ficheiros antes de editar.**
+Como preparar o ambiente, testar e subir cada pedaço: [`FLUXO_DE_TRABALHO.md`](./FLUXO_DE_TRABALHO.md).
+**Leia os três ficheiros antes de editar.**
 
 > Nota: o 3.º briefing recebido terminou no "TESTE 9" (cortado). Se existia mais texto
 > (testes 9 e 10 e o fecho), pedir ao proprietário para reenviar.
