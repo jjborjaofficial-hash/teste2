@@ -8,6 +8,7 @@ const router = Router();
 
 router.get('/categories', authenticate, controller.listCategories);
 router.get('/categories/:categoryId/next-question', authenticate, controller.getNextQuestion);
+router.get('/rounds/:roundId/summary', authenticate, controller.getRoundSummary);
 router.post('/answers', authenticate, validate(submitAnswerSchema), controller.submitAnswer);
 
 module.exports = router;

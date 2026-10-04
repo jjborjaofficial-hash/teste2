@@ -37,4 +37,13 @@ async function submitAnswer(req, res, next) {
   }
 }
 
-module.exports = { listCategories, getNextQuestion, submitAnswer };
+async function getRoundSummary(req, res, next) {
+  try {
+    const summary = await quizService.getRoundSummary({ userId: req.user.id, roundId: req.params.roundId });
+    return res.status(200).json({ status: 'success', message: null, data: summary });
+  } catch (err) {
+    return next(err);
+  }
+}
+
+module.exports = { listCategories, getNextQuestion, submitAnswer, getRoundSummary };

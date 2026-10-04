@@ -23,6 +23,15 @@ const SUSPICIOUSLY_FAST_RESPONSE_MS = 400;
 // migration 029, mas evita que o Quiz pare de dar Pontos por uma linha ausente).
 const DEFAULT_POINTS_BY_DIFFICULTY = { easy: 10, medium: 25, hard: 50 };
 
+// Estrutura definitiva do quiz (docs/quiz-aprendizagem/INSTRUCAO_QUIZ.md, secção 3):
+// a rodada tem EXATAMENTE 10 perguntas; aos 5 há só um checkpoint técnico (progresso
+// gravado e verificado no servidor), sem resumo; o resumo aparece depois da 10.ª.
+const ROUND_SIZE = 10;
+const CHECKPOINT_EVERY = 5;
+// Rodada em andamento sem atividade por este tempo é abandonada; a próxima abre uma nova.
+const ROUND_IDLE_EXPIRY_HOURS = 12;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 /**
  * Pontos por acerto, de acordo com a dificuldade da pergunta (docx
  * "Aprenda-e-Ganhe-Documentao-Oficial", Seção 5.9-B — "Quiz fácil: +10
@@ -67,8 +76,34 @@ async function listCategories() {
   return repository.listActiveCategories();
 }
 
+/** Devolve a rodada em andamento da categoria ou abre uma nova (estado no servidor). */
+async function getOrStartRound(userId, categoryId) {
+  await repository.abandonStaleRounds(db, { userId, categoryId, idleHours: ROUND_IDLE_EXPIRY_HOURS });
+  const existing = await repository.findInProgressRound(db, { userId, categoryId });
+  if (existing) return existing;
+  return repository.createRound(db, { userId, categoryId, targetQuestions: ROUND_SIZE });
+}
+
+function toRoundView(round, progress) {
+  return {
+    id: round.id,
+    target: round.target_questions,
+    answered: progress.answered,
+    correct: progress.correct,
+  };
+}
+
 async function getNextQuestion(categoryId, userId) {
-  const question = await repository.getRandomQuestion(categoryId);
+  // Categoria inválida ou inexistente: 404 em vez de erro 500 do banco.
+  if (!UUID_RE.test(String(categoryId)) || !(await repository.categoryExists(categoryId))) {
+    throw new NotFoundError('Categoria não encontrada.');
+  }
+
+  const round = await getOrStartRound(userId, categoryId);
+  const progress = await repository.getRoundProgress(db, round.id);
+  const answeredIds = await repository.listAnsweredQuestionIds(db, round.id);
+
+  const question = await repository.getRandomQuestion(categoryId, answeredIds);
   if (!question) throw new NotFoundError('Nenhuma pergunta disponível para esta categoria.');
 
   // Antifraude (Seção 19.4): o relógio começa a contar AGORA, no servidor —
@@ -76,7 +111,9 @@ async function getNextQuestion(categoryId, userId) {
   // é só visual; quem decide o tempo real é este timestamp.
   await quizTimerService.markQuestionIssued(userId, question.id, question.time_limit_seconds);
 
-  return question;
+  // O progresso viaja com a pergunta: o contador "Pergunta N de 10" vem do servidor,
+  // então recarregar a página não perde nem reinicia a rodada.
+  return { ...question, round: toRoundView(round, progress) };
 }
 
 /**
@@ -111,6 +148,14 @@ async function submitAnswer({ userId, questionId, alternativeId }) {
   try {
     await client.query('BEGIN');
 
+    // Só associa a tentativa a uma rodada se a pergunta foi realmente entregue a este
+    // utilizador (existe registo do cronómetro). Tentativas diretas na API ficam fora da
+    // rodada e, por isso, fora do resumo (que mostra respostas corretas).
+    // FOR UPDATE serializa duas respostas simultâneas da mesma rodada.
+    const round = elapsedMs !== null
+      ? await repository.findInProgressRound(client, { userId, categoryId: question.category_id, forUpdate: true })
+      : null;
+
     await repository.recordAttempt(client, {
       userId,
       questionId,
@@ -122,7 +167,23 @@ async function submitAnswer({ userId, questionId, alternativeId }) {
       // xpService.addXpAndPoints — o valor efetivamente creditado (líquido) fica
       // em points_ledger.metadata (source = 'quiz_correct_answer').
       pointsAwarded,
+      roundId: round ? round.id : null,
     });
+
+    let roundState = null;
+    if (round) {
+      const progress = await repository.getRoundProgress(client, round.id);
+      const completed = progress.answered >= round.target_questions;
+      const checkpoint = !completed && progress.answered === CHECKPOINT_EVERY;
+      if (completed) {
+        await repository.completeRound(client, round.id);
+      } else if (progress.answered >= CHECKPOINT_EVERY) {
+        await repository.markRoundCheckpoint(client, round.id);
+      } else {
+        await repository.touchRound(client, round.id);
+      }
+      roundState = { ...toRoundView(round, progress), checkpoint, completed };
+    }
 
     let xpResult = null;
     let streakResult = null;
@@ -162,6 +223,7 @@ async function submitAnswer({ userId, questionId, alternativeId }) {
       isCorrect,
       timeExpired,
       ...buildLearningFeedback(question, chosenAlternative, { questionWasIssued: elapsedMs !== null }),
+      round: roundState,
       xpAwarded,
       pointsAwarded: xpResult ? xpResult.pointsCredited : 0,
       newXpTotal: xpResult ? xpResult.xpTotal : undefined,
@@ -184,4 +246,65 @@ async function submitAnswer({ userId, questionId, alternativeId }) {
   }
 }
 
-module.exports = { listCategories, getNextQuestion, submitAnswer, buildLearningFeedback };
+/**
+ * Resumo da rodada (depois da 10.ª pergunta). Os dados vêm das tentativas guardadas no
+ * servidor, não do estado do navegador, então sobrevivem a recarregar a página.
+ */
+async function getRoundSummary({ userId, roundId }) {
+  if (!UUID_RE.test(String(roundId))) throw new NotFoundError('Rodada não encontrada.');
+  const round = await repository.getRoundOfUser(db, { roundId, userId });
+  if (!round) throw new NotFoundError('Rodada não encontrada.');
+  if (round.status !== 'completed') {
+    throw new BusinessRuleError('Esta rodada ainda não foi concluída.');
+  }
+
+  const details = await repository.listRoundAttemptDetails(db, roundId);
+  const answered = details.length;
+  const correct = details.filter((d) => d.is_correct).length;
+
+  const byDifficulty = ['easy', 'medium', 'hard']
+    .map((difficulty) => {
+      const rows = details.filter((d) => d.difficulty === difficulty);
+      return { difficulty, answered: rows.length, correct: rows.filter((d) => d.is_correct).length };
+    })
+    .filter((d) => d.answered > 0);
+
+  // Melhor desempenho / vale a pena rever: a rodada é de uma só categoria e as perguntas
+  // ainda não têm conceitos (tags), então o agrupamento disponível é a dificuldade.
+  const ranked = byDifficulty
+    .map((d) => ({ ...d, rate: d.correct / d.answered }))
+    .sort((a, b) => b.rate - a.rate);
+  const best = ranked.length && ranked[0].rate > 0 ? ranked[0].difficulty : null;
+  const weakest = ranked.length && ranked[ranked.length - 1].rate < 1 ? ranked[ranked.length - 1].difficulty : null;
+
+  // Só mostra a resposta correta de quem a viu na rodada (tentativas ligadas à rodada
+  // exigem pergunta entregue ao utilizador).
+  const toReview = details
+    .filter((d) => !d.is_correct)
+    .map((d) => ({ questionId: d.question_id, statement: d.statement, correctLabel: d.correct_label }));
+
+  await repository.markSummaryShown(db, roundId);
+
+  return {
+    roundId: round.id,
+    categoryId: round.category_id,
+    categoryName: round.category_name,
+    target: round.target_questions,
+    answered,
+    correct,
+    wrong: answered - correct,
+    accuracyPercent: answered ? Math.round((correct / answered) * 100) : 0,
+    xpEarned: details.reduce((sum, d) => sum + d.xp_awarded, 0),
+    pointsEarned: details.reduce((sum, d) => sum + d.points_awarded, 0),
+    averageResponseSeconds: answered
+      ? Math.round(details.reduce((sum, d) => sum + d.response_time_ms, 0) / answered / 100) / 10
+      : 0,
+    byDifficulty,
+    bestDifficulty: best,
+    reviewDifficulty: weakest,
+    toReview,
+    alreadyShown: Boolean(round.summary_shown_at),
+  };
+}
+
+module.exports = { listCategories, getNextQuestion, submitAnswer, buildLearningFeedback, getRoundSummary, ROUND_SIZE, CHECKPOINT_EVERY };

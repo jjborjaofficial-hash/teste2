@@ -17,6 +17,12 @@ jest.mock('../src/modules/quiz/repositories/quizRepository', () => ({
   getQuestionWithCorrectAlternative: jest.fn(),
   recordAttempt: jest.fn().mockResolvedValue({ id: 'a1' }),
   getRandomQuestion: jest.fn(),
+  // Rodadas: estes testes não usam rodada (nenhuma em andamento).
+  findInProgressRound: jest.fn().mockResolvedValue(null),
+  getRoundProgress: jest.fn(),
+  completeRound: jest.fn(),
+  markRoundCheckpoint: jest.fn(),
+  touchRound: jest.fn(),
 }));
 jest.mock('../src/modules/quiz/services/quizTimerService', () => ({
   consumeElapsedMs: jest.fn(),

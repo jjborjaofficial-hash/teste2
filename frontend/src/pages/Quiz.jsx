@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { quizApi } from '../api/quizApi';
 import { ApiError } from '../api/client';
-import { EMPTY_ROUND, QUIZ_ROUND_SIZE, nextRound } from '../lib/quizRound';
+import { QUIZ_ROUND_SIZE } from '../lib/quizRound';
 
 /**
  * Tela de Quiz Ativo (Doc. Mestre Seção 19.4 — "O Coração do Sistema").
@@ -19,8 +19,6 @@ import { EMPTY_ROUND, QUIZ_ROUND_SIZE, nextRound } from '../lib/quizRound';
 export function Quiz() {
   const { categoryId } = useParams();
   const navigate = useNavigate();
-  const location = useLocation();
-  const round = location.state?.round || EMPTY_ROUND;
 
   const [question, setQuestion] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -46,11 +44,8 @@ export function Quiz() {
   }, [categoryId]);
 
   useEffect(() => {
-    if (round.answered >= QUIZ_ROUND_SIZE) {
-      // Rodada já terminada: para jogar de novo é preciso abrir a categoria outra vez.
-      navigate('/hub-estudos', { replace: true });
-      return undefined;
-    }
+    // O progresso da rodada vem do servidor junto com a pergunta (question.round):
+    // recarregar a página retoma a rodada onde ficou.
     loadQuestion();
     return () => clearInterval(timerRef.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -86,13 +81,12 @@ export function Quiz() {
         questionId: question.id,
         alternativeId,
       });
-      // replace: o botão voltar não reabre uma pergunta já respondida (não dá para passar das 10).
+      // replace: o botão voltar não reabre uma pergunta já respondida.
       navigate(`/quiz/${categoryId}/resultado`, {
         replace: true,
         state: {
           result: result.data,
           message: result.message,
-          round: nextRound(round, result.data),
           // Texto da pergunta e das alternativas (o cliente já os tinha): o ecrã de resultado
           // mostra a resposta escolhida e a correta sem pedir nada de novo ao servidor.
           question: {
@@ -156,7 +150,7 @@ export function Quiz() {
 
       <header className="flex items-center justify-between mb-8">
         <span className="text-caption text-text-secondary uppercase tracking-wide">
-          Pergunta {round.answered + 1} de {QUIZ_ROUND_SIZE}
+          Pergunta {(question.round?.answered ?? 0) + 1} de {question.round?.target ?? QUIZ_ROUND_SIZE}
         </span>
         {/* Segundos visíveis a decrescer (a barra fina continua acima). aria-hidden para o
             leitor de ecrã não anunciar a cada segundo; o texto sr-only abaixo cobre isso. */}

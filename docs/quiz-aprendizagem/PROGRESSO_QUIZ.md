@@ -14,9 +14,9 @@ Branch de trabalho: `feat/quiz-aprendizagem`
 | 1 | Analisar o projeto existente | Concluída (checkpoint 0) |
 | 2 | Identificar ficheiros a modificar | Concluída (checkpoint 0) |
 | 3 | Feedback pedagógico (certo/errado) | Concluída no código (checkpoint 1). Falta o conteúdo das explicações (fase 10) |
-| 4 | Checkpoint técnico de 5 perguntas | Pendente |
-| 5 | Rodada de 10 + resumo da rodada | Pendente |
-| 6 | Persistência/recuperação do estado | Pendente |
+| 4 | Checkpoint técnico de 5 perguntas | Concluída (checkpoint 2) |
+| 5 | Rodada de 10 + resumo da rodada | Concluída (checkpoint 2) |
+| 6 | Persistência/recuperação do estado | Concluída (checkpoint 2), testada com banco real |
 | 7 | Resumo final do quiz | Pendente |
 | 8 | Auditar alternativas | Auditoria feita (ver abaixo); correção pendente |
 | 9 | Validador de viés (comprimento/estilo/posição) | Pendente |
@@ -24,20 +24,26 @@ Branch de trabalho: `feat/quiz-aprendizagem`
 | 11 | Testes | Pendente |
 | 12 | Relatório final | Pendente |
 
-## Próximo bloco (checkpoint 2): rodada de 10 persistente + resumo da rodada
+## Próximo bloco (checkpoint 3): validador de alternativas + resumo final
 
-1. Migration: tabela de rodadas (`quiz_rounds`: utilizador, categoria, início, conclusão,
-   resumo mostrado) e coluna opcional `round_id` em `quiz_attempts`.
-2. Backend: iniciar/retomar a rodada atual; `next-question` não repete perguntas já
-   respondidas na rodada; `submitAnswer` associa a tentativa à rodada e devolve o progresso
-   (respondidas, acertos, checkpoint técnico aos 5, rodada concluída aos 10).
-3. Backend: endpoint de resumo da rodada (acertos, erros, %, XP, melhor/pior conceito
-   ou categoria, recomendação de revisão).
-4. Frontend: usar o estado da rodada vindo do servidor (recarregar a página recupera),
-   contador "Pergunta N de 10", sem resumo aos 5.
-5. Frontend: ecrã de resumo da rodada (reutilizando os componentes atuais) + testes.
+1. Módulo validador (`quizQuestionValidator`) com os 12 controlos da secção 7: nº de
+   alternativas, uma só correta, duplicadas/quase iguais, comprimento (caracteres e palavras),
+   estrutura, palavras absolutas, posição da correta. Resultado: aprovada / rever / rejeitada.
+2. Script de auditoria do banco (relatório de viés por categoria/dificuldade) usando o validador.
+3. Testes do validador: caso 7 (correta muito maior), 8 (posição previsível), 9 (duplicadas).
+4. Gancho nos pontos de entrada de novas perguntas (seeds/importação/admin, se existirem).
+5. Resumo final do quiz (depende da decisão em aberto sobre "quiz completo", abaixo).
+
+Depois: fase 10 (conteúdo): reescrever alternativas enviesadas e escrever explicações, por lotes.
 
 ## Decisões em aberto (confirmar com o proprietário)
+
+- **O que é o "quiz completo" e a rodada seguinte?** Hoje cada categoria é um banco de perguntas
+  aleatórias, sem um quiz fechado de 30 perguntas. Implementado: a rodada de 10 termina no
+  resumo, e o utilizador volta ao Hub de Estudos (comportamento que já existia). Abrir a
+  categoria de novo começa uma rodada nova. Para o "resumo final consolidado de todas as
+  rodadas" é preciso definir o que agrupa as rodadas (por exemplo, o dia, uma sessão, ou um
+  quiz de N rodadas). Sem essa definição, o resumo final (checkpoint 3) fica por fazer.
 
 - **Anúncio intersticial:** passou a aparecer ao avançar (depois do feedback), em vez de antes
   do resultado (implementado no checkpoint 1 seguindo a proposta). Confirmar se o proprietário
@@ -126,3 +132,43 @@ digital difícil 97%, tecnologia médio 94%.
   - O repositório não tem configuração do ESLint, por isso não houve lint.
 - **Commit / Push:** ver histórico da branch (commit `feat(quiz): add pedagogical feedback ...`).
 - **Próximo bloco:** checkpoint 2 (ver acima).
+
+### Checkpoint 2: rodada de 10 persistente, checkpoint dos 5 e resumo da rodada
+
+- **Implementado:**
+  1. Migration `107_quiz_rounds.sql`: tabela `quiz_rounds` (estado, `checkpoint_at`,
+     `completed_at`, `summary_shown_at`; uma rodada em andamento por utilizador e categoria) e
+     coluna `quiz_attempts.round_id`. Aditiva; tentativas antigas ficam com `round_id` nulo.
+  2. `quizRepository`: funções da rodada; `getRandomQuestion` exclui as já respondidas na
+     rodada (só repete se o banco da categoria esgotar); `categoryExists`.
+  3. `quizService`: `next-question` abre/retoma a rodada e devolve `question.round`
+     (respondidas, acertos, alvo); `submitAnswer` liga a tentativa à rodada (com `FOR UPDATE`),
+     devolve `round` com `checkpoint` (aos 5, sem resumo) e `completed` (aos 10); rodada parada
+     há mais de 12 h é abandonada; categoria inválida dá 404.
+  4. Novo `GET /api/v1/quiz/rounds/:roundId/summary` (acertos, erros, %, XP, pontos, tempo médio,
+     por dificuldade, lista "para rever" com a resposta correta). Só para rodada concluída e do
+     próprio utilizador. Tentativas feitas sem a pergunta ter sido entregue ficam fora da rodada
+     (não permitem colher respostas pelo resumo).
+  5. Frontend: contador "Pergunta N de 10" vindo do servidor, aviso de progresso guardado aos 5,
+     botão "Ver resumo da rodada" na 10.ª, nova tela `QuizRoundSummary` (sem emojis, componentes
+     existentes). Removido o estado de rodada do navegador.
+- **Testado:**
+  - Novo `quiz-rounds.test.js` (unitário, 13 testes) e `quiz-feedback.test.js` atualizado: passam.
+  - Novo `quiz-rounds.integration.test.js` com **Postgres 16 e Redis reais** (ligado com
+    `RUN_DB_TESTS=1`): rodada de 10 sem repetir perguntas, checkpoint só na 5.ª, conclusão só na
+    10.ª, resumo com 80% (8 de 10), nova rodada depois de concluir, retomar após recarregar,
+    resumo recusado em rodada em andamento e 404 para outro utilizador, e anti-colheita. Passa.
+  - Migration 107 aplicada sobre as 106 anteriores sem erro. Os números da auditoria foram
+    confirmados no banco real (1.659 perguntas, 0 explicações, 1.483 com a correta mais longa).
+  - Suíte completa do backend: 14 de 15 ficheiros passam (83 testes), incluindo
+    `quiz-wallet-ranking`, que antes não terminava sem Redis.
+  - `auth.test.js` tem 3 falhas que **já existem no código original** (falham igual sem estas
+    alterações); não foram investigadas por estarem fora do escopo.
+  - `npm run build` do frontend passa.
+  - **Não feito:** teste manual no navegador (a interface foi compilada, não vista a correr).
+- **Ambiente de teste (para futuras sessões):** `apt-get update && apt-get install -y postgresql
+  redis-server`; criar um banco descartável, aplicar `node src/database/migrate.js up` com um
+  `DATABASE_URL`/`REDIS_URL` locais e correr os testes com `RUN_DB_TESTS=1`. Não pôr
+  credenciais no repositório.
+- **Commit / Push:** ver histórico da branch.
+- **Próximo bloco:** checkpoint 3 (ver acima).

@@ -4,7 +4,6 @@ import { PrimaryButton, SecondaryButton } from '../components/Button';
 import { RewardBadge } from '../components/RewardBadge';
 import { CheckIcon, CloseDrawIcon, FireIcon, XpIcon, WalletIcon, PointsIcon, AchievementIcon } from '../icons';
 import { InterstitialAds } from '../ads';
-import { QUIZ_ROUND_SIZE } from '../lib/quizRound';
 
 /**
  * Tela de Resultados (Doc. Mestre Seção 19.5). "Momento de maior pico de dopamina."
@@ -18,8 +17,10 @@ export function QuizResult() {
   const { categoryId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const { result, message, round, question } = location.state || {};
-  const roundFinished = Boolean(round) && round.answered >= QUIZ_ROUND_SIZE;
+  const { result, message, question } = location.state || {};
+  // Progresso da rodada calculado e guardado pelo servidor (não pelo navegador).
+  const round = result?.round || null;
+  const roundFinished = Boolean(round?.completed);
 
   // Destino pendente: ao tocar num botão, o intersticial aparece e só depois navega.
   const [pendingNav, setPendingNav] = useState(null);
@@ -221,22 +222,11 @@ export function QuizResult() {
         </div>
       )}
 
-      {roundFinished && (
-        <div className="bg-surface border border-border rounded-card p-5 text-center space-y-1">
-          <p className="font-display font-semibold text-text">Rodada concluída!</p>
-          <p className="text-body text-text-secondary">
-            Você acertou {round.correct} de {QUIZ_ROUND_SIZE} perguntas
-            {round.xp > 0 ? ` e ganhou ${round.xp} XP` : ''}.
-          </p>
-          <p className="text-caption text-text-secondary">
-            Para responder de novo, escolha a categoria outra vez em "Escolher categoria".
-          </p>
-        </div>
-      )}
-
-      {!roundFinished && round && (
+      {/* Checkpoint técnico (5.ª pergunta): só confirma que o progresso foi guardado. Sem resumo. */}
+      {round && !roundFinished && (
         <p className="text-caption text-text-secondary text-center">
-          Pergunta {round.answered} de {QUIZ_ROUND_SIZE} respondida
+          {round.checkpoint ? `Progresso guardado: ${round.answered} de ${round.target}. ` : ''}
+          Pergunta {round.answered} de {round.target} respondida
         </p>
       )}
 
@@ -245,12 +235,15 @@ export function QuizResult() {
           Painel
         </SecondaryButton>
         {roundFinished ? (
-          <PrimaryButton onClick={() => goWithAd('/hub-estudos', { replace: true })} className="flex-1">
-            Escolher categoria
+          <PrimaryButton
+            onClick={() => goWithAd(`/quiz/${categoryId}/rodada/${round.id}`, { replace: true })}
+            className="flex-1"
+          >
+            Ver resumo da rodada
           </PrimaryButton>
         ) : (
           <PrimaryButton
-            onClick={() => goWithAd(`/quiz/${categoryId}`, { replace: true, state: { round } })}
+            onClick={() => goWithAd(`/quiz/${categoryId}`, { replace: true })}
             className="flex-1"
           >
             Próxima pergunta

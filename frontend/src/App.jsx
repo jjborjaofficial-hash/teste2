@@ -17,6 +17,7 @@ import { Shop } from './pages/Shop';
 import { MeusRecursos } from './pages/MeusRecursos';
 import { Quiz } from './pages/Quiz';
 import { QuizResult } from './pages/QuizResult';
+import { QuizRoundSummary } from './pages/QuizRoundSummary';
 import { Wallet } from './pages/Wallet';
 import { Profile } from './pages/Profile';
 import { Settings } from './pages/Settings';
@@ -103,6 +104,7 @@ export default function App() {
             >
               <Route path="/quiz/:categoryId" element={<Quiz />} />
               <Route path="/quiz/:categoryId/resultado" element={<QuizResult />} />
+              <Route path="/quiz/:categoryId/rodada/:roundId" element={<QuizRoundSummary />} />
             </Route>
 
             {/* Painel Administrativo — fora do Sitemap da Seção 19 (é uma ferramenta
