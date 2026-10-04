@@ -26,6 +26,12 @@ const logger = require('../../../common/logger');
 
 const NETWORK_GRACE_SECONDS = 10;
 
+// Perguntas de uma rodada podem ser servidas outra vez (recarregar a página). Para recarregar
+// NÃO dar tempo grátis para pesquisar a resposta, nesses casos o registo da emissão original
+// vive este tempo (a duração da rodada em andamento), e o relógio continua a contar desde a
+// primeira entrega. Uma resposta fora do tempo conta como tempo esgotado (erro, 0 XP).
+const REISSUE_WINDOW_SECONDS = 12 * 60 * 60;
+
 function buildKey(userId, questionId) {
   return `quiz:issued:${userId}:${questionId}`;
 }
@@ -33,13 +39,29 @@ function buildKey(userId, questionId) {
 /**
  * Registra o instante exato (server-side) em que a pergunta foi entregue ao
  * usuário. Chamado sempre que getNextQuestion devolve uma pergunta.
+ *
+ * Com `keepExisting: true` (pergunta de uma rodada servida outra vez) mantém a emissão
+ * original e devolve o instante ORIGINAL, para o relógio não reiniciar ao recarregar.
  */
-async function markQuestionIssued(userId, questionId, timeLimitSeconds) {
+async function markQuestionIssued(userId, questionId, timeLimitSeconds, { keepExisting = false } = {}) {
   const key = buildKey(userId, questionId);
   const issuedAtMs = Date.now();
-  const ttlSeconds = Math.max(timeLimitSeconds + NETWORK_GRACE_SECONDS, 5);
+  const ttlSeconds = keepExisting
+    ? timeLimitSeconds + REISSUE_WINDOW_SECONDS
+    : Math.max(timeLimitSeconds + NETWORK_GRACE_SECONDS, 5);
 
   try {
+    if (keepExisting) {
+      // NX: só grava se ainda não existir. Se já existia, o relógio original continua.
+      const created = await redis.set(key, String(issuedAtMs), 'EX', ttlSeconds, 'NX');
+      if (!created) {
+        const original = Number(await redis.get(key));
+        if (original) return original;
+        // Expirou entre o SET e o GET (muito raro): grava uma emissão nova.
+        await redis.set(key, String(issuedAtMs), 'EX', ttlSeconds);
+      }
+      return issuedAtMs;
+    }
     await redis.set(key, String(issuedAtMs), 'EX', ttlSeconds);
   } catch (err) {
     // Se o Redis cair, não travamos a entrega da pergunta (mesmo princípio de
