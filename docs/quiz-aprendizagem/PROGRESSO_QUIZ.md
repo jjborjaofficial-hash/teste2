@@ -24,7 +24,8 @@ Marcar `[x]` ao concluir e enviar. Pegar sempre o primeiro `[ ]`.
 
 **Seleção e persistência da rodada**
 - [x] P4. Migration 109 `quiz_round_questions` (rodada, posição 1..N, pergunta): posição única e a mesma pergunta nunca duas vezes na rodada; índice por pergunta para o histórico recente (P5). Testado no banco real (restrições de posição repetida, pergunta repetida e posição 0). Ainda não é usada pelo serviço (P5 e P6).
-- [ ] P5. Selecionar as 10 perguntas ao iniciar a rodada (variedade de dificuldade; evitar as vistas recentemente pelo utilizador).
+- [x] P5a. Lógica pura de seleção `roundQuestionPicker` (10 únicas, mistura 4 fáceis / 4 médias / 2 difíceis, prefere as não vistas nos últimos 14 dias e depois as vistas há mais tempo, completa com outras dificuldades, ordem do fácil ao difícil). 10 testes unitários passam. Ainda não ligada ao serviço.
+- [ ] P5b. Ligar ao banco: candidatas da categoria com a última vez que o utilizador as viu; ao iniciar a rodada, escolher e gravar em `quiz_round_questions` (com a rodada bloqueada para duas chamadas simultâneas não gerarem conjuntos diferentes); teste de integração (10 posições, mistura, e uma 2.ª rodada sem repetir a 1.ª).
 - [ ] P6. `next-question` serve a pergunta pela posição guardada; testes de recarregar/duplicar resposta.
 - [ ] P7. Histórico da rodada: tempo total, XP e recompensas guardados na rodada.
 
