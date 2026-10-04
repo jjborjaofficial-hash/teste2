@@ -231,9 +231,13 @@ export function QuizResult() {
       )}
 
       <div className="flex gap-3 pt-2">
-        <SecondaryButton onClick={() => goWithAd('/dashboard')} className="flex-1">
-          Painel
-        </SecondaryButton>
+        {/* Na 10.ª pergunta o único caminho é o resumo da rodada (instrução mestre, secção 6):
+            o atalho para o Painel passa a existir dentro do próprio resumo. */}
+        {!roundFinished && (
+          <SecondaryButton onClick={() => goWithAd('/dashboard')} className="flex-1">
+            Painel
+          </SecondaryButton>
+        )}
         {roundFinished ? (
           <PrimaryButton
             onClick={() => goWithAd(`/quiz/${categoryId}/rodada/${round.id}`, { replace: true })}
