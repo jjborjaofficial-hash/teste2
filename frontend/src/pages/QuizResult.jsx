@@ -139,6 +139,22 @@ export function QuizResult() {
               <p className="text-body text-text">{result.explanation}</p>
             </div>
           )}
+
+          {result.learnPoint && (
+            <div>
+              <p className="text-caption text-text-secondary uppercase tracking-wide mb-1">
+                {result.isCorrect ? 'Aprenda:' : 'O que aprender:'}
+              </p>
+              <p className="text-body text-text">{result.learnPoint}</p>
+            </div>
+          )}
+
+          {!result.isCorrect && result.memoryTip && (
+            <div>
+              <p className="text-caption text-text-secondary uppercase tracking-wide mb-1">Dica:</p>
+              <p className="text-body text-text">{result.memoryTip}</p>
+            </div>
+          )}
         </div>
       )}
 

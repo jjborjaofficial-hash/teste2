@@ -20,7 +20,7 @@ Marcar `[x]` ao concluir e enviar. Pegar sempre o primeiro `[ ]`.
 - [x] P1. Resumo da rodada com os 3 botões exatos: Painel inicial (`/dashboard`), Escolher novamente uma categoria (`/hub-estudos`), Ver missões em andamento (`/missoes`). Verificado por build e leitura do código (o frontend não tem executor de testes; falta ver no navegador, P18).
 - [x] P2. Ecrã de resultado da 10.ª pergunta: depois do feedback o único caminho é "Ver resumo da rodada" (sem atalho para o Painel).
 - [x] P3a. Rótulos do feedback com os dados atuais: "Correto!" + "Você identificou a resposta certa." + "Para complementar:" / "Resposta incorreta." + "Resposta correta:" + "Por quê?".
-- [ ] P3b. Campos próprios para "Aprenda:" / "O que aprender:" e "Dica:" (hoje só existe `questions.explanation`): migration com colunas opcionais `learn_point` e `memory_tip`, devolvidas pelo `submitAnswer` e mostradas no resultado. Fazer ANTES do conteúdo (P15) para as explicações já nascerem estruturadas.
+- [x] P3b. Campos próprios `learn_point` ("Aprenda:" / "O que aprender:") e `memory_tip` ("Dica:", só ao errar): migration 108, repositório e serviço (estes três já tinham entrado no commit `a8dd5f8`, junto com a documentação) e agora também o ecrã de resultado. Testes: 23 unitários e 4 com banco real passam; build do frontend passa. As colunas continuam vazias até ao conteúdo (P15).
 
 **Seleção e persistência da rodada**
 - [ ] P4. Migration: guardar as 10 perguntas da rodada e a posição atual (`quiz_round_questions`).
