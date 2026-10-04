@@ -232,6 +232,35 @@ async function countRoundQuestions(executor, roundId) {
   return rows[0].n;
 }
 
+/**
+ * P6b: a próxima pergunta da rodada pela posição guardada = a primeira (menor posição) que
+ * o utilizador ainda não respondeu nesta rodada. Devolve o mesmo formato de
+ * `getRandomQuestion` (sem a alternativa correta), ou null se todas já foram respondidas.
+ */
+async function getNextRoundQuestion(executor, roundId) {
+  const { rows } = await executor.query(
+    `SELECT q.id, q.category_id, q.difficulty, q.statement, q.time_limit_seconds
+     FROM quiz_round_questions rq
+     JOIN questions q ON q.id = rq.question_id
+     WHERE rq.round_id = $1
+       AND NOT EXISTS (
+         SELECT 1 FROM quiz_attempts a
+         WHERE a.round_id = rq.round_id AND a.question_id = rq.question_id
+       )
+     ORDER BY rq.position
+     LIMIT 1`,
+    [roundId]
+  );
+  const question = rows[0];
+  if (!question) return null;
+
+  const altResult = await executor.query(
+    `SELECT id, label FROM question_alternatives WHERE question_id = $1 ORDER BY display_order`,
+    [question.id]
+  );
+  return { ...question, alternatives: altResult.rows };
+}
+
 /** Grava as perguntas escolhidas, com a posição 1..N pela ordem recebida. */
 async function insertRoundQuestions(executor, roundId, questionIds) {
   const positions = questionIds.map((_, i) => i + 1);
@@ -265,4 +294,5 @@ module.exports = {
   getQuestionWithCorrectAlternative,
   recordAttempt,
   countAttemptsToday,
+  getNextRoundQuestion,
 };

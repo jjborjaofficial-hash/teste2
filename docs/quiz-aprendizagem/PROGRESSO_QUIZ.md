@@ -7,14 +7,21 @@ Branch de trabalho: `feat/quiz-aprendizagem`
 
 ---
 
-## Leia primeiro (nota de 2026-10-04)
+## Leia primeiro (nota de 2026-10-04, atualizada)
 
-- **Próximo pedaço a fazer: P6b** (o primeiro `[ ]` da lista abaixo). Só ele, depois commit + push.
-- **Teste obrigatório antes de qualquer código do quiz:** o P6b mexe no cronómetro antifraude
-  (dinheiro). Precisa de `npm install`, Postgres e Redis para correr os testes de verdade.
-  Uma sessão em 2026-10-04 teve `npm install` e `apt-get` **bloqueados (erro 403)**; nesse caso
-  NÃO implemente código do quiz sem poder testar. Faça só documentação e peça uma sessão onde
-  `npm install` funcione (a de 2026-10-03/04 conseguiu).
+- **Próximo pedaço a fazer: P6c** (o primeiro `[ ]` da lista abaixo): o contador regressivo do frontend
+  parte de `time_remaining_seconds`. Só ele, depois commit + push.
+- **Teste obrigatório antes de qualquer código do quiz** (o cronómetro é antifraude, mexe em dinheiro).
+  Para correr os testes de verdade numa sessão onde `npm install` e `apt` funcionem:
+  1. `apt-get update && apt-get install -y postgresql redis-server`; `service postgresql start`;
+     `redis-server --daemonize yes` (use `redis-cli config set dir /tmp` para o Redis não largar `dump.rdb` no repositório).
+  2. Criar um banco **descartável** de teste (ex.: utilizador e banco `aprenda_test`) e correr `npm run migrate:up` no `backend/`
+     com `DATABASE_URL`, `DATABASE_SSL=false`, `REDIS_URL`, `JWT_ACCESS_SECRET` e `JWT_REFRESH_SECRET` (32+ caracteres) definidos.
+  3. `RUN_DB_TESTS=1 npx jest --runInBand --forceExit --testTimeout=30000` (liga também os testes de integração do quiz).
+  4. Entre execuções seguidas, `redis-cli flushall`: o limitador de pedidos guarda contadores no Redis e, sem limpar, o `auth.test.js`
+     e outros passam a receber 429.
+  Em 2026-10-04 (esta sessão) a suíte completa passou: 18 conjuntos, 122 testes. Uma sessão anterior teve `npm install` e `apt-get`
+  **bloqueados (erro 403)**; nesse caso NÃO implemente código do quiz sem poder testar: faça só documentação.
 - Decisões do proprietário em [`INSTRUCAO_QUIZ.md`](./INSTRUCAO_QUIZ.md) ("Decisões do proprietário"):
   intersticial inalterado, reescrita das perguntas em lotes pequenos, e atualizar este
   ficheiro e subir a cada pedaço.
@@ -39,7 +46,7 @@ Marcar `[x]` ao concluir e enviar. Pegar sempre o primeiro `[ ]`.
 - [x] P5a. Lógica pura de seleção `roundQuestionPicker` (10 únicas, mistura 4 fáceis / 4 médias / 2 difíceis, prefere as não vistas nos últimos 14 dias e depois as vistas há mais tempo, completa com outras dificuldades, ordem do fácil ao difícil). 10 testes unitários passam. Ainda não ligada ao serviço.
 - [x] P5b. Seleção ligada ao banco: ao iniciar a rodada, as 10 perguntas são escolhidas (preferindo as que o utilizador não respondeu nos últimos 14 dias) e gravadas em `quiz_round_questions`, com a rodada bloqueada (`FOR UPDATE`); recarregar não troca as perguntas; rodadas antigas já começadas seguem o caminho anterior. Testes: 37 unitários e 9 de integração com banco real (posições 1..10, mistura 4/4/2, do fácil ao difícil, duas chamadas simultâneas, 2.ª rodada sem repetir a 1.ª). Ainda não é a pergunta servida: ver P6.
 - [x] P6a. Cronómetro antifraude: `markQuestionIssued(..., { keepExisting: true })` mantém a emissão ORIGINAL quando a mesma pergunta é servida outra vez (recarregar não dá tempo grátis para pesquisar a resposta; uma resposta fora do tempo conta como esgotada). TTL longo (12 h) só nesse modo; o modo normal fica igual. 5 testes com Redis falso passam. Ainda não é usado (P6b).
-- [ ] P6b. `next-question` serve a pergunta pela posição guardada (a primeira ainda não respondida; se não houver perguntas guardadas, mantém o caminho antigo), com `keepExisting` e devolvendo o tempo RESTANTE; integração: recarregar devolve a mesma pergunta e não duplica respostas.
+- [x] P6b. `next-question` serve a pergunta pela posição guardada (a primeira ainda não respondida; sem perguntas guardadas, mantém o caminho antigo), com `keepExisting` e devolvendo `time_remaining_seconds` (tempo RESTANTE). Testado no banco real (Postgres + Redis): serve na ordem das posições; recarregar devolve a mesma pergunta, mantém o relógio original e não duplica respostas; tempo já esgotado ao recarregar = 0 s e a resposta conta como tempo esgotado; rodada antiga sem perguntas guardadas continua aleatória. O frontend ainda não usa o campo novo (P6c).
 - [ ] P6c. Frontend: contador regressivo parte do tempo restante (se já esgotou, envia a resposta de tempo esgotado como hoje).
 - [ ] P7. Histórico da rodada: tempo total, XP e recompensas guardados na rodada.
 

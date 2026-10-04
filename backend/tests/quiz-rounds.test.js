@@ -19,6 +19,7 @@ jest.mock('../src/modules/quiz/repositories/quizRepository', () => ({
   listRoundCandidates: jest.fn().mockResolvedValue([]),
   insertRoundQuestions: jest.fn(),
   getRandomQuestion: jest.fn(),
+  getNextRoundQuestion: jest.fn(),
   getQuestionWithCorrectAlternative: jest.fn(),
   recordAttempt: jest.fn().mockResolvedValue({ id: 'a1' }),
   markRoundCheckpoint: jest.fn(),
@@ -30,7 +31,7 @@ jest.mock('../src/modules/quiz/repositories/quizRepository', () => ({
 }));
 jest.mock('../src/modules/quiz/services/quizTimerService', () => ({
   consumeElapsedMs: jest.fn().mockResolvedValue(5000),
-  markQuestionIssued: jest.fn(),
+  markQuestionIssued: jest.fn().mockImplementation(async () => Date.now()),
 }));
 jest.mock('../src/modules/gamification/services/xpService', () => ({
   addXpAndPoints: jest.fn().mockResolvedValue({
@@ -76,6 +77,8 @@ describe('getNextQuestion: rodada no servidor', () => {
     repository.categoryExists.mockResolvedValue(true);
     repository.listAnsweredQuestionIds.mockResolvedValue([]);
     repository.getRandomQuestion.mockResolvedValue({ id: 'q9', category_id: CAT, time_limit_seconds: 30, alternatives: [] });
+    repository.getNextRoundQuestion.mockResolvedValue({ id: 'q9', category_id: CAT, time_limit_seconds: 30, alternatives: [] });
+    repository.countRoundQuestions.mockResolvedValue(10);
   });
 
   it('abre uma rodada nova de 10 perguntas quando não há nenhuma em andamento', async () => {
@@ -95,12 +98,35 @@ describe('getNextQuestion: rodada no servidor', () => {
     expect(q.round).toMatchObject({ answered: 6, correct: 4, target: 10 });
   });
 
-  it('não repete perguntas já respondidas na rodada', async () => {
+  it('P6b: com perguntas guardadas, serve a próxima pela posição (e não escolhe ao acaso)', async () => {
+    repository.findInProgressRound.mockResolvedValue({ id: ROUND, target_questions: 10 });
+    repository.getRoundProgress.mockResolvedValue({ answered: 2, correct: 1 });
+    await quizService.getNextQuestion(CAT, 'u1');
+    expect(repository.getNextRoundQuestion).toHaveBeenCalledWith(expect.anything(), ROUND);
+    expect(repository.getRandomQuestion).not.toHaveBeenCalled();
+  });
+
+  it('P6b: pergunta guardada é entregue com keepExisting e traz o tempo restante', async () => {
+    repository.findInProgressRound.mockResolvedValue({ id: ROUND, target_questions: 10 });
+    repository.getRoundProgress.mockResolvedValue({ answered: 2, correct: 1 });
+    // emissão original há 12 s: restam 18 dos 30
+    timer.markQuestionIssued.mockResolvedValue(Date.now() - 12000);
+    const q = await quizService.getNextQuestion(CAT, 'u1');
+    expect(timer.markQuestionIssued).toHaveBeenCalledWith('u1', 'q9', 30, { keepExisting: true });
+    expect(q.time_remaining_seconds).toBeGreaterThanOrEqual(17);
+    expect(q.time_remaining_seconds).toBeLessThanOrEqual(18);
+  });
+
+  it('P6b: rodada sem perguntas guardadas (antiga) não repete as respondidas e não mantém emissão', async () => {
+    repository.countRoundQuestions.mockResolvedValue(0);
     repository.findInProgressRound.mockResolvedValue({ id: ROUND, target_questions: 10 });
     repository.getRoundProgress.mockResolvedValue({ answered: 2, correct: 1 });
     repository.listAnsweredQuestionIds.mockResolvedValue(['q1', 'q2']);
-    await quizService.getNextQuestion(CAT, 'u1');
+    timer.markQuestionIssued.mockResolvedValue(Date.now());
+    const q = await quizService.getNextQuestion(CAT, 'u1');
     expect(repository.getRandomQuestion).toHaveBeenCalledWith(CAT, ['q1', 'q2']);
+    expect(timer.markQuestionIssued).toHaveBeenCalledWith('u1', 'q9', 30, { keepExisting: false });
+    expect(q.time_remaining_seconds).toBe(30);
   });
 
   it('categoria inválida ou inexistente devolve 404 (não erro 500 do banco)', async () => {
@@ -121,11 +147,13 @@ describe('ensureRoundQuestions (via getNextQuestion): perguntas escolhidas ao in
     repository.getRoundProgress.mockResolvedValue({ answered: 0, correct: 0 });
     repository.listAnsweredQuestionIds.mockResolvedValue([]);
     repository.getRandomQuestion.mockResolvedValue({ id: 'q9', category_id: CAT, time_limit_seconds: 30, alternatives: [] });
+    repository.getNextRoundQuestion.mockResolvedValue({ id: 'q9', category_id: CAT, time_limit_seconds: 30, alternatives: [] });
     repository.listRoundCandidates.mockResolvedValue(candidates);
   });
 
   it('rodada nova sem perguntas guardadas: escolhe 10 e grava com a rodada bloqueada', async () => {
-    repository.countRoundQuestions.mockResolvedValue(0);
+    // 1.ª leitura (0) e releitura com a rodada bloqueada (0); depois de gravar, já há 10.
+    repository.countRoundQuestions.mockResolvedValueOnce(0).mockResolvedValueOnce(0).mockResolvedValue(10);
     await quizService.getNextQuestion(CAT, 'u1');
     expect(repository.lockRound).toHaveBeenCalledWith(expect.anything(), ROUND);
     const [, roundId, ids] = repository.insertRoundQuestions.mock.calls[0];

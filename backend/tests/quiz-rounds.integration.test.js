@@ -181,4 +181,69 @@ maybe('quiz: rodadas com banco real', () => {
     const seen = new Set(first.rows.map((r) => r.question_id));
     expect(second.rows.filter((r) => seen.has(r.question_id))).toHaveLength(0);
   });
+
+  // ---- P6b: servir pela posição guardada, recarregar e relógio original ----
+
+  it('P6b: serve as perguntas pela posição guardada, uma de cada vez', async () => {
+    const { rows } = await startFreshRound(); // já serviu (e marcou) a posição 1
+    for (let i = 0; i < 3; i += 1) {
+      const q = await quizService.getNextQuestion(categoryId, userId);
+      expect(q.id).toBe(rows[i].question_id);
+      expect(q.round.answered).toBe(i);
+      await new Promise((r) => setTimeout(r, 450)); // evita o antifraude de resposta rápida
+      await quizService.submitAnswer({ userId, questionId: q.id, alternativeId: await correctAltOf(q.id) });
+    }
+    const next = await quizService.getNextQuestion(categoryId, userId);
+    expect(next.id).toBe(rows[3].question_id);
+  });
+
+  it('P6b: recarregar devolve a MESMA pergunta, mantém o relógio original e não duplica respostas', async () => {
+    const { roundId } = await startFreshRound();
+    const q1 = await quizService.getNextQuestion(categoryId, userId);
+    expect(q1.time_remaining_seconds).toBeGreaterThanOrEqual(q1.time_limit_seconds - 1);
+
+    // simula 20 s já gastos desde a primeira entrega
+    await redis.set(`quiz:issued:${userId}:${q1.id}`, String(Date.now() - 20000), 'EX', 600);
+    const q2 = await quizService.getNextQuestion(categoryId, userId);
+
+    expect(q2.id).toBe(q1.id);
+    // o relógio NÃO reiniciou: só resta o que sobrava (limite - 20 s)
+    expect(q2.time_remaining_seconds).toBeLessThanOrEqual(q1.time_limit_seconds - 20);
+    expect(q2.time_remaining_seconds).toBeGreaterThanOrEqual(q1.time_limit_seconds - 22);
+    const attempts = (await db.query(`SELECT COUNT(*)::int AS n FROM quiz_attempts WHERE round_id = $1`, [roundId])).rows[0].n;
+    expect(attempts).toBe(0);
+  });
+
+  it('P6b: se o tempo já esgotou ao recarregar, restam 0 s e a resposta conta como tempo esgotado', async () => {
+    await startFreshRound();
+    const q1 = await quizService.getNextQuestion(categoryId, userId);
+    await redis.set(`quiz:issued:${userId}:${q1.id}`, String(Date.now() - (q1.time_limit_seconds + 5) * 1000), 'EX', 600);
+
+    const q2 = await quizService.getNextQuestion(categoryId, userId);
+    expect(q2.id).toBe(q1.id);
+    expect(q2.time_remaining_seconds).toBe(0);
+
+    const result = await quizService.submitAnswer({ userId, questionId: q2.id, alternativeId: await correctAltOf(q2.id) });
+    expect(result.timeExpired).toBe(true);
+    expect(result.isCorrect).toBe(false); // recarregar não dá tempo grátis
+  });
+
+  it('P6b: rodada antiga sem perguntas guardadas continua pelo caminho anterior (aleatória)', async () => {
+    await db.query(`UPDATE quiz_rounds SET status = 'abandoned' WHERE user_id = $1 AND status = 'in_progress'`, [userId]);
+    const round = (await db.query(
+      `INSERT INTO quiz_rounds (user_id, category_id, target_questions) VALUES ($1, $2, 10) RETURNING id`, [userId, categoryId]
+    )).rows[0];
+    // uma resposta já dada: rodada começada antes da funcionalidade (não escolhe perguntas)
+    const someQ = (await db.query(`SELECT id FROM questions WHERE category_id = $1 AND is_active LIMIT 1`, [categoryId])).rows[0].id;
+    const alt = (await db.query(`SELECT id FROM question_alternatives WHERE question_id = $1 LIMIT 1`, [someQ])).rows[0].id;
+    await db.query(
+      `INSERT INTO quiz_attempts (user_id, question_id, alternative_id, is_correct, response_time_ms, xp_awarded, points_awarded, round_id)
+       VALUES ($1, $2, $3, FALSE, 5000, 0, 0, $4)`, [userId, someQ, alt, round.id]
+    );
+    const q = await quizService.getNextQuestion(categoryId, userId);
+    expect(q.round.id).toBe(round.id);
+    expect(q.id).not.toBe(someQ);
+    const stored = (await db.query(`SELECT COUNT(*)::int AS n FROM quiz_round_questions WHERE round_id = $1`, [round.id])).rows[0].n;
+    expect(stored).toBe(0);
+  });
 });

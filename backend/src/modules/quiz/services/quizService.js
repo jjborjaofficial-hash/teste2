@@ -134,19 +134,36 @@ async function getNextQuestion(categoryId, userId) {
   const round = await getOrStartRound(userId, categoryId);
   const progress = await repository.getRoundProgress(db, round.id);
   if (progress.answered === 0) await ensureRoundQuestions({ round, userId, categoryId });
-  const answeredIds = await repository.listAnsweredQuestionIds(db, round.id);
-
-  const question = await repository.getRandomQuestion(categoryId, answeredIds);
-  if (!question) throw new NotFoundError('Nenhuma pergunta disponível para esta categoria.');
+  // P6b: se a rodada tem as suas perguntas guardadas, serve a primeira ainda não respondida,
+  // pela posição. Rodadas antigas (sem perguntas guardadas) seguem o caminho anterior.
+  const hasStoredQuestions = (await repository.countRoundQuestions(db, round.id)) > 0;
+  let question;
+  if (hasStoredQuestions) {
+    question = await repository.getNextRoundQuestion(db, round.id);
+    if (!question) throw new NotFoundError('Esta rodada não tem mais perguntas por responder.');
+  } else {
+    const answeredIds = await repository.listAnsweredQuestionIds(db, round.id);
+    question = await repository.getRandomQuestion(categoryId, answeredIds);
+    if (!question) throw new NotFoundError('Nenhuma pergunta disponível para esta categoria.');
+  }
 
   // Antifraude (Seção 19.4): o relógio começa a contar AGORA, no servidor —
   // o frontend continua mostrando a contagem regressiva normalmente, mas ela
   // é só visual; quem decide o tempo real é este timestamp.
-  await quizTimerService.markQuestionIssued(userId, question.id, question.time_limit_seconds);
+  // Com a pergunta guardada na rodada, recarregar a página serve a MESMA pergunta: o relógio
+  // original é mantido (keepExisting) e o frontend recebe só o tempo que ainda resta.
+  const issuedAtMs = await quizTimerService.markQuestionIssued(
+    userId,
+    question.id,
+    question.time_limit_seconds,
+    { keepExisting: hasStoredQuestions }
+  );
+  const elapsedSeconds = Math.max(0, Math.floor((Date.now() - issuedAtMs) / 1000));
+  const remainingSeconds = Math.max(0, question.time_limit_seconds - elapsedSeconds);
 
   // O progresso viaja com a pergunta: o contador "Pergunta N de 10" vem do servidor,
   // então recarregar a página não perde nem reinicia a rodada.
-  return { ...question, round: toRoundView(round, progress) };
+  return { ...question, time_remaining_seconds: remainingSeconds, round: toRoundView(round, progress) };
 }
 
 /**
