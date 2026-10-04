@@ -17,7 +17,7 @@ rodada de 10 persistente com checkpoint dos 5 e resumo da rodada (cp. 2).
 Marcar `[x]` ao concluir e enviar. Pegar sempre o primeiro `[ ]`.
 
 **Resumo e navegação**
-- [ ] P1. Resumo da rodada com os 3 botões exatos: Painel inicial (`/dashboard`), Escolher novamente uma categoria (`/hub-estudos`), Ver missões em andamento (`/missoes`).
+- [x] P1. Resumo da rodada com os 3 botões exatos: Painel inicial (`/dashboard`), Escolher novamente uma categoria (`/hub-estudos`), Ver missões em andamento (`/missoes`). Verificado por build e leitura do código (o frontend não tem executor de testes; falta ver no navegador, P18).
 - [ ] P2. Ecrã de resultado da 10.ª pergunta: depois do feedback levar ao resumo (sem botões extra que fujam das regras).
 - [ ] P3. Rótulos do feedback como no briefing: "Correto!", "Para complementar:", "Aprenda:" / "Resposta incorreta.", "Resposta correta:", "Por quê?", "O que aprender:", "Dica:".
 

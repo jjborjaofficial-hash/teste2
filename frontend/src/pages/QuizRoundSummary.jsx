@@ -125,13 +125,18 @@ export function QuizRoundSummary() {
 
       <p className="text-body text-text-secondary text-center">{motivationalMessage(summary.accuracyPercent)}</p>
 
-      <div className="flex gap-3 pt-2">
-        <SecondaryButton onClick={() => navigate('/dashboard')} className="flex-1">
-          Painel
+      {/* Exatamente 3 caminhos (instrução mestre, secção 8). Nenhum inicia rodada sozinho:
+          uma rodada nova só começa depois de o utilizador escolher uma categoria. */}
+      <div className="flex flex-col gap-3 pt-2">
+        <SecondaryButton onClick={() => navigate('/dashboard')}>
+          Painel inicial
         </SecondaryButton>
-        <PrimaryButton onClick={() => navigate('/hub-estudos', { replace: true })} className="flex-1">
-          Escolher categoria
+        <PrimaryButton onClick={() => navigate('/hub-estudos', { replace: true })}>
+          Escolher novamente uma categoria
         </PrimaryButton>
+        <SecondaryButton onClick={() => navigate('/missoes')}>
+          Ver missões em andamento
+        </SecondaryButton>
       </div>
     </div>
   );
