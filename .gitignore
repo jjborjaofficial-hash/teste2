@@ -28,3 +28,6 @@ Thumbs.db
 
 # Testes / cobertura
 coverage/
+
+# Dump local do Redis (gerado ao correr testes com Redis local)
+dump.rdb
