@@ -200,11 +200,58 @@ async function markSummaryShown(executor, roundId) {
   );
 }
 
+// ---------------------------------------------------------------------------
+// Perguntas da rodada (migration 109)
+// ---------------------------------------------------------------------------
+
+/** Perguntas ativas da categoria, com a última vez que ESTE utilizador as respondeu (qualquer rodada). */
+async function listRoundCandidates(executor, { userId, categoryId }) {
+  const { rows } = await executor.query(
+    `SELECT q.id, q.difficulty, seen.last_seen_at AS "lastSeenAt"
+     FROM questions q
+     LEFT JOIN (
+       SELECT question_id, MAX(created_at) AS last_seen_at
+       FROM quiz_attempts WHERE user_id = $1 GROUP BY question_id
+     ) seen ON seen.question_id = q.id
+     WHERE q.category_id = $2 AND q.is_active = TRUE`,
+    [userId, categoryId]
+  );
+  return rows;
+}
+
+/** Bloqueia a rodada até ao fim da transação (duas chamadas simultâneas não geram dois conjuntos). */
+async function lockRound(executor, roundId) {
+  await executor.query(`SELECT id FROM quiz_rounds WHERE id = $1 FOR UPDATE`, [roundId]);
+}
+
+async function countRoundQuestions(executor, roundId) {
+  const { rows } = await executor.query(
+    `SELECT COUNT(*)::int AS n FROM quiz_round_questions WHERE round_id = $1`,
+    [roundId]
+  );
+  return rows[0].n;
+}
+
+/** Grava as perguntas escolhidas, com a posição 1..N pela ordem recebida. */
+async function insertRoundQuestions(executor, roundId, questionIds) {
+  const positions = questionIds.map((_, i) => i + 1);
+  await executor.query(
+    `INSERT INTO quiz_round_questions (round_id, position, question_id)
+     SELECT $1, t.position, t.question_id
+     FROM unnest($2::int[], $3::uuid[]) AS t(position, question_id)`,
+    [roundId, positions, questionIds]
+  );
+}
+
 module.exports = {
   listActiveCategories,
   categoryExists,
   getRandomQuestion,
   abandonStaleRounds,
+  listRoundCandidates,
+  lockRound,
+  countRoundQuestions,
+  insertRoundQuestions,
   findInProgressRound,
   createRound,
   getRoundProgress,

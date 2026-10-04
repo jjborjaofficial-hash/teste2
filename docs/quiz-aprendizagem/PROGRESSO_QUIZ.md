@@ -25,7 +25,7 @@ Marcar `[x]` ao concluir e enviar. Pegar sempre o primeiro `[ ]`.
 **Seleção e persistência da rodada**
 - [x] P4. Migration 109 `quiz_round_questions` (rodada, posição 1..N, pergunta): posição única e a mesma pergunta nunca duas vezes na rodada; índice por pergunta para o histórico recente (P5). Testado no banco real (restrições de posição repetida, pergunta repetida e posição 0). Ainda não é usada pelo serviço (P5 e P6).
 - [x] P5a. Lógica pura de seleção `roundQuestionPicker` (10 únicas, mistura 4 fáceis / 4 médias / 2 difíceis, prefere as não vistas nos últimos 14 dias e depois as vistas há mais tempo, completa com outras dificuldades, ordem do fácil ao difícil). 10 testes unitários passam. Ainda não ligada ao serviço.
-- [ ] P5b. Ligar ao banco: candidatas da categoria com a última vez que o utilizador as viu; ao iniciar a rodada, escolher e gravar em `quiz_round_questions` (com a rodada bloqueada para duas chamadas simultâneas não gerarem conjuntos diferentes); teste de integração (10 posições, mistura, e uma 2.ª rodada sem repetir a 1.ª).
+- [x] P5b. Seleção ligada ao banco: ao iniciar a rodada, as 10 perguntas são escolhidas (preferindo as que o utilizador não respondeu nos últimos 14 dias) e gravadas em `quiz_round_questions`, com a rodada bloqueada (`FOR UPDATE`); recarregar não troca as perguntas; rodadas antigas já começadas seguem o caminho anterior. Testes: 37 unitários e 9 de integração com banco real (posições 1..10, mistura 4/4/2, do fácil ao difícil, duas chamadas simultâneas, 2.ª rodada sem repetir a 1.ª). Ainda não é a pergunta servida: ver P6.
 - [ ] P6. `next-question` serve a pergunta pela posição guardada; testes de recarregar/duplicar resposta.
 - [ ] P7. Histórico da rodada: tempo total, XP e recompensas guardados na rodada.
 
@@ -55,7 +55,7 @@ Legenda: OK = testado e a passar; PARCIAL = parte feita; PENDENTE = por fazer.
 
 | # | Teste | Estado |
 |---|---|---|
-| 1 | Entrar na categoria inicia rodada de 10 | PARCIAL: a rodada abre (integração OK), mas as 10 perguntas ainda não são selecionadas de uma vez (P4 a P6) |
+| 1 | Entrar na categoria inicia rodada de 10 | PARCIAL: a rodada abre e as 10 perguntas são escolhidas e guardadas (integração OK); falta servir por essa ordem (P6) |
 | 2 | Acerto: confirmação + complemento | OK (unitário); explicações ainda vazias no banco (P15) |
 | 3 | Erro: correção + explicação + aprendizagem | OK (unitário); idem |
 | 4 | Na 5.ª continua, sem resumo | OK (integração: checkpoint só na 5.ª, sem resumo); não visto no navegador |
@@ -64,7 +64,7 @@ Legenda: OK = testado e a passar; PARCIAL = parte feita; PENDENTE = por fazer.
 | 7 | Painel inicial | PARCIAL: botão feito (P1), não visto no navegador |
 | 8 | Escolher novamente uma categoria | PARCIAL: botão feito (P1), não visto no navegador |
 | 9 | Ver missões em andamento | PARCIAL: botão feito (P1); progresso atualizado por testar (P8) |
-| 10 | Nova categoria -> nova rodada, 10 novas perguntas | PARCIAL: nova rodada abre ao entrar (OK); seleção das 10 pendente (P5) |
+| 10 | Nova categoria -> nova rodada, 10 novas perguntas | PARCIAL: nova rodada escolhe 10 perguntas, preferindo as não vistas (integração OK); falta servir por essa ordem (P6) |
 | 11 | Correta muito maior detetada | PENDENTE (P10) |
 | 12 | Correta muito menor detetada | PENDENTE (P10) |
 | 13 | Alternativas duplicadas rejeitadas | PENDENTE (P9) |

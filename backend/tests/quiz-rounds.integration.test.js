@@ -126,4 +126,59 @@ maybe('quiz: rodadas com banco real', () => {
     ).rejects.toThrow(/check/i); // posição tem de ser > 0
     await db.query(`DELETE FROM quiz_round_questions WHERE round_id = $1`, [roundId]);
   });
+
+  async function startFreshRound() {
+    await db.query(`UPDATE quiz_rounds SET status = 'abandoned' WHERE user_id = $1 AND status = 'in_progress'`, [userId]);
+    const q = await quizService.getNextQuestion(categoryId, userId);
+    const rows = (await db.query(
+      `SELECT rq.position, rq.question_id, qu.difficulty
+       FROM quiz_round_questions rq JOIN questions qu ON qu.id = rq.question_id
+       WHERE rq.round_id = $1 ORDER BY rq.position`, [q.round.id]
+    )).rows;
+    return { roundId: q.round.id, rows };
+  }
+
+  it('ao iniciar a rodada, as 10 perguntas ficam escolhidas: posições 1..10, mistura 4/4/2, do fácil ao difícil', async () => {
+    const { rows } = await startFreshRound();
+    expect(rows.map((r) => r.position)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    expect(new Set(rows.map((r) => r.question_id)).size).toBe(10);
+    const count = (d) => rows.filter((r) => r.difficulty === d).length;
+    expect([count('easy'), count('medium'), count('hard')]).toEqual([4, 4, 2]);
+    const rank = rows.map((r) => ['easy', 'medium', 'hard'].indexOf(r.difficulty));
+    expect(rank).toEqual([...rank].sort((a, b) => a - b));
+  });
+
+  it('chamar next-question outra vez (recarregar) não troca as perguntas da rodada', async () => {
+    const first = await startFreshRound();
+    await quizService.getNextQuestion(categoryId, userId);
+    await quizService.getNextQuestion(categoryId, userId);
+    const after = (await db.query(`SELECT question_id FROM quiz_round_questions WHERE round_id = $1 ORDER BY position`, [first.roundId])).rows.map((r) => r.question_id);
+    expect(after).toEqual(first.rows.map((r) => r.question_id));
+  });
+
+  it('duas chamadas simultâneas na rodada nova guardam um único conjunto de 10', async () => {
+    await db.query(`UPDATE quiz_rounds SET status = 'abandoned' WHERE user_id = $1 AND status = 'in_progress'`, [userId]);
+    const [a, b] = await Promise.all([
+      quizService.getNextQuestion(categoryId, userId),
+      quizService.getNextQuestion(categoryId, userId),
+    ]);
+    expect(a.round.id).toBe(b.round.id);
+    const n = (await db.query(`SELECT COUNT(*)::int AS n FROM quiz_round_questions WHERE round_id = $1`, [a.round.id])).rows[0].n;
+    expect(n).toBe(10);
+  });
+
+  it('a 2.ª rodada prefere perguntas que o utilizador não viu na 1.ª', async () => {
+    const first = await startFreshRound();
+    for (const r of first.rows) {
+      const alt = (await db.query(`SELECT id FROM question_alternatives WHERE question_id = $1 LIMIT 1`, [r.question_id])).rows[0].id;
+      await db.query(
+        `INSERT INTO quiz_attempts (user_id, question_id, alternative_id, is_correct, response_time_ms, xp_awarded, points_awarded, round_id)
+         VALUES ($1, $2, $3, FALSE, 5000, 0, 0, $4)`, [userId, r.question_id, alt, first.roundId]
+      );
+    }
+    await db.query(`UPDATE quiz_rounds SET status = 'completed', completed_at = now() WHERE id = $1`, [first.roundId]);
+    const second = await startFreshRound();
+    const seen = new Set(first.rows.map((r) => r.question_id));
+    expect(second.rows.filter((r) => seen.has(r.question_id))).toHaveLength(0);
+  });
 });

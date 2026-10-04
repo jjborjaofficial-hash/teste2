@@ -30,6 +30,7 @@ const ROUND_SIZE = 10;
 const CHECKPOINT_EVERY = 5;
 // Rodada em andamento sem atividade por este tempo é abandonada; a próxima abre uma nova.
 const ROUND_IDLE_EXPIRY_HOURS = 12;
+const { pickRoundQuestions } = require('./roundQuestionPicker');
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
@@ -97,6 +98,33 @@ function toRoundView(round, progress) {
   };
 }
 
+/**
+ * Garante que a rodada tem as suas perguntas escolhidas e guardadas (uma só vez, ao iniciar).
+ * Rodadas antigas, já começadas antes desta funcionalidade (com respostas e sem perguntas
+ * guardadas), continuam pelo caminho anterior.
+ */
+async function ensureRoundQuestions({ round, userId, categoryId }) {
+  if ((await repository.countRoundQuestions(db, round.id)) > 0) return;
+
+  const client = await db.getClient();
+  try {
+    await client.query('BEGIN');
+    await repository.lockRound(client, round.id);
+    // Reconfirmar já com a rodada bloqueada: outra chamada pode ter escolhido entretanto.
+    if ((await repository.countRoundQuestions(client, round.id)) === 0) {
+      const candidates = await repository.listRoundCandidates(client, { userId, categoryId });
+      const ids = pickRoundQuestions(candidates, { count: round.target_questions });
+      if (ids.length) await repository.insertRoundQuestions(client, round.id, ids);
+    }
+    await client.query('COMMIT');
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
 async function getNextQuestion(categoryId, userId) {
   // Categoria inválida ou inexistente: 404 em vez de erro 500 do banco.
   if (!UUID_RE.test(String(categoryId)) || !(await repository.categoryExists(categoryId))) {
@@ -105,6 +133,7 @@ async function getNextQuestion(categoryId, userId) {
 
   const round = await getOrStartRound(userId, categoryId);
   const progress = await repository.getRoundProgress(db, round.id);
+  if (progress.answered === 0) await ensureRoundQuestions({ round, userId, categoryId });
   const answeredIds = await repository.listAnsweredQuestionIds(db, round.id);
 
   const question = await repository.getRandomQuestion(categoryId, answeredIds);
