@@ -1,258 +1,237 @@
-# Atualização do Quiz: Ensino + Aprendizagem (Instrução Mestre)
+# Atualização do Quiz: Ensino + Aprendizagem (Instrução Mestre, versão 2)
 
-Este documento é a **fonte única de verdade** da atualização do quiz da plataforma
-Aprenda e Ganhe. Foi consolidado a partir dos dois briefings do proprietário. Onde
-os dois diferiam, vale a **regra definitiva** (rodada de 10 perguntas, ver secção 3).
+Fonte única de verdade da atualização do quiz do Aprenda e Ganhe. Consolida os três
+briefings do proprietário. **Onde houver conflito, vale o briefing mais recente (este)**:
 
-O estado do trabalho (o que já foi feito e o que falta) está em
-[`PROGRESSO_QUIZ.md`](./PROGRESSO_QUIZ.md). **Leia os dois ficheiros antes de editar.**
+- Não existe "quiz completo": **cada rodada de 10 perguntas é independente**.
+- **Não há resumo final** que junte rodadas (nem do dia, nem da sessão).
+- O resumo da rodada tem **exatamente 3 botões** (secção 8).
+
+Estado do trabalho e lista de pedaços pequenos: [`PROGRESSO_QUIZ.md`](./PROGRESSO_QUIZ.md).
+**Leia os dois ficheiros antes de editar.**
+
+> Nota: o 3.º briefing recebido terminou no "TESTE 9" (cortado). Se existia mais texto
+> (testes 9 e 10 e o fecho), pedir ao proprietário para reenviar.
 
 ---
 
 ## 0. Como retomar numa nova sessão
 
-1. Clonar o repositório (público) e mudar para a branch `feat/quiz-aprendizagem`.
-2. Ler este ficheiro e `PROGRESSO_QUIZ.md` (secção "Próximo bloco").
-3. Continuar do ponto em que parou. Não é preciso reenviar a instrução.
-4. Para o `git push` é preciso um token GitHub temporário (ver secção 14).
+1. Clonar o repositório (público) e usar a branch `feat/quiz-aprendizagem`.
+2. Ler este ficheiro e `PROGRESSO_QUIZ.md` (secção "Próximos pedaços").
+3. Pegar o primeiro pedaço pendente da lista e fazer só esse.
+4. Para o `git push` é preciso um token temporário (secção 17).
 
 Mensagem sugerida para abrir a nova sessão:
 
 > Leia `docs/quiz-aprendizagem/INSTRUCAO_QUIZ.md` e `PROGRESSO_QUIZ.md` no repositório
-> `jjborjaofficial-hash/teste2` (branch `feat/quiz-aprendizagem`) e continue do próximo bloco.
+> `jjborjaofficial-hash/teste2` (branch `feat/quiz-aprendizagem`) e continue do próximo pedaço.
 
----
+## 1. Objetivo e regras gerais
 
-## 1. Objetivo
+O quiz passa de "certo/errado" a **aprendizagem + feedback + progresso + gamificação**:
+cada resposta ensina alguma coisa.
 
-O quiz deixa de ser só "certo/errado" e passa a ser uma experiência real de
-**ensino + aprendizagem**: o utilizador não está apenas a responder, está a aprender.
+- ACERTO = confirmar + complementar + aprofundar.
+- ERRO = corrigir + explicar + ensinar o conceito (nunca humilhante).
 
-Regras gerais:
+Regras:
 
-- Não recriar o projeto nem trocar a arquitetura sem necessidade.
-- Não remover funcionalidades existentes.
-- Não alterar autenticação, saldo MZN, XP, Pontos, missões, ranking ou outras
-  funcionalidades sem necessidade.
-- Primeiro analisar o código, depois implementar de forma compatível.
-- Testar tudo, registar no Git, fazer push (secção 11).
-- Se encontrar trabalho feito antes por outra pessoa ou IA, preservá-lo e analisar antes de mexer.
-- Não usar emojis. Manter o design atual e reutilizar componentes existentes.
+- Trabalhar sobre o projeto existente; não recriar nem trocar a arquitetura sem necessidade.
+- Não remover funcionalidades; não alterar autenticação, XP, Pontos, saldo MZN, missões,
+  ranking, notificações ou outras áreas sem necessidade.
+- Analisar antes de alterar; reutilizar componentes, serviços, endpoints e modelos.
+- Não criar segunda implementação do que já existe.
+- Não usar emojis. Manter o design atual.
 
-## 2. Fluxo por pergunta
+## 2. Conceito oficial de rodada
 
-```
-PERGUNTA -> UTILIZADOR RESPONDE -> SERVIDOR VALIDA -> RESULTADO
-         -> EXPLICAÇÃO DIDÁTICA -> UTILIZADOR APRENDE/REVÊ -> PRÓXIMA PERGUNTA
-```
+- O banco de perguntas é contínuo. Ao entrar numa categoria (ex.: Inteligência Artificial)
+  começa uma **nova rodada de 10 perguntas** selecionadas pelo sistema.
+- Cada rodada é uma unidade independente, com o seu próprio resultado. Pode repetir-se
+  indefinidamente (IA, depois IA outra vez, depois Tecnologia, etc.).
+- **Não criar:** quiz fixo de 30 perguntas, 3 rodadas agrupadas, resumo das rodadas do dia,
+  resumo de uma sessão, ou qualquer "quiz completo".
 
-Rápido e natural. Não transformar cada pergunta numa aula.
+## 3. Seleção das 10 perguntas
 
-## 3. Estrutura definitiva do quiz (REGRA DEFINITIVA)
+Ao entrar na categoria, selecionar/recomendar 10 perguntas respeitando: categoria,
+dificuldade (variedade), perguntas já respondidas, perguntas apresentadas recentemente,
+progresso do utilizador, regras de repetição existentes e disponibilidade.
 
-- **Rodada = EXATAMENTE 10 perguntas.** É a unidade normal de jogo.
-- **Resumo da rodada** só aparece **depois da 10.ª pergunta**.
-- **5 perguntas = checkpoint técnico/de persistência**: o servidor grava/verifica o
-  progresso e o utilizador continua. **Não** mostra resumo e **não** finaliza nada.
-- Contador sempre "Pergunta N de 10". Após a 5.ª mostra "5 de 10" e continua. Nunca
-  mostrar "5 de 5".
-- Quiz com mais de 10 perguntas divide-se em rodadas de 10 (ex.: 30 = 1–10, 11–20, 21–30).
-  Se o total não for múltiplo de 10, a última rodada pode ter o restante, desde que a
-  arquitetura suporte.
-- Ao concluir todas as rodadas, mostrar o **resumo final consolidado** (não só da última rodada).
+- Nunca repetir perguntas dentro da mesma rodada.
+- Evitar repetir as vistas recentemente; respeitar o histórico do utilizador.
+- Não alterar o banco de perguntas sem necessidade.
+- Guardar as perguntas da rodada e a posição atual para a rodada poder ser retomada.
 
-Não confundir: 5 alterações de código = checkpoint do Git (secção 11). 5 perguntas =
-checkpoint técnico do quiz. 10 perguntas = fim da rodada + resumo.
+## 4. Contador e checkpoint dos 5
 
-## 4. Feedback pedagógico após CADA resposta
+- Mostrar 1/10, 2/10 ... 10/10.
+- Aos 5: **não** mostrar resumo, **não** terminar a rodada, **não** iniciar outra. Continua
+  normalmente. (Internamente é só um checkpoint de persistência.)
+- A rodada só termina depois da 10.ª pergunta.
 
-O resumo da rodada **não substitui** a explicação individual.
+## 5. Feedback depois de CADA pergunta
 
-**Se acertar** (acerto = confirmação + aprofundamento):
+Fluxo: PERGUNTA -> RESPOSTA -> VALIDAÇÃO -> FEEDBACK -> EXPLICAÇÃO -> PRÓXIMA.
 
-```
-CORRETO -> por que está certa -> complemento -> conceito a reter -> próxima pergunta
-```
+**Acerto:** "Correto!" + "Você identificou a resposta certa." + "Para complementar:"
+(informação adicional) + "Aprenda:" (conceito ou detalhe importante). Curto, para não
+interromper o fluxo. ACERTO = CONFIRMAÇÃO + COMPLEMENTO.
 
-**Se errar** (erro = correção + aprendizagem; nunca humilhante):
+**Erro:** "Resposta incorreta." + "Resposta correta:" + "Por quê?" (explicação) +
+"O que aprender:" (conceito principal) + quando útil "A sua resposta estava incorreta
+porque..." + opcionalmente "Dica:" (memorização). ERRO = CORREÇÃO + EXPLICAÇÃO + APRENDIZAGEM.
 
-```
-RESPOSTA INCORRETA -> resposta correta -> por que é correta
- -> por que a escolhida estava errada (quando útil)
- -> o que aprender (conceito principal) -> dica para memorizar -> próxima pergunta
-```
-
-Tom: o erro é parte do processo de aprendizagem. Sem mensagens negativas ou humilhantes.
-
-**Profundidade conforme a dificuldade** (qualidade acima de tamanho):
+**Profundidade por dificuldade** (qualidade acima de quantidade):
 
 | Dificuldade | Explicação |
 |---|---|
-| Fácil | curta, linguagem simples, conceito fundamental |
-| Média | um pouco mais desenvolvida, explica o raciocínio |
+| Fácil | linguagem simples, curta, conceito fundamental |
+| Média | explica o raciocínio e contextualiza |
 | Difícil | raciocínio e relações entre conceitos quando necessário |
-| Especialista | técnica, contextualizada, com consequência ou aplicação (hoje o banco só tem fácil/médio/difícil) |
+| Especialista | técnica, com contexto, aplicações ou consequências (o banco hoje só tem fácil/média/difícil) |
 
-## 5. Resumos
+## 6. Fim da 10.ª pergunta
 
-**Resumo da rodada (após 10 perguntas):** perguntas respondidas, acertos, erros, % de
-aproveitamento, XP obtido, recompensas (quando aplicável), categorias/conceitos com
-melhor desempenho, conceitos com mais erros, recomendação de revisão, progresso da
-rodada, botão para continuar para a próxima rodada quando existir.
+Primeiro mostrar o feedback pedagógico dessa pergunta, igual às anteriores. Depois:
+marcar a rodada como CONCLUÍDA, calcular o resultado, registar o desempenho, atualizar
+métricas/recompensas, atualizar as missões aplicáveis e abrir o RESUMO DA RODADA.
+**Não** mostrar nova pergunta e **não** iniciar outra rodada automaticamente.
 
-**Resumo final do quiz:** total de perguntas, acertos, erros, % de aproveitamento,
-percentagem por rodada, XP total, recompensas, missões/progresso relacionado (se
-aplicável), melhor categoria, o que rever, evolução (se houver dados), mensagem final.
+## 7. Resumo da rodada
 
-Exemplo de estrutura (texto, sem emojis):
+Representa **exclusivamente** as 10 perguntas daquela rodada: categoria, 10 respondidas,
+acertos, erros, % de aproveitamento, XP ganho, recompensas (quando aplicável), melhor
+desempenho, conceitos a rever, progresso de aprendizagem e outras métricas já existentes.
 
-```
-Rodada concluída
-10 perguntas respondidas | 8 acertos | 2 erros | 80%
-Melhor desempenho: Tecnologia
-Vale a pena rever: Segurança digital
-+XP        [Continuar]
-```
+## 8. Botões do resumo (EXATAMENTE 3)
 
-## 6. Qualidade das alternativas (problema crítico)
+1. **Painel inicial** -> Dashboard existente (`/dashboard`). Não inicia rodada nem reabre a categoria.
+2. **Escolher novamente uma categoria** -> tela existente de categorias (`/hub-estudos`).
+   Não inicia rodada sozinho; só depois de o utilizador escolher a categoria começa a nova
+   rodada com 10 perguntas.
+3. **Ver missões em andamento** -> tela existente de missões (`/missoes`). Não cria nem
+   conclui missões; só leva o utilizador à área de missões, já com o progresso atualizado.
 
-Problema detetado: a alternativa correta tende a ser bem mais longa e detalhada que
-as erradas, permitindo acertar sem saber a matéria. **Auditado: a correta é a mais
-longa em 89,4% das perguntas** (ver `PROGRESSO_QUIZ.md`).
+## 9. Histórico das rodadas
 
-Regras de construção:
+Registar cada rodada (sem inventar "quiz completo"): user_id, round_id, categoria,
+perguntas apresentadas, respostas, acertos, erros, tempo, XP, recompensas, dificuldade,
+conceitos, data/hora, desempenho. Serve para estatísticas, perfil de aprendizagem,
+recomendações, evolução e histórico futuros. Sem arquitetura gigante.
 
-- A correta não pode ser sistematicamente a mais longa, nem a mais curta, nem a que tem mais detalhes.
-- Mesma estrutura linguística em todas; sem palavras que denunciem a resposta.
-- As erradas devem ser plausíveis e do mesmo conceito.
-- Nível semelhante de elaboração em todas.
-- Não basta contar caracteres: analisar também nº de palavras, estrutura da frase,
-  nível de detalhe, quantidade de informação, termos técnicos, explicações extra,
-  exemplos, palavras absolutas ou óbvias e outros padrões reveladores.
+## 10. Integração com missões
 
-**Geração de perguntas:** não gerar primeiro a correta e depois erradas simples.
-Definir o conceito avaliado, gerar todas as alternativas em conjunto com nível
-semelhante, definir a correta, validar o conjunto.
+Usar a lógica existente de missões (responder perguntas, completar uma rodada, login,
+permanecer 12 minutos). Não duplicar nem criar segunda implementação. Depois da rodada,
+"Ver missões em andamento" mostra a tela atualizada.
 
-## 7. Validador automático
+## 11. Qualidade das alternativas (problema crítico)
 
-Antes de uma pergunta entrar no banco, verificar:
+Problema: a correta é identificável por ser mais longa, detalhada, técnica, explicativa ou
+estruturalmente diferente. **Auditado: a correta é a mais longa em 89,4% das 1.659 perguntas.**
 
-1. Número de alternativas correto.
-2. Exatamente uma correta.
-3. A correta está entre as alternativas.
-4. Sem alternativas duplicadas.
-5. Sem alternativas praticamente iguais.
-6. A correta não é bem maior que todas.
-7. A correta não é bem menor que todas.
-8. A correta não tem explicação adicional que as outras não têm.
-9. As erradas são plausíveis.
-10. A posição da correta não segue padrão previsível.
-11. Linguagem de nível semelhante.
-12. Nenhum padrão óbvio que permita acertar sem conhecimento.
+Regras: a correta não pode ser sistematicamente a mais longa, curta, detalhada, técnica ou
+a única explicativa; as erradas devem ser plausíveis e do mesmo conceito, sem absurdos;
+todas com nível de elaboração semelhante. Uma pequena diferença de tamanho é aceitável; o
+problema é um padrão claro que denuncia a resposta.
 
-Se falhar: **rejeitar ou enviar para revisão**. Perguntas claramente enviesadas não
-podem ser publicadas automaticamente.
+Medir mais do que caracteres: palavras, tokens (se disponível), estrutura da frase, nível
+de detalhe, quantidade de informação, termos técnicos, explicações embutidas, exemplos,
+pontuação, palavras absolutas e outros padrões linguísticos.
 
-## 8. Posição da resposta correta e segurança
+Exemplo a rejeitar: correta longa e específica ("É o processo pelo qual sistemas de IA
+aprendem padrões a partir de dados para realizar previsões.") contra erradas curtas
+("É um programa." / "É um banco de dados." / "É uma rede.").
 
-- A posição da correta deve ser aleatória e bem distribuída (hoje a distribuição já é
-  ~25% por posição; manter e impedir padrões nas novas perguntas).
-- A aleatorização não pode quebrar a validação por `alternative_id`.
-- **Nunca confiar na posição visual.** O backend é a fonte de verdade.
-- Não enviar ao frontend `correctAnswer`, `correctOption`, `isCorrect` ou equivalente
-  antes de o utilizador responder (a API atual já cumpre isto; manter). A resposta
-  correta e a explicação só são devolvidas **depois** de a resposta ser registada.
+**Geração por IA:** não gerar a correta e depois distratores simples. Definir o conceito,
+gerar todas as alternativas em conjunto, definir a correta, gerar distratores plausíveis,
+validar equilíbrio e qualidade, aprovar ou rejeitar.
 
-## 9. Controlo de progresso (persistente)
+## 12. Validador automático (16 controlos)
 
-O sistema deve saber de forma confiável: quantas perguntas foram respondidas, onde
-começa a rodada atual, quantas faltam para o checkpoint, se a rodada/quiz terminou e
-se o resumo já foi mostrado. **Não depender só de variáveis visuais do frontend**:
-usar estado persistente/dados do backend, para que recarregar a página recupere o estado.
+1. Número correto de alternativas. 2. Apenas uma correta. 3. A correta existe.
+4. Sem alternativas duplicadas. 5. Sem alternativas quase iguais. 6. Tamanho equilibrado.
+7. Estrutura equilibrada. 8. A correta sem explicação extra. 9. Distratores plausíveis.
+10. Posição da correta não previsível. 11. Linguagem equilibrada. 12. Sem pistas óbvias.
+13. A pergunta tem explicação. 14. A explicação é coerente com a resposta.
+15. Categoria correta. 16. Dificuldade coerente.
 
-## 10. Métricas de aprendizagem (leve e extensível)
+Se falhar: **rejeitar ou enviar para revisão**; nunca publicar automaticamente.
 
-Se a arquitetura permitir sem grande complexidade, registar: perguntas respondidas,
-acertos, erros, categoria, dificuldade, tempo de resposta, conceitos que geraram erro,
-evolução. Servem para futura personalização e dificuldade adaptativa. Não construir
-uma arquitetura gigante só para isto.
+## 13. Posição da correta e segurança
 
-## 11. Regra de Git e registo
+- A ordem visual das alternativas é aleatória e a posição da correta bem distribuída
+  (hoje já ~25% por posição; manter e impedir padrões nas novas).
+- O backend continua a saber a correta e a validar por `alternative_id`; nunca confiar na
+  posição visual nem no frontend.
+- Antes de responder, o frontend não recebe `correctAnswer`, `isCorrect`, `answer_id` correto
+  ou equivalente (a API atual já cumpre; manter). Correta e explicação só depois de registada
+  a resposta, e só se a pergunta foi entregue ao utilizador (anti-colheita).
 
-Ciclos de trabalho:
+## 14. Persistência
 
-```
-ANALISAR -> IMPLEMENTAR -> TESTAR -> COMMIT -> PUSH -> REGISTAR EM PROGRESSO_QUIZ.md
-```
+A rodada tem estado confiável: iniciada, categoria, 10 perguntas selecionadas, progresso,
+respostas, pergunta atual, conclusão. Recarregar a página recupera o estado. Sem perder
+nem duplicar respostas por falhas simples de frontend.
 
-- **Checkpoint normal:** a cada ~5 alterações/itens concluídos e testados.
-- **Checkpoint estrutural:** ao concluir uma secção importante, mesmo com menos de 5.
-- **Checkpoint final:** ao concluir o quiz/feature (commit final, push, resumo completo).
-- Nunca fazer commit de código quebrado só para atingir 5. Qualidade primeiro.
-- Antes de cada commit: `git status`, rever diferenças, testes e build.
-- Commits claros, por exemplo `feat(quiz): improve learning feedback`,
-  `feat(quiz): add answer quality validation`.
-- **Depois de cada checkpoint, atualizar `PROGRESSO_QUIZ.md`** (feito, testado, commit,
-  push, próximo bloco) e incluir essa atualização no mesmo push ou num commit logo a seguir.
+## 15. Visual, acessibilidade e UX
 
-Relatório após cada checkpoint:
+Manter o design atual e reutilizar componentes, botões, cards, tipografia, cores, ícones,
+animações e navegação. Botões claros, estados de resposta claros, boa leitura, responsivo,
+navegação por teclado quando aplicável, feedback visual suficiente, respeitar
+`prefers-reduced-motion`. Sem animações excessivas.
+
+## 16. Dados de aprendizagem
+
+Se couber sem complexidade: acertos, erros, categoria, dificuldade, tempo de resposta,
+conceitos errados, desempenho por rodada. Preparar o sistema, sem arquitetura gigante.
+
+## 17. Git: PEDAÇOS PEQUENOS, PUSH A CADA UM (regra principal)
+
+Para que, se a sessão atingir o limite, o que já foi feito esteja sempre no GitHub:
 
 ```
-CHECKPOINT: ...
-IMPLEMENTADO: ...
-TESTADO: ...
-COMMIT: ...
-PUSH: sucesso/erro
-PRÓXIMO BLOCO: ...
+ESCOLHER 1 pedaço pequeno -> IMPLEMENTAR -> TESTAR -> COMMIT -> PUSH -> REGISTAR no PROGRESSO
 ```
 
-Relatório final: arquivos alterados, funcionalidades, testes, problemas encontrados e
-corrigidos, commit final, push.
+- Cada pedaço é pequeno (uma ideia, poucos ficheiros). **Commit e push logo que o pedaço
+  estiver testado**, sem juntar muitos.
+- O limite máximo é ~5 alterações por commit; o normal é menos.
+- Depois de cada push, atualizar `PROGRESSO_QUIZ.md` (o que foi feito, o que falta, próximo pedaço).
+- Nunca commitar código quebrado. Antes do commit: `git status`, rever diferenças, testes, build.
+- Não commitar ficheiros gerados (ex.: dumps do Redis, `dist`, `.env`).
+- Commits claros, por exemplo `feat(quiz): ...`, `test(quiz): ...`, `docs(quiz): ...`.
 
-## 12. Testes obrigatórios
+Relatório curto após cada push: IMPLEMENTADO, TESTADO, COMMIT, PUSH, PRÓXIMO PEDAÇO.
 
-1. Utilizador acerta: resposta correta, explicação complementar, avanço correto.
-2. Utilizador erra: incorreta, resposta correta, explicação, aprendizagem, avanço.
-3. Completar 5 perguntas: checkpoint técnico, contador "5 de 10", sem resumo, progresso correto.
-4. Completar 10 perguntas: resumo da rodada com contagem correta.
-5. Continuar depois do resumo: próxima rodada, contador reiniciado.
-6. Finalizar todas as rodadas: resumo final consolidado.
-7. Alternativa correta muito maior: o validador deteta o viés.
-8. Posição previsível da correta: o sistema corrige/aleatoriza.
-9. Alternativas duplicadas: rejeição ou revisão.
-10. Recarregar a página durante o quiz: o estado é recuperado.
+## 18. Testes obrigatórios
 
-Dizer claramente quando um teste não puder correr no ambiente (ex.: sem Postgres/Redis).
-Nunca afirmar que passou sem ter corrido.
+1. Entrar numa categoria inicia rodada de 10 perguntas.
+2. Acertar: feedback correto + complemento/aprendizagem.
+3. Errar: correção + explicação + aprendizagem.
+4. Chegar à 5.ª: continua normalmente, sem resumo.
+5. Responder a 10.ª: feedback, rodada concluída, resumo.
+6. Resumo com exatamente os dados daquela rodada.
+7. Botão "Painel inicial" abre o Dashboard.
+8. Botão "Escolher novamente uma categoria" abre a seleção de categorias.
+9. Botão "Ver missões em andamento" abre as missões (com progresso atualizado).
+10. Validador: correta muito maior, posição previsível, alternativas duplicadas.
+11. Recarregar a página a meio recupera o estado.
 
-## 13. Fases de execução
+Dizer claramente quando um teste não puder correr no ambiente. Nunca afirmar que passou sem ter corrido.
 
-1. Analisar o projeto existente.
-2. Identificar os ficheiros a modificar.
-3. Feedback pedagógico (certo/errado).
-4. Checkpoint técnico de 5 perguntas.
-5. Rodada de 10 e resumo da rodada.
-6. Persistência/recuperação do estado.
-7. Resumo final do quiz.
-8. Auditar a lógica das alternativas.
-9. Validador contra pistas de comprimento/estilo/posição.
-10. Conteúdo: corrigir alternativas enviesadas e preencher explicações, por lotes.
-11. Testes.
-12. Commits por checkpoint e push.
+## 19. Token do GitHub (segurança)
 
-## 14. Token do GitHub (segurança)
+O repositório é público (clone sem token); o **push** precisa de token. O proprietário cria
+um fine-grained token de 7 dias, só para este repositório, com **Contents: Read and write**,
+e apaga-o depois. O token nunca é gravado em ficheiros, `.git/config`, memória ou repositório;
+usa-se só por comando (header HTTP temporário).
 
-- O repositório é público: o clone não precisa de token; o **push** precisa.
-- O proprietário cria um fine-grained token de 7 dias, limitado ao repositório, com
-  **Contents: Read and write**, e apaga-o depois do uso.
-- O token **nunca** é gravado em ficheiros, no `.git/config`, na memória ou neste
-  repositório. Usa-se só por comando (header HTTP temporário).
-- Se o token tiver sido colado numa conversa, apagá-lo no GitHub quando terminar.
+## 20. Critérios de conclusão
 
-## 15. Critérios de conclusão
-
-A tarefa só está concluída quando: o fluxo pedagógico funciona; erros ensinam; acertos
-complementam; o checkpoint de 5 e a rodada de 10 funcionam; os resumos de rodada e
-final funcionam; as alternativas não denunciam a correta; os testes passam; tudo está
-no Git e enviado ao GitHub; e o relatório final foi apresentado.
+Concluído quando: erros ensinam e acertos complementam; contador 1/10 a 10/10 sem resumo aos
+5; resumo só depois da 10.ª com os 3 botões corretos; cada rodada independente e registada;
+missões atualizadas; alternativas sem pistas; validador ativo; testes a passar; tudo no
+GitHub; relatório final apresentado.

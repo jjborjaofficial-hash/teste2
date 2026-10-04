@@ -7,51 +7,53 @@ Branch de trabalho: `feat/quiz-aprendizagem`
 
 ---
 
-## Estado atual
+## Estado atual (versão 2 da instrução)
 
-| Fase | Descrição | Estado |
-|---|---|---|
-| 1 | Analisar o projeto existente | Concluída (checkpoint 0) |
-| 2 | Identificar ficheiros a modificar | Concluída (checkpoint 0) |
-| 3 | Feedback pedagógico (certo/errado) | Concluída no código (checkpoint 1). Falta o conteúdo das explicações (fase 10) |
-| 4 | Checkpoint técnico de 5 perguntas | Concluída (checkpoint 2) |
-| 5 | Rodada de 10 + resumo da rodada | Concluída (checkpoint 2) |
-| 6 | Persistência/recuperação do estado | Concluída (checkpoint 2), testada com banco real |
-| 7 | Resumo final do quiz | Pendente |
-| 8 | Auditar alternativas | Auditoria feita (ver abaixo); correção pendente |
-| 9 | Validador de viés (comprimento/estilo/posição) | Pendente |
-| 10 | Conteúdo: corrigir alternativas e escrever explicações | Pendente |
-| 11 | Testes | Pendente |
-| 12 | Relatório final | Pendente |
+Feito e enviado: análise (cp. 0), feedback pedagógico no servidor e no ecrã (cp. 1),
+rodada de 10 persistente com checkpoint dos 5 e resumo da rodada (cp. 2).
 
-## Próximo bloco (checkpoint 3): validador de alternativas + resumo final
+## Próximos pedaços (um por vez; commit + push a cada um)
 
-1. Módulo validador (`quizQuestionValidator`) com os 12 controlos da secção 7: nº de
-   alternativas, uma só correta, duplicadas/quase iguais, comprimento (caracteres e palavras),
-   estrutura, palavras absolutas, posição da correta. Resultado: aprovada / rever / rejeitada.
-2. Script de auditoria do banco (relatório de viés por categoria/dificuldade) usando o validador.
-3. Testes do validador: caso 7 (correta muito maior), 8 (posição previsível), 9 (duplicadas).
-4. Gancho nos pontos de entrada de novas perguntas (seeds/importação/admin, se existirem).
-5. Resumo final do quiz (depende da decisão em aberto sobre "quiz completo", abaixo).
+Marcar `[x]` ao concluir e enviar. Pegar sempre o primeiro `[ ]`.
 
-Depois: fase 10 (conteúdo): reescrever alternativas enviesadas e escrever explicações, por lotes.
+**Resumo e navegação**
+- [ ] P1. Resumo da rodada com os 3 botões exatos: Painel inicial (`/dashboard`), Escolher novamente uma categoria (`/hub-estudos`), Ver missões em andamento (`/missoes`).
+- [ ] P2. Ecrã de resultado da 10.ª pergunta: depois do feedback levar ao resumo (sem botões extra que fujam das regras).
+- [ ] P3. Rótulos do feedback como no briefing: "Correto!", "Para complementar:", "Aprenda:" / "Resposta incorreta.", "Resposta correta:", "Por quê?", "O que aprender:", "Dica:".
 
-## Decisões em aberto (confirmar com o proprietário)
+**Seleção e persistência da rodada**
+- [ ] P4. Migration: guardar as 10 perguntas da rodada e a posição atual (`quiz_round_questions`).
+- [ ] P5. Selecionar as 10 perguntas ao iniciar a rodada (variedade de dificuldade; evitar as vistas recentemente pelo utilizador).
+- [ ] P6. `next-question` serve a pergunta pela posição guardada; testes de recarregar/duplicar resposta.
+- [ ] P7. Histórico da rodada: tempo total, XP e recompensas guardados na rodada.
 
-- **O que é o "quiz completo" e a rodada seguinte?** Hoje cada categoria é um banco de perguntas
-  aleatórias, sem um quiz fechado de 30 perguntas. Implementado: a rodada de 10 termina no
-  resumo, e o utilizador volta ao Hub de Estudos (comportamento que já existia). Abrir a
-  categoria de novo começa uma rodada nova. Para o "resumo final consolidado de todas as
-  rodadas" é preciso definir o que agrupa as rodadas (por exemplo, o dia, uma sessão, ou um
-  quiz de N rodadas). Sem essa definição, o resumo final (checkpoint 3) fica por fazer.
+**Missões**
+- [ ] P8. Analisar a integração atual do quiz com missões e testar que a rodada concluída atualiza `/missoes`.
 
-- **Anúncio intersticial:** passou a aparecer ao avançar (depois do feedback), em vez de antes
-  do resultado (implementado no checkpoint 1 seguindo a proposta). Confirmar se o proprietário
-  concorda, por afetar a monetização.
+**Validador de perguntas (16 controlos)**
+- [ ] P9. Módulo validador: contagem, uma só correta, duplicadas e quase iguais (controlos 1 a 5) + testes.
+- [ ] P10. Validador de tamanho (caracteres e palavras) (controlo 6) + teste da correta muito maior.
+- [ ] P11. Validador de estrutura e pistas (controlos 7 a 9, 11, 12): pontuação, termos técnicos, absolutos, explicação embutida.
+- [ ] P12. Validador de posição (controlo 10), explicação presente e coerente (13, 14), categoria e dificuldade (15, 16).
+- [ ] P13. Script de auditoria do banco com relatório de viés por categoria e dificuldade.
+- [ ] P14. Gancho do validador nos pontos de entrada de novas perguntas (importação/admin, se existirem).
+
+**Conteúdo (por lotes pequenos, uma migration de UPDATE por lote, com revisão humana recomendada)**
+- [ ] P15. Piloto: 25 perguntas (alternativas equilibradas + explicações) e validar com o validador.
+- [ ] P16 em diante. Restantes lotes por categoria e dificuldade (1.659 perguntas; ~66 lotes de 25).
+
+**Acabamento**
+- [ ] P17. Acessibilidade: `prefers-reduced-motion` e navegação por teclado nas alternativas.
+- [ ] P18. Teste manual no navegador e relatório final.
+
+## Decisões e pontos em aberto
+
+- **Resolvido:** cada rodada é independente; sem quiz completo e sem resumo final (briefing 3).
+- **Anúncio intersticial:** passou a aparecer ao avançar, depois do feedback (cp. 1). Confirmar
+  com o proprietário, por afetar a monetização.
 - **Risco conhecido:** errar de propósito revela a resposta correta de uma pergunta que pode
-  voltar a sair. É inerente ao feedback que ensina; a rodada sem repetição (checkpoint 2) reduz isto.
-- **Conteúdo:** 1.659 perguntas precisam de explicação e de reescrita das alternativas.
-  Será feito por lotes, em migrations; recomenda-se revisão humana.
+  voltar a sair. É inerente a um feedback que ensina; evitar repetições reduz o efeito (P5).
+- **Briefing 3 cortado** no "TESTE 9": confirmar se havia mais texto.
 
 ---
 
@@ -171,4 +173,4 @@ digital difícil 97%, tecnologia médio 94%.
   `DATABASE_URL`/`REDIS_URL` locais e correr os testes com `RUN_DB_TESTS=1`. Não pôr
   credenciais no repositório.
 - **Commit / Push:** ver histórico da branch.
-- **Próximo bloco:** checkpoint 3 (ver acima).
+- **Próximo bloco:** ver "Próximos pedaços" (P1 em diante).
