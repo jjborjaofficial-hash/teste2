@@ -19,7 +19,8 @@ Marcar `[x]` ao concluir e enviar. Pegar sempre o primeiro `[ ]`.
 **Resumo e navegação**
 - [x] P1. Resumo da rodada com os 3 botões exatos: Painel inicial (`/dashboard`), Escolher novamente uma categoria (`/hub-estudos`), Ver missões em andamento (`/missoes`). Verificado por build e leitura do código (o frontend não tem executor de testes; falta ver no navegador, P18).
 - [x] P2. Ecrã de resultado da 10.ª pergunta: depois do feedback o único caminho é "Ver resumo da rodada" (sem atalho para o Painel).
-- [ ] P3. Rótulos do feedback como no briefing: "Correto!", "Para complementar:", "Aprenda:" / "Resposta incorreta.", "Resposta correta:", "Por quê?", "O que aprender:", "Dica:".
+- [x] P3a. Rótulos do feedback com os dados atuais: "Correto!" + "Você identificou a resposta certa." + "Para complementar:" / "Resposta incorreta." + "Resposta correta:" + "Por quê?".
+- [ ] P3b. Campos próprios para "Aprenda:" / "O que aprender:" e "Dica:" (hoje só existe `questions.explanation`): migration com colunas opcionais `learn_point` e `memory_tip`, devolvidas pelo `submitAnswer` e mostradas no resultado. Fazer ANTES do conteúdo (P15) para as explicações já nascerem estruturadas.
 
 **Seleção e persistência da rodada**
 - [ ] P4. Migration: guardar as 10 perguntas da rodada e a posição atual (`quiz_round_questions`).

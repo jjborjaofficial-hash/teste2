@@ -99,6 +99,9 @@ export function QuizResult() {
         <h1 className="font-display text-h1 text-text mb-1">
           {result.isCorrect ? 'Correto!' : message || 'Resposta incorreta.'}
         </h1>
+        {result.isCorrect && (
+          <p className="text-caption text-text-secondary">Você identificou a resposta certa.</p>
+        )}
         {result.timeExpired && (
           <p className="text-caption text-text-secondary">O tempo esgotou desta vez.</p>
         )}
@@ -124,14 +127,14 @@ export function QuizResult() {
           )}
 
           <div>
-            <p className="text-caption text-text-secondary uppercase tracking-wide mb-1">Resposta correta</p>
+            <p className="text-caption text-text-secondary uppercase tracking-wide mb-1">Resposta correta:</p>
             <p className="text-body font-semibold text-success">{correctLabel}</p>
           </div>
 
           {result.explanation && (
             <div>
               <p className="text-caption text-text-secondary uppercase tracking-wide mb-1">
-                {result.isCorrect ? 'Para complementar' : 'Por que esta é a resposta'}
+                {result.isCorrect ? 'Para complementar:' : 'Por quê?'}
               </p>
               <p className="text-body text-text">{result.explanation}</p>
             </div>
