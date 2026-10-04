@@ -4,6 +4,16 @@ Este ficheiro é o ponto de partida para quem (pessoa ou IA) vai trabalhar neste
 O dono do projeto (Borja) só precisa de enviar o **link do repositório**: tudo o que está
 por fazer fica escrito aqui e nos ficheiros `PENDENTE.md` de cada área.
 
+> ## PRÓXIMO PASSO AGORA
+> **O trabalho em andamento é o Quiz v2.** A ordem de execução está na secção
+> **"Quiz v2 — estado e próximos passos"** (mais abaixo neste ficheiro). Resumo:
+> 1. Feedback pedagógico depois de cada resposta (`BE-004` + `FE-003`).
+> 2. Validador de qualidade das alternativas (`BE-003`).
+> 3. Sobras das rodadas (`BE-005`).
+>
+> Os pontos da secção **"Ideias ainda NÃO aprovadas"** (fim do ficheiro) **não** são para
+> implementar: só se o dono aprovar.
+
 ## Como funciona (protocolo)
 
 1. **Clonar e ler.** Ao receber o link: clone o repositório e leia este ficheiro e todos os
@@ -93,7 +103,7 @@ Se uma tarefa nova não encaixar em nenhuma área, crie um `PENDENTE.md` na past
   `teste2-backend` e `teste2-frontend` (diferentes dos do `render.yaml`); confira
   `CORS_ALLOWED_ORIGINS` no painel antes de supor algo.
 
-## Quiz v2 — estado e próximos passos (ordem de execução)
+## Quiz v2 — estado e próximos passos (ordem de execução) — ESTES SÃO OS PRÓXIMOS PASSOS
 
 Especificação do dono: `docs/quiz-v2-rodadas-e-feedback.md` (ler primeiro). Detalhes de cada
 tarefa nos `PENDENTE.md` (`BE-003`, `BE-004`, `BE-005`, `FE-003`). Trabalhar sobre o que já
@@ -125,9 +135,9 @@ daquela rodada com os 3 botões. Testes: `backend/tests/quiz-rounds.test.js` e
 Missões com o progresso certo), 11 a 14 (dependem do validador), 16 (rodada que atualiza uma
 missão). Já verificados no servidor e por HTTP: 1, 2 (contagem), 4, 5, 6, 10 e 15.
 
-## Próximos passos sugeridos (ainda NÃO decididos — não implementar até o dono pedir)
+## Ideias ainda NÃO aprovadas (NÃO implementar até o dono pedir)
 
-Isto não são instruções: são pontos já conversados que o dono ainda não aprovou, na
+Isto NÃO é o próximo passo e não são instruções: são pontos já conversados que o dono ainda não aprovou, na
 ordem de prioridade sugerida. Quando ele aprovar um, passa a ser uma instrução na área certa
 (`BE-`, `FE-`, `ADS-` ou `GER-`) e sai desta lista.
 
