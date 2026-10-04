@@ -7,6 +7,18 @@ Branch de trabalho: `feat/quiz-aprendizagem`
 
 ---
 
+## Leia primeiro (nota de 2026-10-04)
+
+- **Próximo pedaço a fazer: P6b** (o primeiro `[ ]` da lista abaixo). Só ele, depois commit + push.
+- **Teste obrigatório antes de qualquer código do quiz:** o P6b mexe no cronómetro antifraude
+  (dinheiro). Precisa de `npm install`, Postgres e Redis para correr os testes de verdade.
+  Uma sessão em 2026-10-04 teve `npm install` e `apt-get` **bloqueados (erro 403)**; nesse caso
+  NÃO implemente código do quiz sem poder testar. Faça só documentação e peça uma sessão onde
+  `npm install` funcione (a de 2026-10-03/04 conseguiu).
+- Decisões do proprietário em [`INSTRUCAO_QUIZ.md`](./INSTRUCAO_QUIZ.md) ("Decisões do proprietário"):
+  intersticial inalterado, reescrita das perguntas em lotes pequenos, e atualizar este
+  ficheiro e subir a cada pedaço.
+
 ## Estado atual (versão 2 da instrução)
 
 Feito e enviado: análise (cp. 0), feedback pedagógico no servidor e no ecrã (cp. 1),
@@ -77,8 +89,10 @@ Legenda: OK = testado e a passar; PARCIAL = parte feita; PENDENTE = por fazer.
 ## Decisões e pontos em aberto
 
 - **Resolvido:** cada rodada é independente; sem quiz completo e sem resumo final (briefing 3).
-- **Anúncio intersticial:** passou a aparecer ao avançar, depois do feedback (cp. 1). Confirmar
-  com o proprietário, por afetar a monetização.
+- **Anúncio intersticial:** RESOLVIDO (2026-10-04). O proprietário confirmou que continua com
+  a mesma lógica de antes. Não alterar `InterstitialAds` nem a contagem de 5 s.
+- **Reescrita das perguntas (P15 em diante):** confirmado pelo proprietário que é pedaço por
+  pedaço (lotes de 25, um por vez, com revisão humana).
 - **Risco conhecido:** errar de propósito revela a resposta correta de uma pergunta que pode
   voltar a sair. É inerente a um feedback que ensina; evitar repetições reduz o efeito (P5).
 - O briefing 3 foi recebido completo (16 testes e 22 critérios); ver a matriz abaixo.

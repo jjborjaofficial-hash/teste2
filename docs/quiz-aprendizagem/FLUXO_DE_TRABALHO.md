@@ -87,6 +87,10 @@ H="Authorization: Basic $(printf 'x-access-token:%s' "$TOKEN" | base64 -w0)"
 git -c http.extraheader="$H" push origin feat/quiz-aprendizagem
 ```
 
+Nota (2026-10-04): se a sessão estiver ligada ao app do Claude no GitHub do proprietário, o
+push funciona sem token: `git push origin feat/quiz-aprendizagem`. Use o token só se o push
+for recusado por falta de acesso.
+
 ## 5. Checklist antes de cada push
 
 - [ ] O pedaço está testado (diga o que NÃO pôde testar).

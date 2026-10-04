@@ -13,6 +13,20 @@ Como preparar o ambiente, testar e subir cada pedaço: [`FLUXO_DE_TRABALHO.md`](
 
 > O 3.º briefing foi recebido completo (testes 1 a 16, regras de Git e 22 critérios finais).
 
+## Decisões do proprietário (2026-10-04) — valem sobre qualquer outra parte deste ficheiro
+
+1. **Anúncio intersticial:** continua a aparecer exatamente com a mesma lógica de antes
+   (componente `InterstitialAds`, 5 segundos, mesma frequência). Não mexer nessa lógica.
+   Verificado: na branch só o rótulo "Continuar" virou um botão visível; o resto é igual.
+2. **Reescrita das perguntas (P15 em diante):** é feita **pedaço por pedaço** (lotes pequenos,
+   um de cada vez, com revisão humana), nunca tudo de uma vez.
+3. **Instrução sempre atualizada:** ao fim de CADA pedaço, atualizar `PROGRESSO_QUIZ.md`
+   (o que foi feito, o que falta, o próximo pedaço) e subir para o GitHub, para que qualquer
+   sessão ou pessoa saiba os próximos passos sem o proprietário explicar de novo.
+4. **Push sem token:** o acesso de escrita agora vem do app do Claude instalado no GitHub do
+   proprietário; em sessões ligadas a ele não é preciso token. Se a sessão não tiver essa
+   ligação, ver a secção 19.
+
 ---
 
 ## 0. Como retomar numa nova sessão
@@ -20,7 +34,9 @@ Como preparar o ambiente, testar e subir cada pedaço: [`FLUXO_DE_TRABALHO.md`](
 1. Clonar o repositório (público) e usar a branch `feat/quiz-aprendizagem`.
 2. Ler este ficheiro e `PROGRESSO_QUIZ.md` (secção "Próximos pedaços").
 3. Pegar o primeiro pedaço pendente da lista e fazer só esse.
-4. Para o `git push` é preciso um token temporário (secção 17).
+4. Para o `git push`: se a sessão estiver ligada ao app do Claude no GitHub do proprietário,
+   basta `git push origin feat/quiz-aprendizagem`; senão é preciso um token temporário
+   (secção 19).
 
 Mensagem sugerida para abrir a nova sessão:
 
