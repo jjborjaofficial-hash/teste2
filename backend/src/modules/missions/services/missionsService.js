@@ -19,6 +19,8 @@ const { NotFoundError, BusinessRuleError, ConflictError } = require('../../../co
  * ou se cadastrou durante o dia). Só missões 'daily' — as demais têm ciclo próprio.
  */
 async function ensureAssigned(userId) {
+  // Primeiro expira o que ficou a meio em dias anteriores, para não bloquear as de hoje.
+  await repository.expireStaleDailyForUser(db, userId);
   const activeMissions = await repository.listActiveMissions();
   for (const mission of activeMissions) {
     if (mission.type !== 'daily') continue;

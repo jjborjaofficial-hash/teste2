@@ -36,6 +36,27 @@ async function getUserMissionProgress(userId, executor = db) {
   return rows;
 }
 
+/**
+ * Expira as missões diárias deste utilizador que ficaram em andamento em dias
+ * anteriores. É o mesmo critério do CRON expireMissions, aplicado ao abrir a lista:
+ * sem isso (e sem o worker a correr) a missão de ontem bloqueia, pela UNIQUE
+ * parcial (user_id, mission_id) WHERE status IN ('in_progress','completed'),
+ * a atribuição de hoje e o utilizador fica com menos missões.
+ */
+async function expireStaleDailyForUser(executor, userId) {
+  await executor.query(
+    `UPDATE user_missions um
+     SET status = 'expired'
+     FROM missions m
+     WHERE um.mission_id = m.id
+       AND um.user_id = $1
+       AND um.status = 'in_progress'
+       AND m.ends_at IS NULL
+       AND um.period_date < ${dateInPlatformTz('now()')}`,
+    [userId]
+  );
+}
+
 async function assignMissionIfNotPresent(executor, { userId, missionId, targetSnapshot }) {
   // target_snapshot (migration 022, NOT NULL): alvo congelado no momento da
   // atribuição. period_date usa o fuso oficial da plataforma (Moçambique),
@@ -201,6 +222,7 @@ module.exports = {
   listActiveMissions,
   getUserMissionProgress,
   assignMissionIfNotPresent,
+  expireStaleDailyForUser,
   incrementProgressForCategory,
   completeLoginMissions,
   incrementCategoryExploration,
