@@ -8,7 +8,8 @@ por fazer fica escrito aqui e nos ficheiros `PENDENTE.md` de cada área.
 
 1. **Clonar e ler.** Ao receber o link: clone o repositório e leia este ficheiro e todos os
    `PENDENTE.md` (`find . -name PENDENTE.md -not -path "*/node_modules/*"`).
-2. **Resumir ao dono.** Diga, em poucas linhas, o que está pendente em cada área.
+2. **Resumir ao dono.** Diga, em poucas linhas, o que está pendente em cada área. O quiz tem
+   uma secção própria com a ordem de execução: **"Quiz v2 — estado e próximos passos"** (abaixo).
 3. **Executar só o que o dono pedir.** Tudo o que está nos `PENDENTE.md` é real e foi
    decidido pelo dono, mas a ordem e o momento são dele. Se ele disser "faz tudo", faça por
    ordem de ID. Dúvida em regra de negócio, dinheiro, segurança ou apagar dados: **pergunte antes**.
@@ -91,6 +92,38 @@ Se uma tarefa nova não encaixar em nenhuma área, crie um `PENDENTE.md` na past
 - Cuidados: nunca escrever tokens neste repositório. Os nomes dos serviços reais no Render são
   `teste2-backend` e `teste2-frontend` (diferentes dos do `render.yaml`); confira
   `CORS_ALLOWED_ORIGINS` no painel antes de supor algo.
+
+## Quiz v2 — estado e próximos passos (ordem de execução)
+
+Especificação do dono: `docs/quiz-v2-rodadas-e-feedback.md` (ler primeiro). Detalhes de cada
+tarefa nos `PENDENTE.md` (`BE-003`, `BE-004`, `BE-005`, `FE-003`). Trabalhar sobre o que já
+existe, nunca do zero. Cada etapa: testar, commit descritivo, push e relatório (regra 8).
+
+**Já feito e no GitHub (commits `beec9a1` e `91195e1`):** rodadas de 10 perguntas no servidor
+(migration 107, `quiz_rounds`, `backend/src/modules/quiz/services/quizService.js` e
+`roundSelection.js`); contador n/10; recuperar a rodada ao recarregar; resumo só da 10.ª e só
+daquela rodada com os 3 botões. Testes: `backend/tests/quiz-rounds.test.js` e
+`quiz-round-selection.test.js`. Depois de um push, o dono faz o deploy manual: **backend primeiro**
+(aplica a migration), depois o frontend.
+
+**A fazer, nesta ordem:**
+1. **BE-004 + FE-003 — feedback pedagógico.** Devolver só depois de responder: correta, "Por quê?",
+   "O que aprender", dica; mostrar no ecrã de resultado (acerto = confirmar + complementar; erro =
+   corrigir + explicar). A coluna `questions.explanation` existe mas está vazia nas 1.659
+   perguntas. Escrever as explicações **por categoria**, começando por uma. *Decisão do dono
+   pendente: qual categoria primeiro* (IA 336, Finanças 301, Marketing Digital 306,
+   Produtividade 396, Tecnologia 320). Sem explicação, usar um feedback genérico seguro.
+2. **BE-003 — validador de qualidade das alternativas.** Hoje a correta é a mais longa em 90,8%
+   das perguntas (a posição já é equilibrada). Validador + fila de revisão; reprovadas não são
+   servidas nas rodadas novas. *Proposta aguardando confirmação do dono:* manter as existentes a
+   ser servidas, marcá-las para revisão e aplicar o validador estrito às novas; corrigir as
+   antigas por categoria. Não apagar perguntas sem aprovação.
+3. **BE-005 — sobras:** retirar o uso das rotas antigas sem rodada, tipo de missão "completar
+   uma rodada" (hoje o progresso conta por resposta certa), conceitos errados por rodada.
+
+**Testes da especificação ainda por confirmar:** 9 (botão "Ver missões em andamento" abre as
+Missões com o progresso certo), 11 a 14 (dependem do validador), 16 (rodada que atualiza uma
+missão). Já verificados no servidor e por HTTP: 1, 2 (contagem), 4, 5, 6, 10 e 15.
 
 ## Próximos passos sugeridos (ainda NÃO decididos — não implementar até o dono pedir)
 
