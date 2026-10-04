@@ -40,6 +40,24 @@ async function listCategories() {
 }
 
 async function getNextQuestion(categoryId, userId) {
+  // CORREÇÃO (F5 reinicia o relógio visual): antes de sortear uma pergunta
+  // nova, verifica se o usuário já tem uma pergunta ativa e ainda dentro do
+  // prazo real medido pelo servidor. Se tiver, repete a MESMA pergunta e
+  // devolve o tempo restante real — em vez de sortear outra com o relógio
+  // visual cheio de novo, o que permitiria "resetar" a contagem visualmente
+  // só recarregando a tela. O tempo real sempre foi medido pelo servidor
+  // (ver quizTimerService); esta correção só alinha o que o frontend mostra
+  // a esse tempo real.
+  const active = await quizTimerService.getActiveIssuedQuestion(userId);
+  if (active) {
+    const activeQuestion = await repository.getQuestionById(active.questionId, categoryId);
+    if (activeQuestion) {
+      return { ...activeQuestion, time_remaining_seconds: active.remainingSeconds };
+    }
+    // Pergunta ativa não existe mais nesta categoria (ex.: foi desativada) —
+    // segue o caminho normal de sortear uma pergunta nova abaixo.
+  }
+
   const question = await repository.getRandomQuestion(categoryId);
   if (!question) throw new NotFoundError('Nenhuma pergunta disponível para esta categoria.');
 
@@ -48,7 +66,7 @@ async function getNextQuestion(categoryId, userId) {
   // é só visual; quem decide o tempo real é este timestamp.
   await quizTimerService.markQuestionIssued(userId, question.id, question.time_limit_seconds);
 
-  return question;
+  return { ...question, time_remaining_seconds: question.time_limit_seconds };
 }
 
 /**

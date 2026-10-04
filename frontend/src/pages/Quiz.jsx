@@ -37,7 +37,13 @@ export function Quiz() {
     quizApi.nextQuestion(categoryId)
       .then((res) => {
         setQuestion(res.data);
-        setSecondsLeft(res.data.time_limit_seconds);
+        // CORREÇÃO (F5 reinicia o relógio visual): o servidor pode devolver a
+        // mesma pergunta de antes (se o usuário recarregou a tela), junto com
+        // o tempo restante real medido por ele mesmo. Usamos esse valor
+        // quando ele vier, em vez de sempre reiniciar do time_limit_seconds
+        // cheio — senão o relógio visual "resetaria" a cada F5, mesmo que o
+        // tempo real (no servidor) já estivesse correndo havia um tempo.
+        setSecondsLeft(res.data.time_remaining_seconds ?? res.data.time_limit_seconds);
       })
       .catch((err) => {
         setError(err instanceof ApiError ? err.message : 'Não foi possível carregar a pergunta.');

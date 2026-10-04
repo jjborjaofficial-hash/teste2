@@ -36,6 +36,35 @@ async function getRandomQuestion(categoryId, executor = db) {
   return { ...question, alternatives: altResult.rows };
 }
 
+/**
+ * Busca uma pergunta específica pelo id, com as mesmas colunas e formato de
+ * getRandomQuestion (sem revelar a alternativa correta). Usada para repetir
+ * ao usuário a pergunta que o servidor já tinha emitido (ver F5 em
+ * quizTimerService.getActiveIssuedQuestion), em vez de sortear uma nova.
+ * Retorna `null` se a pergunta não existir mais ou tiver sido desativada —
+ * quem chama deve então seguir o caminho normal de sortear uma nova.
+ */
+async function getQuestionById(questionId, categoryId, executor = db) {
+  const { rows } = await executor.query(
+    `SELECT id, category_id, difficulty, statement, time_limit_seconds
+     FROM questions
+     WHERE id = $1 AND category_id = $2 AND is_active = TRUE`,
+    [questionId, categoryId]
+  );
+  if (!rows[0]) return null;
+
+  const question = rows[0];
+  const altResult = await executor.query(
+    `SELECT id, label
+     FROM question_alternatives
+     WHERE question_id = $1
+     ORDER BY display_order`,
+    [question.id]
+  );
+
+  return { ...question, alternatives: altResult.rows };
+}
+
 async function getQuestionWithCorrectAlternative(questionId, executor = db) {
   const { rows } = await executor.query(
     `SELECT id, category_id, time_limit_seconds, xp_reward, difficulty FROM questions WHERE id = $1 AND is_active = TRUE`,
@@ -75,6 +104,7 @@ async function countAttemptsToday(userId, executor = db) {
 module.exports = {
   listActiveCategories,
   getRandomQuestion,
+  getQuestionById,
   getQuestionWithCorrectAlternative,
   recordAttempt,
   countAttemptsToday,

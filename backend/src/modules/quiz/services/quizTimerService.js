@@ -22,25 +22,37 @@ const logger = require('../../../common/logger');
  * TTL da chave = time_limit_seconds da pergunta + margem de rede, para não
  * expirar antes da hora em conexões lentas, mas também não ficar vivo
  * indefinidamente ocupando memória do Redis.
+ *
+ * CORREÇÃO (F5 reinicia o relógio): antes, dar F5 ou reabrir a tela de quiz
+ * sorteava uma pergunta nova com o relógio visual cheio de novo — o tempo real
+ * continuava correto no servidor, mas o usuário "ganhava" tempo visualmente ao
+ * forçar uma nova pergunta sempre que o cronômetro visual apertava. Agora o
+ * registro guarda também a questionId e o time_limit_seconds emitidos, e
+ * getActiveIssuedQuestion() permite ao service checar, ANTES de sortear uma
+ * pergunta nova, se o usuário já tem uma pergunta ativa em andamento — e se
+ * tiver, devolver a mesma pergunta com o tempo restante real, em vez de uma
+ * pergunta nova com o tempo zerado.
  */
 
 const NETWORK_GRACE_SECONDS = 10;
 
-function buildKey(userId, questionId) {
-  return `quiz:issued:${userId}:${questionId}`;
+function buildKey(userId) {
+  return `quiz:issued:${userId}`;
 }
 
 /**
  * Registra o instante exato (server-side) em que a pergunta foi entregue ao
- * usuário. Chamado sempre que getNextQuestion devolve uma pergunta.
+ * usuário, além da própria pergunta e do seu limite de tempo. Chamado sempre
+ * que getNextQuestion devolve uma pergunta (nova ou repetida).
  */
 async function markQuestionIssued(userId, questionId, timeLimitSeconds) {
-  const key = buildKey(userId, questionId);
+  const key = buildKey(userId);
   const issuedAtMs = Date.now();
   const ttlSeconds = Math.max(timeLimitSeconds + NETWORK_GRACE_SECONDS, 5);
+  const payload = JSON.stringify({ questionId, issuedAtMs, timeLimitSeconds });
 
   try {
-    await redis.set(key, String(issuedAtMs), 'EX', ttlSeconds);
+    await redis.set(key, payload, 'EX', ttlSeconds);
   } catch (err) {
     // Se o Redis cair, não travamos a entrega da pergunta (mesmo princípio de
     // degradação graciosa usado no resto do projeto) — mas registramos o
@@ -56,23 +68,59 @@ async function markQuestionIssued(userId, questionId, timeLimitSeconds) {
 }
 
 /**
+ * Busca, sem consumir, a pergunta que o servidor já tinha entregue a este
+ * usuário e que ainda está dentro do prazo (não expirada). Usada por
+ * getNextQuestion para decidir se repete a pergunta ativa (com o tempo
+ * restante real) em vez de sortear uma pergunta nova.
+ *
+ * Retorna `null` se não houver registro, se já tiver expirado ou se o Redis
+ * estiver indisponível — nesses casos quem chama deve seguir o caminho normal
+ * de sortear uma pergunta nova.
+ */
+async function getActiveIssuedQuestion(userId) {
+  const key = buildKey(userId);
+
+  try {
+    const raw = await redis.get(key);
+    if (!raw) return null;
+
+    const { questionId, issuedAtMs, timeLimitSeconds } = JSON.parse(raw);
+    const elapsedSeconds = Math.floor((Date.now() - issuedAtMs) / 1000);
+    const remainingSeconds = timeLimitSeconds - elapsedSeconds;
+
+    if (remainingSeconds <= 0) return null;
+
+    return { questionId, remainingSeconds };
+  } catch (err) {
+    logger.warn('Não foi possível ler a pergunta ativa do quiz no Redis', {
+      userId,
+      error: err.message,
+    });
+    return null;
+  }
+}
+
+/**
  * Calcula o tempo de resposta real, medido inteiramente pelo servidor, e
  * consome o registro (uma pergunta só pode ser respondida uma vez com este
  * timestamp — evita reuso do mesmo "issued_at" para múltiplas tentativas).
  *
- * Retorna `null` se não houver registro válido (expirado, nunca emitido, ou
- * Redis indisponível) — quem chama deve tratar isso como tempo esgotado.
+ * Retorna `null` se não houver registro válido (expirado, nunca emitido, de
+ * outra pergunta, ou Redis indisponível) — quem chama deve tratar isso como
+ * tempo esgotado.
  */
 async function consumeElapsedMs(userId, questionId) {
-  const key = buildKey(userId, questionId);
+  const key = buildKey(userId);
 
   try {
-    const issuedAtRaw = await redis.get(key);
-    if (!issuedAtRaw) return null;
+    const raw = await redis.get(key);
+    if (!raw) return null;
+
+    const { questionId: issuedQuestionId, issuedAtMs } = JSON.parse(raw);
+    if (issuedQuestionId !== questionId) return null;
 
     await redis.del(key);
 
-    const issuedAtMs = Number(issuedAtRaw);
     const elapsedMs = Date.now() - issuedAtMs;
     return Math.max(elapsedMs, 0);
   } catch (err) {
@@ -85,4 +133,4 @@ async function consumeElapsedMs(userId, questionId) {
   }
 }
 
-module.exports = { markQuestionIssued, consumeElapsedMs };
+module.exports = { markQuestionIssued, getActiveIssuedQuestion, consumeElapsedMs };
