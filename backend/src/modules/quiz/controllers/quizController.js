@@ -29,9 +29,7 @@ async function submitAnswer(req, res, next) {
 
     return res.status(200).json({
       status: 'success',
-      message: result.isCorrect
-        ? 'Incrível! Você dominou este assunto.'
-        : 'Quase! Você está mais perto da resposta certa. Vamos tentar outra?',
+      message: result.isCorrect ? 'Correto!' : 'Resposta incorreta.',
       data: result,
     });
   } catch (err) {

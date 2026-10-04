@@ -8,35 +8,37 @@ import { QUIZ_ROUND_SIZE } from '../lib/quizRound';
 
 /**
  * Tela de Resultados (Doc. Mestre Seção 19.5). "Momento de maior pico de dopamina."
- * Inclui o Anúncio Estratégico 3 (Intersticial/Tela Cheia) — "ponto de maior
- * monetização" — exibido antes de liberar os botões de continuar, exatamente
- * como especificado: o usuário acabou de ganhar uma recompensa, então a
- * tolerância para o anúncio é alta.
+ *
+ * Primeiro vem o FEEDBACK PEDAGÓGICO (resultado, resposta correta e explicação): o quiz
+ * ensina, não só corrige. O Anúncio Estratégico 3 (Intersticial/Tela Cheia) continua
+ * a existir, mas passou a aparecer ao AVANÇAR (depois de o utilizador ter lido a
+ * explicação), em vez de tapar o ecrã de resultado.
  */
 export function QuizResult() {
   const { categoryId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const { result, message, round } = location.state || {};
+  const { result, message, round, question } = location.state || {};
   const roundFinished = Boolean(round) && round.answered >= QUIZ_ROUND_SIZE;
 
-  const [showAd, setShowAd] = useState(true);
+  // Destino pendente: ao tocar num botão, o intersticial aparece e só depois navega.
+  const [pendingNav, setPendingNav] = useState(null);
   const [adSecondsLeft, setAdSecondsLeft] = useState(5);
 
   useEffect(() => {
-    if (!result) return undefined;
+    if (!pendingNav) return undefined;
+    setAdSecondsLeft(5);
     const interval = setInterval(() => {
       setAdSecondsLeft((s) => {
         if (s <= 1) {
           clearInterval(interval);
-          setShowAd(false);
           return 0;
         }
         return s - 1;
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [result]);
+  }, [pendingNav]);
 
   useEffect(() => {
     if (!result) {
@@ -48,7 +50,11 @@ export function QuizResult() {
     return null;
   }
 
-  if (showAd) {
+  function goWithAd(to, options) {
+    setPendingNav({ to, options });
+  }
+
+  if (pendingNav) {
     return (
       <div className="min-h-screen bg-text flex flex-col items-center justify-center text-white px-6">
         {/* InterstitialAds controla a própria UI de tela cheia do Adcash por
@@ -63,12 +69,17 @@ export function QuizResult() {
         <div className="bg-white/10 rounded-card w-full max-w-sm h-64 flex items-center justify-center mb-4">
           <p className="text-body text-white/70">Espaço de anúncio (Intersticial)</p>
         </div>
-        <p className="text-caption text-white/60">
-          {adSecondsLeft > 0 ? `Continuar em ${adSecondsLeft}s` : 'Você já pode continuar'}
-        </p>
+        {adSecondsLeft > 0 ? (
+          <p className="text-caption text-white/60">Continuar em {adSecondsLeft}s</p>
+        ) : (
+          <PrimaryButton onClick={() => navigate(pendingNav.to, pendingNav.options)}>Continuar</PrimaryButton>
+        )}
       </div>
     );
   }
+
+  const chosenLabel = question?.alternatives?.find((a) => a.id === result.chosenAlternativeId)?.label;
+  const correctLabel = result.correctAlternative?.label;
 
   return (
     <div className="space-y-5 pt-6 pb-4">
@@ -85,12 +96,47 @@ export function QuizResult() {
           )}
         </div>
         <h1 className="font-display text-h1 text-text mb-1">
-          {result.isCorrect ? 'Incrível! Você dominou este assunto.' : message}
+          {result.isCorrect ? 'Correto!' : message || 'Resposta incorreta.'}
         </h1>
         {result.timeExpired && (
           <p className="text-caption text-text-secondary">O tempo esgotou desta vez.</p>
         )}
+        {!result.isCorrect && (
+          <p className="text-caption text-text-secondary">
+            Errar faz parte de aprender. Veja a resposta e a explicação abaixo.
+          </p>
+        )}
       </div>
+
+      {/* Feedback pedagógico: só aparece quando o servidor devolveu a resposta correta. */}
+      {correctLabel && (
+        <div className="bg-surface border border-border rounded-card p-5 space-y-4">
+          {question?.statement && (
+            <p className="text-caption text-text-secondary">{question.statement}</p>
+          )}
+
+          {!result.isCorrect && !result.timeExpired && chosenLabel && (
+            <div>
+              <p className="text-caption text-text-secondary uppercase tracking-wide mb-1">Você escolheu</p>
+              <p className="text-body text-text">{chosenLabel}</p>
+            </div>
+          )}
+
+          <div>
+            <p className="text-caption text-text-secondary uppercase tracking-wide mb-1">Resposta correta</p>
+            <p className="text-body font-semibold text-success">{correctLabel}</p>
+          </div>
+
+          {result.explanation && (
+            <div>
+              <p className="text-caption text-text-secondary uppercase tracking-wide mb-1">
+                {result.isCorrect ? 'Para complementar' : 'Por que esta é a resposta'}
+              </p>
+              <p className="text-body text-text">{result.explanation}</p>
+            </div>
+          )}
+        </div>
+      )}
 
       {result.isCorrect && (
         <div className="bg-surface border border-border rounded-card p-5 space-y-3">
@@ -195,16 +241,16 @@ export function QuizResult() {
       )}
 
       <div className="flex gap-3 pt-2">
-        <SecondaryButton onClick={() => navigate('/dashboard')} className="flex-1">
+        <SecondaryButton onClick={() => goWithAd('/dashboard')} className="flex-1">
           Painel
         </SecondaryButton>
         {roundFinished ? (
-          <PrimaryButton onClick={() => navigate('/hub-estudos', { replace: true })} className="flex-1">
+          <PrimaryButton onClick={() => goWithAd('/hub-estudos', { replace: true })} className="flex-1">
             Escolher categoria
           </PrimaryButton>
         ) : (
           <PrimaryButton
-            onClick={() => navigate(`/quiz/${categoryId}`, { replace: true, state: { round } })}
+            onClick={() => goWithAd(`/quiz/${categoryId}`, { replace: true, state: { round } })}
             className="flex-1"
           >
             Próxima pergunta

@@ -38,13 +38,13 @@ async function getRandomQuestion(categoryId, executor = db) {
 
 async function getQuestionWithCorrectAlternative(questionId, executor = db) {
   const { rows } = await executor.query(
-    `SELECT id, category_id, time_limit_seconds, xp_reward, difficulty FROM questions WHERE id = $1 AND is_active = TRUE`,
+    `SELECT id, category_id, time_limit_seconds, xp_reward, difficulty, explanation FROM questions WHERE id = $1 AND is_active = TRUE`,
     [questionId]
   );
   if (!rows[0]) return null;
 
   const altResult = await executor.query(
-    `SELECT id, is_correct FROM question_alternatives WHERE question_id = $1`,
+    `SELECT id, label, is_correct FROM question_alternatives WHERE question_id = $1 ORDER BY display_order`,
     [questionId]
   );
 

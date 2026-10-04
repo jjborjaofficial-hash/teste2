@@ -13,7 +13,7 @@ Branch de trabalho: `feat/quiz-aprendizagem`
 |---|---|---|
 | 1 | Analisar o projeto existente | Concluída (checkpoint 0) |
 | 2 | Identificar ficheiros a modificar | Concluída (checkpoint 0) |
-| 3 | Feedback pedagógico (certo/errado) | Pendente |
+| 3 | Feedback pedagógico (certo/errado) | Concluída no código (checkpoint 1). Falta o conteúdo das explicações (fase 10) |
 | 4 | Checkpoint técnico de 5 perguntas | Pendente |
 | 5 | Rodada de 10 + resumo da rodada | Pendente |
 | 6 | Persistência/recuperação do estado | Pendente |
@@ -24,21 +24,26 @@ Branch de trabalho: `feat/quiz-aprendizagem`
 | 11 | Testes | Pendente |
 | 12 | Relatório final | Pendente |
 
-## Próximo bloco (checkpoint 1)
+## Próximo bloco (checkpoint 2): rodada de 10 persistente + resumo da rodada
 
-1. Backend: `submitAnswer` passa a devolver `correctAlternativeId` e `explanation`
-   (só depois de registar a resposta; a pergunta continua sem expor a correta).
-2. Backend: devolver `difficulty` e `categoryId` no resultado para o feedback e o resumo.
-3. Frontend: ecrã de resultado com feedback pedagógico (acerto: confirmação + complemento;
-   erro: resposta correta + explicação + o que aprender + dica), destacando a alternativa
-   correta e a escolhida.
-4. Tratar pergunta sem explicação (fallback sem inventar texto).
-5. Testes unitários do novo comportamento do `submitAnswer`.
+1. Migration: tabela de rodadas (`quiz_rounds`: utilizador, categoria, início, conclusão,
+   resumo mostrado) e coluna opcional `round_id` em `quiz_attempts`.
+2. Backend: iniciar/retomar a rodada atual; `next-question` não repete perguntas já
+   respondidas na rodada; `submitAnswer` associa a tentativa à rodada e devolve o progresso
+   (respondidas, acertos, checkpoint técnico aos 5, rodada concluída aos 10).
+3. Backend: endpoint de resumo da rodada (acertos, erros, %, XP, melhor/pior conceito
+   ou categoria, recomendação de revisão).
+4. Frontend: usar o estado da rodada vindo do servidor (recarregar a página recupera),
+   contador "Pergunta N de 10", sem resumo aos 5.
+5. Frontend: ecrã de resumo da rodada (reutilizando os componentes atuais) + testes.
 
 ## Decisões em aberto (confirmar com o proprietário)
 
-- **Anúncio intersticial:** hoje aparece 5 s antes do resultado e esconderia a explicação.
-  Proposta: mostrar primeiro o feedback e o anúncio depois (ao avançar). Ainda não confirmado.
+- **Anúncio intersticial:** passou a aparecer ao avançar (depois do feedback), em vez de antes
+  do resultado (implementado no checkpoint 1 seguindo a proposta). Confirmar se o proprietário
+  concorda, por afetar a monetização.
+- **Risco conhecido:** errar de propósito revela a resposta correta de uma pergunta que pode
+  voltar a sair. É inerente ao feedback que ensina; a rodada sem repetição (checkpoint 2) reduz isto.
 - **Conteúdo:** 1.659 perguntas precisam de explicação e de reescrita das alternativas.
   Será feito por lotes, em migrations; recomenda-se revisão humana.
 
@@ -96,5 +101,28 @@ digital difícil 97%, tecnologia médio 94%.
   quiz (backend, frontend, schema) e auditoria das alternativas.
 - **Testado:** auditoria por script sobre as migrations de seed (parser de SQL). Nenhum
   código de produção foi alterado.
-- **Commit / Push:** ver histórico da branch `feat/quiz-aprendizagem`.
-- **Próximo bloco:** checkpoint 1 (ver acima).
+- **Commit / Push:** `61306ba`, enviado com sucesso.
+- **Próximo bloco:** checkpoint 1.
+
+### Checkpoint 1: feedback pedagógico (5 alterações)
+
+- **Implementado:**
+  1. `quizRepository`: devolve `explanation` e o texto das alternativas ao validar a resposta.
+  2. `quizService.submitAnswer`: devolve `correctAlternative`, `chosenAlternativeId`,
+     `explanation`, `difficulty` e `categoryId` só depois de registar a resposta. Anti-colheita:
+     não revela a correta se a pergunta não foi entregue ao utilizador (sem registo do cronómetro).
+  3. `quizController`: mensagens passam a "Correto!" e "Resposta incorreta.".
+  4. Frontend: ecrã de resultado com o feedback (resposta escolhida, resposta correta,
+     explicação), tom sem humilhação; `Quiz.jsx` passa o texto da pergunta ao resultado.
+  5. Anúncio intersticial movido para o momento de avançar. Pergunta sem explicação mostra
+     só a resposta correta (nada é inventado).
+- **Testado:**
+  - Novo `backend/tests/quiz-feedback.test.js` (8 testes, passam): acerto, erro, tempo esgotado,
+    anti-colheita, sem explicação, explicação vazia, alternativa inválida, e a pergunta enviada
+    ao cliente sem `is_correct`/`explanation`. Teste `login-mission` continua a passar.
+  - `npm run build` do frontend passa.
+  - **Não executado:** o teste supertest existente (`quiz-wallet-ranking`) precisa de Redis,
+    que não existe neste ambiente. Não foi feito teste manual no navegador nem com banco real.
+  - O repositório não tem configuração do ESLint, por isso não houve lint.
+- **Commit / Push:** ver histórico da branch (commit `feat(quiz): add pedagogical feedback ...`).
+- **Próximo bloco:** checkpoint 2 (ver acima).

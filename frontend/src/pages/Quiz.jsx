@@ -89,7 +89,17 @@ export function Quiz() {
       // replace: o botão voltar não reabre uma pergunta já respondida (não dá para passar das 10).
       navigate(`/quiz/${categoryId}/resultado`, {
         replace: true,
-        state: { result: result.data, message: result.message, round: nextRound(round, result.data) },
+        state: {
+          result: result.data,
+          message: result.message,
+          round: nextRound(round, result.data),
+          // Texto da pergunta e das alternativas (o cliente já os tinha): o ecrã de resultado
+          // mostra a resposta escolhida e a correta sem pedir nada de novo ao servidor.
+          question: {
+            statement: question.statement,
+            alternatives: question.alternatives.map((a) => ({ id: a.id, label: a.label })),
+          },
+        },
       });
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Não foi possível enviar sua resposta.');

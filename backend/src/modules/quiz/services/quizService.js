@@ -35,6 +35,34 @@ async function getPointsRewardForDifficulty(difficulty) {
   return value !== null ? Number(value) : (DEFAULT_POINTS_BY_DIFFICULTY[difficulty] ?? 0);
 }
 
+/**
+ * Feedback pedagógico devolvido DEPOIS de a resposta ter sido registada: a alternativa
+ * correta e a explicação. Antes de responder, o cliente nunca recebe nada disto
+ * (getRandomQuestion não traz `is_correct` nem `explanation`).
+ *
+ * Anti-colheita: só revela a correta se a pergunta foi realmente entregue a este
+ * utilizador por `next-question` (existe registo do cronómetro). Quem chama
+ * `POST /quiz/answers` diretamente, com IDs de perguntas que nunca pediu, não fica a
+ * conhecer as respostas. Se o Redis estiver indisponível o registo não existe, e o
+ * feedback simplesmente não é enviado (o ecrã trata a ausência).
+ */
+function buildLearningFeedback(question, chosenAlternative, { questionWasIssued }) {
+  const base = {
+    chosenAlternativeId: chosenAlternative.id,
+    difficulty: question.difficulty,
+    categoryId: question.category_id,
+  };
+  if (!questionWasIssued) {
+    return { ...base, correctAlternative: null, explanation: null };
+  }
+  const correct = question.alternatives.find((a) => a.is_correct);
+  return {
+    ...base,
+    correctAlternative: correct ? { id: correct.id, label: correct.label } : null,
+    explanation: question.explanation ? String(question.explanation).trim() || null : null,
+  };
+}
+
 async function listCategories() {
   return repository.listActiveCategories();
 }
@@ -133,6 +161,7 @@ async function submitAnswer({ userId, questionId, alternativeId }) {
     return {
       isCorrect,
       timeExpired,
+      ...buildLearningFeedback(question, chosenAlternative, { questionWasIssued: elapsedMs !== null }),
       xpAwarded,
       pointsAwarded: xpResult ? xpResult.pointsCredited : 0,
       newXpTotal: xpResult ? xpResult.xpTotal : undefined,
@@ -155,4 +184,4 @@ async function submitAnswer({ userId, questionId, alternativeId }) {
   }
 }
 
-module.exports = { listCategories, getNextQuestion, submitAnswer };
+module.exports = { listCategories, getNextQuestion, submitAnswer, buildLearningFeedback };
