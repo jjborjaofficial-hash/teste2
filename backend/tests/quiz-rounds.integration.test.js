@@ -108,4 +108,22 @@ maybe('quiz: rodadas com banco real', () => {
     const att = (await db.query(`SELECT round_id FROM quiz_attempts WHERE user_id = $1 AND question_id = $2 ORDER BY created_at DESC LIMIT 1`, [userId, q.id])).rows[0];
     expect(att.round_id).toBeNull();
   });
+
+  it('quiz_round_questions: posição única e a mesma pergunta nunca duas vezes na rodada', async () => {
+    const q = await quizService.getNextQuestion(categoryId, userId);
+    const roundId = q.round.id;
+    const ids = (await db.query(`SELECT id FROM questions WHERE category_id = $1 AND is_active LIMIT 3`, [categoryId])).rows.map((r) => r.id);
+    await db.query(`DELETE FROM quiz_round_questions WHERE round_id = $1`, [roundId]);
+    await db.query(`INSERT INTO quiz_round_questions (round_id, position, question_id) VALUES ($1, 1, $2), ($1, 2, $3)`, [roundId, ids[0], ids[1]]);
+    await expect(
+      db.query(`INSERT INTO quiz_round_questions (round_id, position, question_id) VALUES ($1, 1, $2)`, [roundId, ids[2]])
+    ).rejects.toThrow(/duplicate key|unique/i); // posição repetida
+    await expect(
+      db.query(`INSERT INTO quiz_round_questions (round_id, position, question_id) VALUES ($1, 3, $2)`, [roundId, ids[0]])
+    ).rejects.toThrow(/uq_quiz_round_question|duplicate key/i); // pergunta repetida
+    await expect(
+      db.query(`INSERT INTO quiz_round_questions (round_id, position, question_id) VALUES ($1, 0, $2)`, [roundId, ids[2]])
+    ).rejects.toThrow(/check/i); // posição tem de ser > 0
+    await db.query(`DELETE FROM quiz_round_questions WHERE round_id = $1`, [roundId]);
+  });
 });

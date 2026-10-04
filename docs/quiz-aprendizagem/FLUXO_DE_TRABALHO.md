@@ -102,6 +102,8 @@ git -c http.extraheader="$H" push origin feat/quiz-aprendizagem
 - `audit_logs` é append-only: não dá para apagar utilizadores de teste; limpar só rodadas e tentativas.
 - `users.phone_provider` só aceita `mpesa` ou `emola`; o cadastro real também cria a linha em `streaks`.
 - O antifraude trata respostas em menos de ~400 ms como suspeitas; nos testes esperar ~450 ms antes de responder.
+- Postgres e Redis de teste podem **cair entre sessões/chamadas** (erro "connection refused" na porta 5432): rodar `service postgresql start` e `redis-server --daemonize yes --dir /tmp` e repetir.
+- Antes de `git add -A`, ver `git status --short`: ficheiros em andamento de outro pedaço entram no commit (já aconteceu com o P3b).
 - `apt-get install` pode falhar com 404 se o índice estiver velho: rodar `apt-get update` antes.
 - Os números da auditoria (1.659 perguntas, 0 explicações, 1.483 com a correta mais longa) saem de
   `select` no banco depois das migrations; servem para conferir o ambiente.

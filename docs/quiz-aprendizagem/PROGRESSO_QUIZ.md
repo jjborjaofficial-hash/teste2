@@ -23,7 +23,7 @@ Marcar `[x]` ao concluir e enviar. Pegar sempre o primeiro `[ ]`.
 - [x] P3b. Campos próprios `learn_point` ("Aprenda:" / "O que aprender:") e `memory_tip` ("Dica:", só ao errar): migration 108, repositório e serviço (estes três já tinham entrado no commit `a8dd5f8`, junto com a documentação) e agora também o ecrã de resultado. Testes: 23 unitários e 4 com banco real passam; build do frontend passa. As colunas continuam vazias até ao conteúdo (P15).
 
 **Seleção e persistência da rodada**
-- [ ] P4. Migration: guardar as 10 perguntas da rodada e a posição atual (`quiz_round_questions`).
+- [x] P4. Migration 109 `quiz_round_questions` (rodada, posição 1..N, pergunta): posição única e a mesma pergunta nunca duas vezes na rodada; índice por pergunta para o histórico recente (P5). Testado no banco real (restrições de posição repetida, pergunta repetida e posição 0). Ainda não é usada pelo serviço (P5 e P6).
 - [ ] P5. Selecionar as 10 perguntas ao iniciar a rodada (variedade de dificuldade; evitar as vistas recentemente pelo utilizador).
 - [ ] P6. `next-question` serve a pergunta pela posição guardada; testes de recarregar/duplicar resposta.
 - [ ] P7. Histórico da rodada: tempo total, XP e recompensas guardados na rodada.
