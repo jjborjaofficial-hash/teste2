@@ -13,6 +13,7 @@ jest.mock('../src/modules/missions/repositories/missionsRepository', () => ({
     { id: 'm2', type: 'weekly', target_quiz_count: 5 },
   ]),
   assignMissionIfNotPresent: jest.fn(),
+  expireStaleDailyForUser: jest.fn().mockResolvedValue(undefined),
   completeLoginMissions: jest.fn().mockResolvedValue([{ id: 'um1', title: 'Entrar na plataforma' }]),
 }));
 jest.mock('../src/modules/notifications/services/notificationsService', () => ({
