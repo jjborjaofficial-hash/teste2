@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { quizApi } from '../api/quizApi';
 import { ApiError } from '../api/client';
-import { EMPTY_ROUND, QUIZ_ROUND_SIZE, nextRound } from '../lib/quizRound';
 
 /**
  * Tela de Quiz Ativo (Doc. Mestre Seção 19.4 — "O Coração do Sistema").
@@ -19,8 +18,6 @@ import { EMPTY_ROUND, QUIZ_ROUND_SIZE, nextRound } from '../lib/quizRound';
 export function Quiz() {
   const { categoryId } = useParams();
   const navigate = useNavigate();
-  const location = useLocation();
-  const round = location.state?.round || EMPTY_ROUND;
 
   const [question, setQuestion] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -34,7 +31,10 @@ export function Quiz() {
     setLoading(true);
     setError(null);
     setQuestion(null);
-    quizApi.nextQuestion(categoryId)
+    // Entrar na categoria inicia uma rodada de 10 perguntas escolhidas pelo servidor, ou retoma
+    // a que já está em andamento nela (recarregar a página não perde nem duplica respostas).
+    quizApi.startRound(categoryId)
+      .then((started) => quizApi.roundQuestion(started.data.id))
       .then((res) => {
         setQuestion(res.data);
         // CORREÇÃO (F5 reinicia o relógio visual): o servidor pode devolver a
@@ -52,14 +52,8 @@ export function Quiz() {
   }, [categoryId]);
 
   useEffect(() => {
-    if (round.answered >= QUIZ_ROUND_SIZE) {
-      // Rodada já terminada: para jogar de novo é preciso abrir a categoria outra vez.
-      navigate('/hub-estudos', { replace: true });
-      return undefined;
-    }
     loadQuestion();
     return () => clearInterval(timerRef.current);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadQuestion]);
 
   useEffect(() => {
@@ -91,11 +85,13 @@ export function Quiz() {
       const result = await quizApi.submitAnswer({
         questionId: question.id,
         alternativeId,
+        roundId: question.round.id,
       });
-      // replace: o botão voltar não reabre uma pergunta já respondida (não dá para passar das 10).
+      // replace: o botão voltar não reabre uma pergunta já respondida. O progresso da rodada
+      // (n/10) e o resumo final vêm do servidor dentro de `result.data`.
       navigate(`/quiz/${categoryId}/resultado`, {
         replace: true,
-        state: { result: result.data, message: result.message, round: nextRound(round, result.data) },
+        state: { result: result.data, message: result.message },
       });
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Não foi possível enviar sua resposta.');
@@ -152,7 +148,7 @@ export function Quiz() {
 
       <header className="flex items-center justify-between mb-8">
         <span className="text-caption text-text-secondary uppercase tracking-wide">
-          Pergunta {round.answered + 1} de {QUIZ_ROUND_SIZE}
+          {question.round.current}/{question.round.total}
         </span>
         {/* Segundos visíveis a decrescer (a barra fina continua acima). aria-hidden para o
             leitor de ecrã não anunciar a cada segundo; o texto sr-only abaixo cobre isso. */}

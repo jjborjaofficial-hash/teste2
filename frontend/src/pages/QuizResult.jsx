@@ -4,7 +4,6 @@ import { PrimaryButton, SecondaryButton } from '../components/Button';
 import { RewardBadge } from '../components/RewardBadge';
 import { CheckIcon, CloseDrawIcon, FireIcon, XpIcon, WalletIcon, PointsIcon, AchievementIcon } from '../icons';
 import { InterstitialAds } from '../ads';
-import { QUIZ_ROUND_SIZE } from '../lib/quizRound';
 
 /**
  * Tela de Resultados (Doc. Mestre Seção 19.5). "Momento de maior pico de dopamina."
@@ -13,12 +12,17 @@ import { QUIZ_ROUND_SIZE } from '../lib/quizRound';
  * como especificado: o usuário acabou de ganhar uma recompensa, então a
  * tolerância para o anúncio é alta.
  */
+const DIFFICULTY_LABEL = { easy: 'fácil', medium: 'médio', hard: 'difícil' };
+
 export function QuizResult() {
   const { categoryId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const { result, message, round } = location.state || {};
-  const roundFinished = Boolean(round) && round.answered >= QUIZ_ROUND_SIZE;
+  const { result, message } = location.state || {};
+  // O progresso da rodada e o resumo final vêm do servidor (resposta de /quiz/answers).
+  const round = result?.round;
+  const summary = result?.roundSummary;
+  const roundFinished = Boolean(round?.finished && summary);
 
   const [showAd, setShowAd] = useState(true);
   const [adSecondsLeft, setAdSecondsLeft] = useState(5);
@@ -176,41 +180,73 @@ export function QuizResult() {
       )}
 
       {roundFinished && (
-        <div className="bg-surface border border-border rounded-card p-5 text-center space-y-1">
-          <p className="font-display font-semibold text-text">Rodada concluída!</p>
-          <p className="text-body text-text-secondary">
-            Você acertou {round.correct} de {QUIZ_ROUND_SIZE} perguntas
-            {round.xp > 0 ? ` e ganhou ${round.xp} XP` : ''}.
+        <div className="bg-surface border border-border rounded-card p-5 space-y-3">
+          <p className="font-display font-semibold text-text text-center">Rodada concluída</p>
+          <div className="grid grid-cols-3 gap-2 text-center">
+            <div>
+              <p className="font-display font-semibold text-text">{summary.total}</p>
+              <p className="text-caption text-text-secondary">perguntas</p>
+            </div>
+            <div>
+              <p className="font-display font-semibold text-success">{summary.correct}</p>
+              <p className="text-caption text-text-secondary">acertos</p>
+            </div>
+            <div>
+              <p className="font-display font-semibold text-danger">{summary.wrong}</p>
+              <p className="text-caption text-text-secondary">erros</p>
+            </div>
+          </div>
+          <p className="text-body text-text-secondary text-center">
+            {summary.accuracyPercent}% de aproveitamento
+            {summary.xpTotal > 0 ? ` · +${summary.xpTotal} XP` : ''}
           </p>
-          <p className="text-caption text-text-secondary">
-            Para responder de novo, escolha a categoria outra vez em "Escolher categoria".
-          </p>
+          {summary.bestDifficulty && (
+            <p className="text-caption text-text-secondary text-center">
+              Melhor desempenho: perguntas de nível {DIFFICULTY_LABEL[summary.bestDifficulty]}.
+            </p>
+          )}
+          {summary.reviewStatements.length > 0 && (
+            <div className="border-t border-border pt-3 space-y-1">
+              <p className="text-caption font-semibold text-text">Vale a pena rever</p>
+              <ul className="list-disc pl-5 space-y-1">
+                {summary.reviewStatements.slice(0, 3).map((statement) => (
+                  <li key={statement} className="text-caption text-text-secondary">{statement}</li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       )}
 
       {!roundFinished && round && (
         <p className="text-caption text-text-secondary text-center">
-          Pergunta {round.answered} de {QUIZ_ROUND_SIZE} respondida
+          {round.answered}/{round.total} respondidas
         </p>
       )}
 
-      <div className="flex gap-3 pt-2">
-        <SecondaryButton onClick={() => navigate('/dashboard')} className="flex-1">
-          Painel
-        </SecondaryButton>
-        {roundFinished ? (
-          <PrimaryButton onClick={() => navigate('/hub-estudos', { replace: true })} className="flex-1">
-            Escolher categoria
-          </PrimaryButton>
-        ) : (
+      {roundFinished ? (
+        // Exatamente 3 caminhos; nenhum inicia uma nova rodada sozinho. A nova rodada só
+        // começa depois de o utilizador escolher uma categoria.
+        <div className="flex flex-col gap-3 pt-2">
+          <PrimaryButton onClick={() => navigate('/dashboard')}>Painel inicial</PrimaryButton>
+          <SecondaryButton onClick={() => navigate('/hub-estudos', { replace: true })}>
+            Escolher novamente uma categoria
+          </SecondaryButton>
+          <SecondaryButton onClick={() => navigate('/missoes')}>Ver missões em andamento</SecondaryButton>
+        </div>
+      ) : (
+        <div className="flex gap-3 pt-2">
+          <SecondaryButton onClick={() => navigate('/dashboard')} className="flex-1">
+            Painel
+          </SecondaryButton>
           <PrimaryButton
-            onClick={() => navigate(`/quiz/${categoryId}`, { replace: true, state: { round } })}
+            onClick={() => navigate(`/quiz/${categoryId}`, { replace: true })}
             className="flex-1"
           >
             Próxima pergunta
           </PrimaryButton>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
