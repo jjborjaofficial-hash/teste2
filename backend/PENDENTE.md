@@ -37,8 +37,9 @@ fácil → médio → difícil; lotes de 5 perguntas, e cada lote = migration + 
 esta atualização. Dentro de cada dificuldade segue-se a ordem dos seeds e, em cada seed, a ordem das
 perguntas no ficheiro. A explicação é o "Por quê?" (coluna `questions.explanation`), curta e em
 linguagem simples nas fáceis.
-- Finanças fácil (seeds 045 → 064 → 068 → 094 → 099): **feito** lote 01 = 5 primeiras do seed 045
-  (migration 109). **Próximo:** lote 02 = perguntas 6 a 10 do seed 045 (começa em "O que é consumo?").
+- Finanças fácil (seeds 045 → 064 → 068 → 094 → 099): **feito** lote 01 = perguntas 1 a 5 do seed 045
+  (migration 109) e lote 02 = perguntas 6 a 10 (migration 110). **Próximo:** lote 03 = perguntas 11 a 15
+  do seed 045 (começa em "O que é preço?").
 - Finanças médio (seeds 046 → 065 → 069 → 100): pendente.
 - Finanças difícil (seeds 047 → 073 → 074 → 075 → 083): pendente.
 - IA, Marketing Digital, Produtividade, Tecnologia: pendentes (ordem a decidir pelo dono).
