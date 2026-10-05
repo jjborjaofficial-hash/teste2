@@ -31,3 +31,17 @@ resposta do quiz não a devolve. Devolver, só depois de responder: resposta cor
 "O que aprender" e dica opcional, adaptados à dificuldade. Conteúdo: escrever as explicações
 por categoria, começando por uma (decisão do dono pendente: qual primeiro). Sem explicação, usar
 um feedback genérico seguro enquanto o conteúdo não existir.
+
+**Progresso das explicações (atualizar a cada push).** Decisão do dono: começar por Finanças; ordem
+fácil → médio → difícil; lotes de 5 perguntas, e cada lote = migration + testes + commit + push +
+esta atualização. Dentro de cada dificuldade segue-se a ordem dos seeds e, em cada seed, a ordem das
+perguntas no ficheiro. A explicação é o "Por quê?" (coluna `questions.explanation`), curta e em
+linguagem simples nas fáceis.
+- Finanças fácil (seeds 045 → 064 → 068 → 094 → 099): **feito** lote 01 = 5 primeiras do seed 045
+  (migration 109). **Próximo:** lote 02 = perguntas 6 a 10 do seed 045 (começa em "O que é consumo?").
+- Finanças médio (seeds 046 → 065 → 069 → 100): pendente.
+- Finanças difícil (seeds 047 → 073 → 074 → 075 → 083): pendente.
+- IA, Marketing Digital, Produtividade, Tecnologia: pendentes (ordem a decidir pelo dono).
+
+Nota: até a parte técnica (devolver a explicação na resposta + mostrá-la no ecrã, FE-003) estar feita,
+estas migrations só preenchem o texto; o jogador ainda não o vê.

@@ -121,8 +121,10 @@ daquela rodada com os 3 botões. Testes: `backend/tests/quiz-rounds.test.js` e
    "O que aprender", dica; mostrar no ecrã de resultado (acerto = confirmar + complementar; erro =
    corrigir + explicar). A coluna `questions.explanation` existe mas está vazia nas 1.659
    perguntas. Escrever as explicações **por categoria**, começando por uma. *Decisão do dono
-   pendente: qual categoria primeiro* (IA 336, Finanças 301, Marketing Digital 306,
-   Produtividade 396, Tecnologia 320). Sem explicação, usar um feedback genérico seguro.
+   tomada: Finanças primeiro* (de 301 perguntas; as outras: IA 336, Marketing Digital 306,
+   Produtividade 396, Tecnologia 320), ordem fácil → médio → difícil, em lotes de 5 com commit e push
+   a cada lote. O estado atual e o próximo lote estão em "Progresso das explicações" no BE-004 de
+   `backend/PENDENTE.md` — atualizar lá a cada push. Sem explicação, usar um feedback genérico seguro.
 2. **BE-003 — validador de qualidade das alternativas.** Hoje a correta é a mais longa em 90,8%
    das perguntas (a posição já é equilibrada). Validador + fila de revisão; reprovadas não são
    servidas nas rodadas novas. *Proposta aguardando confirmação do dono:* manter as existentes a
