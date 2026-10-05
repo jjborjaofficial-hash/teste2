@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { PrimaryButton } from '../components/Button';
+import { GoogleLoginButton } from '../components/GoogleLoginButton';
 import { ApiError } from '../api/client';
 
 /**
@@ -159,6 +160,8 @@ export function Register() {
             Criar Nova Conta
           </PrimaryButton>
         </form>
+
+        <GoogleLoginButton />
 
         <p className="text-caption text-text-secondary text-center mt-6">
           Já tem conta? <Link to="/entrar" className="text-primary font-semibold">Entrar</Link>

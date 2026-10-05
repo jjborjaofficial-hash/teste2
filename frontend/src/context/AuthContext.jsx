@@ -54,6 +54,21 @@ export function AuthProvider({ children }) {
     return result.data.user;
   }, []);
 
+  const loginWithGoogle = useCallback(async (idToken) => {
+    const result = await authApi.loginWithGoogle(idToken);
+    setTokens(result.data);
+    setUser(result.data.user);
+    return result.data.user;
+  }, []);
+
+  // Pedida logo após o primeiro login via Google (conta nasce sem telefone);
+  // atualiza o user em memória para refletir needsPhone: false imediatamente.
+  const completeProfile = useCallback(async (formData) => {
+    const result = await authApi.completeProfile(formData);
+    setUser(result.data.user);
+    return result.data.user;
+  }, []);
+
   const logout = useCallback(async () => {
     clearTokens();
     setUser(null);
@@ -73,7 +88,9 @@ export function AuthProvider({ children }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, register, login, logout, refreshProfile }}>
+    <AuthContext.Provider
+      value={{ user, loading, register, login, loginWithGoogle, completeProfile, logout, refreshProfile }}
+    >
       {children}
     </AuthContext.Provider>
   );

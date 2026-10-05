@@ -26,6 +26,69 @@ async function findUserById(id) {
   return rows[0] || null;
 }
 
+async function findUserByGoogleId(googleId) {
+  const { rows } = await db.query(
+    `SELECT id, name, phone, phone_provider, email, google_id, avatar_url,
+            trust_score, status, role, xp_total, points_balance, wallet_balance_mzn
+     FROM users
+     WHERE google_id = $1 AND deleted_at IS NULL`,
+    [googleId]
+  );
+  return rows[0] || null;
+}
+
+async function findUserByEmail(email) {
+  const { rows } = await db.query(
+    `SELECT id, name, phone, phone_provider, email, google_id, avatar_url,
+            trust_score, status, role, xp_total, points_balance, wallet_balance_mzn
+     FROM users
+     WHERE email = $1 AND deleted_at IS NULL`,
+    [email]
+  );
+  return rows[0] || null;
+}
+
+/**
+ * Cria uma conta a partir do primeiro login via Google. Nasce sem telefone
+ * (Google não fornece) — a tela "completar perfil" preenche isso a seguir.
+ * is_adult_declared/terms_accepted_at ficam pendentes até lá também.
+ */
+async function createUserFromGoogle({ name, email, googleId, avatarUrl }) {
+  const { rows } = await db.query(
+    `INSERT INTO users (
+        name, email, google_id, avatar_url, status, is_adult_declared
+     ) VALUES ($1, $2, $3, $4, 'pending_verification', FALSE)
+     RETURNING id, name, phone, email, google_id, avatar_url, trust_score, status,
+               xp_total, points_balance, wallet_balance_mzn`,
+    [name, email, googleId, avatarUrl]
+  );
+  return rows[0];
+}
+
+/** Vincula uma conta Google a uma conta já existente, encontrada pelo e-mail. */
+async function linkGoogleToUser(userId, { googleId, avatarUrl }) {
+  const { rows } = await db.query(
+    `UPDATE users SET google_id = $1, avatar_url = COALESCE(avatar_url, $2)
+     WHERE id = $3
+     RETURNING id, name, phone, email, google_id, avatar_url, trust_score, status,
+               xp_total, points_balance, wallet_balance_mzn`,
+    [googleId, avatarUrl, userId]
+  );
+  return rows[0];
+}
+
+/** Preenche telefone + check-in jurídico de uma conta criada via Google. */
+async function completeGoogleProfile(userId, { phone, phoneProvider, isAdultDeclared }) {
+  const { rows } = await db.query(
+    `UPDATE users
+        SET phone = $1, phone_provider = $2, is_adult_declared = $3, status = 'active'
+      WHERE id = $4
+      RETURNING id, name, phone, trust_score, status, xp_total, points_balance, wallet_balance_mzn`,
+    [phone, phoneProvider, isAdultDeclared, userId]
+  );
+  return rows[0];
+}
+
 async function createUser({ name, phone, phoneProvider, passwordHash, isAdultDeclared, termsVersion }) {
   const { rows } = await db.query(
     `INSERT INTO users (
@@ -114,7 +177,12 @@ async function insertAuditLog({ userId, action, entity, entityId, metadata, ipAd
 module.exports = {
   findUserByPhone,
   findUserById,
+  findUserByGoogleId,
+  findUserByEmail,
   createUser,
+  createUserFromGoogle,
+  linkGoogleToUser,
+  completeGoogleProfile,
   createStreakRow,
   recordLoginAttempt,
   touchLastLogin,

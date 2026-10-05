@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+const { OAuth2Client } = require('google-auth-library');
 const repository = require('../repositories/authRepository');
 const referralsService = require('../../referrals/services/referralsService');
 const legalService = require('../../legal/services/legalService');
@@ -179,6 +180,129 @@ async function login({ phone, password }, context) {
   return { user: sanitizeUser(user), ...tokens };
 }
 
+/**
+ * Login/Cadastro via Google (Doc. Mestre Seção 17, variante sem telefone no
+ * primeiro passo). O backend NUNCA confia em dados enviados pelo cliente
+ * sobre quem é o usuário do Google — o idToken é verificado diretamente
+ * junto aos servidores do Google antes de qualquer decisão.
+ *
+ * Conta nova entra sem telefone (status 'pending_verification'); o
+ * controller sinaliza isso ao frontend via needsPhone para redirecionar à
+ * tela de completar perfil antes de liberar o resto do app.
+ */
+async function loginWithGoogle({ idToken }, context) {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  if (!clientId) {
+    logger.warn('Login com Google chamado sem GOOGLE_CLIENT_ID configurado no servidor.');
+    throw new ForbiddenError('Login com Google não está disponível no momento.');
+  }
+
+  const googleClient = new OAuth2Client(clientId);
+  let payload;
+  try {
+    const ticket = await googleClient.verifyIdToken({ idToken, audience: clientId });
+    payload = ticket.getPayload();
+  } catch (err) {
+    throw new UnauthorizedError('Não foi possível verificar o login com o Google.');
+  }
+
+  if (!payload?.sub || !payload?.email) {
+    throw new UnauthorizedError('Resposta do Google incompleta.');
+  }
+
+  const googleId = payload.sub;
+  const email = payload.email.toLowerCase();
+  const name = payload.name || email.split('@')[0];
+  const avatarUrl = payload.picture || null;
+
+  let user = await repository.findUserByGoogleId(googleId);
+
+  if (!user) {
+    // Pode já existir uma conta com esse e-mail (cadastrada por telefone
+    // normalmente, que também guardou o e-mail depois) — nesse caso, apenas
+    // vincula o Google a ela em vez de criar uma conta duplicada.
+    const existingByEmail = await repository.findUserByEmail(email);
+    if (existingByEmail) {
+      user = await repository.linkGoogleToUser(existingByEmail.id, { googleId, avatarUrl });
+    } else {
+      user = await repository.createUserFromGoogle({ name, email, googleId, avatarUrl });
+      await repository.createStreakRow(user.id);
+    }
+
+    await repository.insertAuditLog({
+      userId: user.id,
+      action: 'user.registered_google',
+      entity: 'users',
+      entityId: user.id,
+      metadata: { email },
+      ipAddress: context.ipAddress,
+    });
+  }
+
+  if (user.status === 'banned' || user.status === 'suspended') {
+    throw new ForbiddenError('Esta conta está inativa. Contate o suporte.');
+  }
+
+  await repository.touchLastLogin(user.id);
+  await repository.insertAuditLog({
+    userId: user.id,
+    action: 'user.login_google',
+    entity: 'users',
+    entityId: user.id,
+    ipAddress: context.ipAddress,
+  });
+
+  const tokens = await issueTokenPair(user, context);
+  if (user.phone) {
+    await markDailyPresence(user.id);
+  }
+
+  return { user: sanitizeUser(user), ...tokens };
+}
+
+/**
+ * Completa o perfil de uma conta criada via Google: telefone (M-Pesa/e-Mola)
+ * + check-in jurídico (maioridade + Termos), espelhando as exigências do
+ * cadastro normal (Seção 16.1 e 17 do Doc. Mestre), só que em dois passos.
+ */
+async function completeProfile(userId, { phone, isAdultDeclared }, context) {
+  const existingPhone = await repository.findUserByPhone(phone);
+  if (existingPhone && existingPhone.id !== userId) {
+    throw new ConflictError('Já existe uma conta cadastrada com este número de telefone.');
+  }
+
+  const phoneProvider = detectPhoneProvider(phone);
+  const user = await repository.completeGoogleProfile(userId, { phone, phoneProvider, isAdultDeclared });
+  if (!user) {
+    throw new UnauthorizedError('Usuário não encontrado.');
+  }
+
+  await repository.createStreakRow(user.id);
+
+  const acceptedDocs = await legalService.acceptMandatoryDocuments(user.id, {
+    ipAddress: context.ipAddress,
+    userAgent: context.userAgent,
+  });
+  const termosAceito = acceptedDocs.find((d) => d.type === 'termos');
+  if (termosAceito) {
+    await repository.acceptTerms(user.id, termosAceito.version);
+  }
+
+  await repository.insertAuditLog({
+    userId: user.id,
+    action: 'user.completed_google_profile',
+    entity: 'users',
+    entityId: user.id,
+    metadata: { phoneProvider },
+    ipAddress: context.ipAddress,
+  });
+
+  await userCache.invalidateProfile(user.id);
+  await markDailyPresence(user.id, { once: true });
+
+  return sanitizeUser(user);
+}
+
 async function refresh({ refreshToken }, context) {
   const tokenHash = hashToken(refreshToken);
   const stored = await repository.findValidRefreshToken(tokenHash);
@@ -210,12 +334,18 @@ function sanitizeUser(user) {
     id: user.id,
     name: user.name,
     phone: user.phone,
+    email: user.email || null,
+    avatarUrl: user.avatar_url || null,
     role: user.role || 'user',
     trustScore: user.trust_score,
     status: user.status,
     xpTotal: Number(user.xp_total || 0),
     pointsBalance: Number(user.points_balance || 0),
     walletBalanceMzn: Number(user.wallet_balance_mzn || 0),
+    // Conta criada via Google ainda sem telefone — frontend usa isto para
+    // redirecionar a /completar-perfil antes de liberar o resto do app
+    // (mesmo mecanismo que needsTermsReacceptance já usa no ProtectedRoute).
+    needsPhone: !user.phone,
   };
 }
 
@@ -234,4 +364,12 @@ async function acceptTerms(userId, context = {}) {
   return { accepted };
 }
 
-module.exports = { register, login, refresh, logout, acceptTerms };
+module.exports = {
+  register,
+  login,
+  loginWithGoogle,
+  completeProfile,
+  refresh,
+  logout,
+  acceptTerms,
+};

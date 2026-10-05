@@ -35,4 +35,33 @@ const loginSchema = z.object({
 // O refresh token deixou de vir no corpo da requisição — agora viaja em
 // cookie httpOnly (ver refreshCookie.js) e é lido de req.cookies no controller.
 
-module.exports = { registerSchema, loginSchema, phoneRegex };
+const googleLoginSchema = z.object({
+  // ID token (JWT) emitido pelo Google Identity Services no navegador —
+  // nunca a senha nem o access token, só esse token assinado que o backend
+  // verifica diretamente junto ao Google antes de confiar em qualquer dado.
+  idToken: z.string().min(10, 'Token do Google ausente ou inválido.'),
+});
+
+// Tela "completar perfil": pedida logo após o primeiro login via Google,
+// pois a conta nasce sem telefone (não existe no Google) mas o telefone
+// M-Pesa/e-Mola é obrigatório para a carteira (Seção 16.1 do Doc. Mestre).
+const completeProfileSchema = z.object({
+  phone: z
+    .string()
+    .trim()
+    .regex(phoneRegex, 'Número de telefone inválido. Use um número M-Pesa (84/85) ou e-Mola (86/87).'),
+  isAdultDeclared: z.literal(true, {
+    errorMap: () => ({ message: 'É necessário declarar maioridade para continuar.' }),
+  }),
+  termsAccepted: z.literal(true, {
+    errorMap: () => ({ message: 'É necessário aceitar os Termos de Uso e a Política de Privacidade.' }),
+  }),
+});
+
+module.exports = {
+  registerSchema,
+  loginSchema,
+  phoneRegex,
+  googleLoginSchema,
+  completeProfileSchema,
+};
