@@ -64,6 +64,7 @@ export function WelcomeBonusCard({ bonus, onClaimed }) {
           >
             <span className="font-semibold">{d.status === 'claimed' ? <CheckIcon className="w-4 h-4" /> : `D${d.day}`}</span>
             <span>{d.amountMzn.toFixed(2).replace('.', ',')}</span>
+            <span className="text-[9px] opacity-80">MZN</span>
           </div>
         ))}
       </div>
