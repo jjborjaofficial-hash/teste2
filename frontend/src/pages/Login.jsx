@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { PrimaryButton } from '../components/Button';
+import { GoogleLoginButton } from '../components/GoogleLoginButton';
 import { ApiError } from '../api/client';
 
 export function Login() {
@@ -73,6 +74,8 @@ export function Login() {
             Entrar
           </PrimaryButton>
         </form>
+
+        <GoogleLoginButton />
 
         <p className="text-caption text-text-secondary text-center mt-6">
           Ainda não tem conta?{' '}

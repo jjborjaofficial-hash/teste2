@@ -17,6 +17,13 @@ export function ProtectedRoute({ children }) {
     return <Navigate to="/entrar" state={{ from: location }} replace />;
   }
 
+  // Conta criada via Google ainda sem telefone: app inteiro fica bloqueado
+  // até completar o perfil (telefone + check-in jurídico), antes de
+  // qualquer outra tela — mesmo mecanismo do reaceite de Termos abaixo.
+  if (user.needsPhone && location.pathname !== '/completar-perfil') {
+    return <Navigate to="/completar-perfil" replace />;
+  }
+
   // Mecanismo de reaceite de Termos: se os Termos mudaram de versão desde o
   // último aceite do usuário, o app inteiro fica bloqueado até ele confirmar
   // novamente (checkbox), antes de liberar qualquer outra tela.

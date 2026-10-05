@@ -38,6 +38,10 @@ async function getProfile(userId) {
     // recente ainda não aceita, o frontend deve bloquear a navegação e pedir
     // reaceite antes de liberar o resto do app.
     needsTermsReacceptance: needsLegalReacceptance,
+    // Conta criada via login com Google ainda sem telefone (Google não
+    // fornece) — o frontend bloqueia a navegação e pede o telefone
+    // M-Pesa/e-Mola antes de liberar o resto do app (ver ProtectedRoute).
+    needsPhone: !profile.phone,
     memberSince: profile.created_at,
     // Cosméticos equipados (Loja de Pontos) — o frontend usa isso para
     // renderizar a moldura de perfil e aplicar o tema de cor globalmente.

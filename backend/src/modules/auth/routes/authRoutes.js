@@ -3,13 +3,27 @@ const controller = require('../controllers/authController');
 const validate = require('../../../middleware/validate');
 const authenticate = require('../../../middleware/authenticate');
 const { authRateLimiter } = require('../../../middleware/rateLimiter');
-const { registerSchema, loginSchema } = require('../validators/authValidators');
+const {
+  registerSchema,
+  loginSchema,
+  googleLoginSchema,
+  completeProfileSchema,
+} = require('../validators/authValidators');
 
 const router = Router();
 
 // Todas as rotas de autenticação usam rate limiting rígido (Manual Parte 5: Middleware)
 router.post('/register', authRateLimiter, validate(registerSchema), controller.register);
 router.post('/login', authRateLimiter, validate(loginSchema), controller.login);
+router.post('/google', authRateLimiter, validate(googleLoginSchema), controller.googleLogin);
+// Pedida logo após o primeiro login via Google (conta nasce sem telefone).
+router.post(
+  '/complete-profile',
+  authenticate,
+  authRateLimiter,
+  validate(completeProfileSchema),
+  controller.completeProfile
+);
 // /refresh e /logout não recebem mais refreshToken no body — vem do cookie
 // httpOnly (ver refreshCookie.js), lido direto no controller.
 router.post('/refresh', authRateLimiter, controller.refresh);

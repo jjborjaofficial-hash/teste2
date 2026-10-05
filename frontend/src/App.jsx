@@ -10,6 +10,7 @@ import { AdminLayout } from './layouts/AdminLayout';
 import { Onboarding } from './pages/Onboarding';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
+import { CompleteProfile } from './pages/CompleteProfile';
 import { Dashboard } from './pages/Dashboard';
 import { HubEstudos } from './pages/HubEstudos';
 import { Missions } from './pages/Missions';
@@ -60,6 +61,18 @@ export default function App() {
             <Route path="/recompensas" element={<RewardsPolicyPage />} />
             <Route path="/como-funciona" element={<HowItWorksPage />} />
             <Route path="/suporte" element={<SupportPage />} />
+
+            {/* Completar Perfil — protegido (exige login), mas sem BottomNav/Rodapé,
+                pois bloqueia o resto do app até quem entrou via Google informar
+                o telefone M-Pesa/e-Mola. */}
+            <Route
+              path="/completar-perfil"
+              element={
+                <ProtectedRoute>
+                  <CompleteProfile />
+                </ProtectedRoute>
+              }
+            />
 
             {/* Reaceite de Termos — protegido (exige login), mas sem BottomNav/Rodapé,
                 pois bloqueia o resto do app até o usuário confirmar. */}
