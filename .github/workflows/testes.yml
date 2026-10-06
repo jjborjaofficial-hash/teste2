@@ -83,7 +83,17 @@ jobs:
       # Relatório do validador de alternativas (BE-003): só leitura, nunca derruba o resultado.
       - name: Relatório do validador de alternativas do quiz (informativo)
         continue-on-error: true
-        run: npm run quiz:validate
+        run: |
+          npm run quiz:validate -- --list > quiz-validador.txt
+          cat quiz-validador.txt
+          cat quiz-validador.txt | head -60 >> "$GITHUB_STEP_SUMMARY"
+      - name: Guardar o relatório do validador
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorio-validador-quiz
+          path: backend/quiz-validador.txt
+          if-no-files-found: ignore
       - name: Testes do backend (bloqueia se falhar)
         run: npx jest --runInBand --forceExit --testPathIgnorePatterns "auth.test.js"
       # auth.test.js tinha 3 falhas que já existiam antes do trabalho do quiz. Roda à parte e
