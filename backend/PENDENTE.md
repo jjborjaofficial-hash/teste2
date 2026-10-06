@@ -73,11 +73,15 @@ perguntas no ficheiro. A explicação é o "Por quê?" (coluna `questions.explan
 linguagem simples nas fáceis.
 - Finanças fácil (seeds 045 → 064 → 068 → 094 → 099; 100 perguntas no banco): **CONCLUÍDO** — as 100
   explicações escritas (migrations 109 a 120).
-- Finanças médio (seeds 046 → 065 → 069 → 100; 100 perguntas no banco): **em andamento** — seeds 046
-  (38), 065 (54) e 069 (3) **concluídos**; 95 explicações escritas (migrations 120 a 129).
-  **Próximo:** as 5 do seed 100 (source `seed_financas_medio_v4`, a primeira é "Uma pessoa poupa
-  500 MZN por mês durante 6 meses...") para fechar Finanças médio, em lotes de 10 (migration 130).
-- Finanças difícil (seeds 047 → 073 → 074 → 075 → 083): pendente.
+- Finanças médio (seeds 046 → 065 → 069 → 100; 100 perguntas no banco): **CONCLUÍDO** — as 100
+  explicações escritas (migrations 120 a 130). Nota de qualidade: os lotes 13 a 22 (migrations 120 a
+  129) seguiram o estilo curto das fáceis (definição + "não é X"); a especificação pede, para médio,
+  raciocínio e contexto. Só o seed 100 (lote 23) já segue isso. Reescrever as 95 anteriores, se o dono
+  quiser, exige um UPDATE que sobrescreva (as migrations atuais nunca sobrescrevem).
+- Finanças difícil (seeds 047 → 073 → 074 → 075 → 083): **em andamento** — feitas as 5 primeiras do
+  seed 047 (source `seed_financas_dificil_v1`, 31 perguntas; migration 130), já com raciocínio e relação
+  entre conceitos. **Próximo:** a 6.ª pergunta do seed 047 ("O que é custo de oportunidade de manter
+  dinheiro parado?" e seguintes, na ordem do ficheiro; 26 faltam), em lotes de 10 (migration 131).
 - IA, Marketing Digital, Produtividade, Tecnologia: pendentes (ordem a decidir pelo dono).
 
 Parte técnica **feita**: `submitAnswer` já devolve `feedback` ({ correctAlternativeId,
