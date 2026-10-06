@@ -73,10 +73,10 @@ perguntas no ficheiro. A explicação é o "Por quê?" (coluna `questions.explan
 linguagem simples nas fáceis.
 - Finanças fácil (seeds 045 → 064 → 068 → 094 → 099; 100 perguntas no banco): **CONCLUÍDO** — as 100
   explicações escritas (migrations 109 a 120).
-- Finanças médio (seeds 046 → 065 → 069 → 100): **em andamento** — seed 046 **concluído** (38) e as 47
-  primeiras do seed 065 (source `seed_financas_medio_v2`, 54 perguntas) feitas (migrations 120 a 128).
-  **Próximo:** a 48.ª pergunta do seed 065 ("O que é renda variável?" e seguintes, na ordem do
-  ficheiro; 7 faltam nesse seed), depois o seed 069, em lotes de 10 (migration 129 em diante).
+- Finanças médio (seeds 046 → 065 → 069 → 100; 100 perguntas no banco): **em andamento** — seeds 046
+  (38), 065 (54) e 069 (3) **concluídos**; 95 explicações escritas (migrations 120 a 129).
+  **Próximo:** as 5 do seed 100 (source `seed_financas_medio_v4`, a primeira é "Uma pessoa poupa
+  500 MZN por mês durante 6 meses...") para fechar Finanças médio, em lotes de 10 (migration 130).
 - Finanças difícil (seeds 047 → 073 → 074 → 075 → 083): pendente.
 - IA, Marketing Digital, Produtividade, Tecnologia: pendentes (ordem a decidir pelo dono).
 
