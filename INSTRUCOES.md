@@ -13,6 +13,21 @@ por fazer fica escrito aqui e nos ficheiros `PENDENTE.md` de cada área.
 >
 > Os pontos da secção **"Ideias ainda NÃO aprovadas"** (fim do ficheiro) **não** são para
 > implementar: só se o dono aprovar.
+>
+> **Atenção — branch paralela do quiz.** Existe no GitHub a branch `feat/quiz-aprendizagem` com
+> OUTRA implementação das rodadas do quiz (feita antes de se seguir a linha do `main`). Os números
+> das migrations colidem com os do `main` (107, 108 e 109 existem nos dois com conteúdos
+> diferentes). **Não fazer merge dessa branch no `main`** e não copiar migrations dela sem o dono
+> decidir; o trabalho do quiz continua no `main`, como descrito na secção do Quiz v2.
+>
+> **Testes automáticos.** A cada push o GitHub roda `.github/workflows/testes.yml` (migrations
+> num banco novo, testes do backend e build do frontend); o resultado fica na aba **Actions** e ao
+> lado de cada commit. Serve para confirmar os testes mesmo quando o ambiente da sessão não
+> consegue rodar `npm install`. Não faz deploy (o deploy no Render continua manual). Se ficar
+> vermelho, leia o relatório antes de continuar.
+>
+> **Decisão do dono (2026-10-04):** o anúncio intersticial continua com a mesma lógica de antes
+> (`InterstitialAds`, 5 segundos, mesma frequência); não alterar.
 
 ## Como funciona (protocolo)
 
