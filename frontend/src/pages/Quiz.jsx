@@ -35,7 +35,9 @@ export function Quiz() {
     quizApi.nextQuestion(categoryId)
       .then((res) => {
         setQuestion(res.data);
-        setSecondsLeft(res.data.time_limit_seconds);
+        // P6c: o servidor devolve o tempo que AINDA resta (o relógio original é mantido ao recarregar).
+        // Perguntas vindas de um servidor mais antigo não trazem o campo: usa o tempo total.
+        setSecondsLeft(res.data.time_remaining_seconds ?? res.data.time_limit_seconds);
       })
       .catch((err) => {
         setError(err instanceof ApiError ? err.message : 'Não foi possível carregar a pergunta.');

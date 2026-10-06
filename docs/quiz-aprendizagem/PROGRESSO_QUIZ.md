@@ -9,8 +9,7 @@ Branch de trabalho: `feat/quiz-aprendizagem`
 
 ## Leia primeiro (nota de 2026-10-04, atualizada)
 
-- **Próximo pedaço a fazer: P6c** (o primeiro `[ ]` da lista abaixo): o contador regressivo do frontend
-  parte de `time_remaining_seconds`. Só ele, depois commit + push.
+- **Próximo pedaço a fazer: P7** (o primeiro `[ ]` da lista abaixo): histórico da rodada, XP e recompensas guardados. Só ele, depois commit + push.
 - **Teste obrigatório antes de qualquer código do quiz** (o cronómetro é antifraude, mexe em dinheiro).
   Para correr os testes de verdade numa sessão onde `npm install` e `apt` funcionem:
   1. `apt-get update && apt-get install -y postgresql redis-server`; `service postgresql start`;
@@ -47,7 +46,7 @@ Marcar `[x]` ao concluir e enviar. Pegar sempre o primeiro `[ ]`.
 - [x] P5b. Seleção ligada ao banco: ao iniciar a rodada, as 10 perguntas são escolhidas (preferindo as que o utilizador não respondeu nos últimos 14 dias) e gravadas em `quiz_round_questions`, com a rodada bloqueada (`FOR UPDATE`); recarregar não troca as perguntas; rodadas antigas já começadas seguem o caminho anterior. Testes: 37 unitários e 9 de integração com banco real (posições 1..10, mistura 4/4/2, do fácil ao difícil, duas chamadas simultâneas, 2.ª rodada sem repetir a 1.ª). Ainda não é a pergunta servida: ver P6.
 - [x] P6a. Cronómetro antifraude: `markQuestionIssued(..., { keepExisting: true })` mantém a emissão ORIGINAL quando a mesma pergunta é servida outra vez (recarregar não dá tempo grátis para pesquisar a resposta; uma resposta fora do tempo conta como esgotada). TTL longo (12 h) só nesse modo; o modo normal fica igual. 5 testes com Redis falso passam. Ainda não é usado (P6b).
 - [x] P6b. `next-question` serve a pergunta pela posição guardada (a primeira ainda não respondida; sem perguntas guardadas, mantém o caminho antigo), com `keepExisting` e devolvendo `time_remaining_seconds` (tempo RESTANTE). Testado no banco real (Postgres + Redis): serve na ordem das posições; recarregar devolve a mesma pergunta, mantém o relógio original e não duplica respostas; tempo já esgotado ao recarregar = 0 s e a resposta conta como tempo esgotado; rodada antiga sem perguntas guardadas continua aleatória. O frontend ainda não usa o campo novo (P6c).
-- [ ] P6c. Frontend: contador regressivo parte do tempo restante (se já esgotou, envia a resposta de tempo esgotado como hoje).
+- [x] P6c. Frontend (`Quiz.jsx`): o contador regressivo parte de `time_remaining_seconds` (cai para `time_limit_seconds` se o campo não vier). Recarregar a página já não devolve o tempo todo; se já esgotou, o contador começa em 0 e envia a resposta de tempo esgotado como antes (efeito já existente). Compila sem erro; falta só a prova no navegador (P18).
 - [ ] P7. Histórico da rodada: tempo total, XP e recompensas guardados na rodada.
 
 **Missões**
