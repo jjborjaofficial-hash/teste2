@@ -78,7 +78,7 @@ linguagem simples nas fáceis.
   129) seguiram o estilo curto das fáceis (definição + "não é X"); a especificação pede, para médio,
   raciocínio e contexto. Só o seed 100 (lote 23) já segue isso. Reescrever as 95 anteriores, se o dono
   quiser, exige um UPDATE que sobrescreva (as migrations atuais nunca sobrescrevem).
-- Finanças difícil (seeds 047 → 073 → 074 → 075 → 083): **em andamento** — seed 047 **concluído** (31) e as 34 primeiras do seed 073 (source `seed_financas_dificil_v2`, 35 perguntas) feitas (migrations 130 a 136), com raciocínio e relação entre conceitos. **Próximo:** a 35.ª e última do seed 073 ("O que é solvência empresarial?") e depois o seed 074 (source `seed_financas_dificil_v3`, 33 perguntas), em lotes de 10 (migration 137).
+- Finanças difícil (seeds 047 → 073 → 074 → 075 → 083): **em andamento** — seeds 047 (31) e 073 (35) **concluídos** e as 9 primeiras do seed 074 (source `seed_financas_dificil_v3`, 33 perguntas) feitas (migrations 130 a 137), com raciocínio e relação entre conceitos. **Próximo:** a 10.ª pergunta do seed 074 e seguintes, na ordem do ficheiro (24 faltam nesse seed), depois os seeds 075 e 083 (1 cada), em lotes de 10 (migration 138).
 - IA, Marketing Digital, Produtividade, Tecnologia: pendentes (ordem a decidir pelo dono).
 
 Parte técnica **feita**: `submitAnswer` já devolve `feedback` ({ correctAlternativeId,
