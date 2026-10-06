@@ -45,5 +45,10 @@ linguagem simples nas fáceis.
 - Finanças difícil (seeds 047 → 073 → 074 → 075 → 083): pendente.
 - IA, Marketing Digital, Produtividade, Tecnologia: pendentes (ordem a decidir pelo dono).
 
-Nota: até a parte técnica (devolver a explicação na resposta + mostrá-la no ecrã, FE-003) estar feita,
-estas migrations só preenchem o texto; o jogador ainda não o vê.
+Parte técnica **feita**: `submitAnswer` já devolve `feedback` ({ correctAlternativeId,
+correctAlternativeLabel, explanation }) depois de responder, só se a pergunta foi entregue ao
+utilizador (senão `null`, para ninguém colher respostas por id), e a tela de resultado mostra-o.
+`explanation` é `null` nas perguntas ainda sem texto: aí a tela mostra só a resposta correta.
+Decisão do dono: um único texto de explicação serve para acerto ("Para complementar") e erro
+("Por quê?"). Falta, só se o dono quiser: "O que aprender" e "Dica" como campos próprios (exigiria
+colunas novas e reescrever as explicações já feitas).

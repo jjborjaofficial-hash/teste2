@@ -96,6 +96,33 @@ export function QuizResult() {
         )}
       </div>
 
+      {/* Feedback pedagógico (BE-004 / FE-003): vem do servidor só depois de responder. Acerto:
+          confirmação + "Para complementar". Erro: resposta correta + "Por quê?". Sem explicação
+          escrita ainda, mostra apenas a resposta certa (nunca um texto inventado). */}
+      {result.feedback && (
+        <section
+          aria-label="Feedback da resposta"
+          className="bg-surface border border-border rounded-card p-5 space-y-3"
+        >
+          {result.isCorrect ? (
+            <p className="text-body font-semibold text-text">Você identificou a resposta certa.</p>
+          ) : (
+            <div className="space-y-1">
+              <p className="text-caption font-semibold text-text">Resposta correta</p>
+              <p className="text-body text-text">{result.feedback.correctAlternativeLabel}</p>
+            </div>
+          )}
+          {result.feedback.explanation && (
+            <div className="space-y-1">
+              <p className="text-caption font-semibold text-text">
+                {result.isCorrect ? 'Para complementar' : 'Por quê?'}
+              </p>
+              <p className="text-body text-text-secondary">{result.feedback.explanation}</p>
+            </div>
+          )}
+        </section>
+      )}
+
       {result.isCorrect && (
         <div className="bg-surface border border-border rounded-card p-5 space-y-3">
           <div className="flex items-center justify-between">

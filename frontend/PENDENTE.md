@@ -9,7 +9,7 @@ mesmo commit** que a implementa.
 Especificação completa: `docs/quiz-v2-rodadas-e-feedback.md`. Depende de BE-004 (explicações).
 Já feito: contador n/10 vindo do servidor, recuperar a rodada ao recarregar, resumo só da 10.ª
 e só daquela rodada, com exatamente 3 botões (Painel inicial, Escolher novamente uma categoria,
-Ver missões em andamento), nenhum iniciando rodada sozinho. Falta: no ecrã de resultado, mostrar
-o feedback pedagógico — acerto: confirmação + "Para complementar" + "Aprenda"; erro: "Resposta
-incorreta" + "Resposta correta" + "Por quê?" + "O que aprender" + dica opcional, adaptado à
-dificuldade. Sem emojis, design atual, `prefers-reduced-motion`.
+Ver missões em andamento), nenhum iniciando rodada sozinho. Feito (junto com BE-004): o ecrã de resultado mostra o feedback vindo do servidor — acerto:
+"Você identificou a resposta certa." + "Para complementar"; erro: "Resposta correta" + "Por quê?";
+sem explicação escrita, só a resposta correta. Falta: "Aprenda"/"O que aprender" e dica opcional como
+campos próprios (ver BE-004) e a profundidade por dificuldade quando houver explicações médias e difíceis.

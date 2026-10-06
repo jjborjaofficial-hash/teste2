@@ -243,6 +243,22 @@ async function submitAnswer({ userId, questionId, alternativeId, roundId = null 
   const xpAwarded = isCorrect ? question.xp_reward : 0;
   const pointsAwarded = isCorrect ? await getPointsRewardForDifficulty(question.difficulty) : 0;
 
+  // Feedback pedagógico (BE-004): só é devolvido DEPOIS de a resposta ser enviada, e só quando
+  // a pergunta foi realmente entregue a este utilizador — na rodada, a validação abaixo garante
+  // que é a pergunta atual dele; fora da rodada, exige o registro do cronómetro. Sem isto, bastaria
+  // enviar ids de perguntas nunca entregues para colher as respostas certas.
+  const correctAlternative = question.alternatives.find((a) => a.is_correct);
+  const feedbackAllowed = roundId ? true : elapsedMs !== null;
+  const feedback =
+    feedbackAllowed && correctAlternative
+      ? {
+          correctAlternativeId: correctAlternative.id,
+          correctAlternativeLabel: correctAlternative.label,
+          // null enquanto a pergunta ainda não tem explicação escrita: o front mostra só a resposta certa.
+          explanation: question.explanation || null,
+        }
+      : null;
+
   const client = await db.getClient();
   try {
     await client.query('BEGIN');
@@ -327,6 +343,7 @@ async function submitAnswer({ userId, questionId, alternativeId, roundId = null 
       roundSummary,
       isCorrect,
       timeExpired,
+      feedback,
       xpAwarded,
       pointsAwarded: xpResult ? xpResult.pointsCredited : 0,
       newXpTotal: xpResult ? xpResult.xpTotal : undefined,
