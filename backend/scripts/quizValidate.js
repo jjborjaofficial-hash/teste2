@@ -41,7 +41,7 @@ async function main() {
       report.failing.forEach((f) => console.log(`${f.id}  ${f.group}  ${f.reasons.join(',')}`));
     }
   }
-  await db.end();
+  await db.pool.end();
 }
 
 main().catch((e) => {

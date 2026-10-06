@@ -6,7 +6,7 @@ const db = require('../src/config/database');
 const quizRepository = require('../src/modules/quiz/repositories/quizRepository');
 
 afterAll(async () => {
-  await db.end();
+  await db.pool.end();
 });
 
 test('a ordem das alternativas varia entre apresentações, com o mesmo conjunto de ids', async () => {
