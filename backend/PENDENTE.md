@@ -78,7 +78,7 @@ linguagem simples nas fáceis.
   129) seguiram o estilo curto das fáceis (definição + "não é X"); a especificação pede, para médio,
   raciocínio e contexto. Só o seed 100 (lote 23) já segue isso. Reescrever as 95 anteriores, se o dono
   quiser, exige um UPDATE que sobrescreva (as migrations atuais nunca sobrescrevem).
-- Finanças difícil (seeds 047 → 073 → 074 → 075 → 083): **em andamento** — seed 047 **concluído** (31) e as 14 primeiras do seed 073 (source `seed_financas_dificil_v2`, 35 perguntas) feitas (migrations 130 a 134), com raciocínio e relação entre conceitos. **Próximo:** a 15.ª pergunta do seed 073 ("O que é hedge financeiro?" e seguintes, na ordem do ficheiro; 21 faltam nesse seed), em lotes de 10 (migration 135).
+- Finanças difícil (seeds 047 → 073 → 074 → 075 → 083): **em andamento** — seed 047 **concluído** (31) e as 24 primeiras do seed 073 (source `seed_financas_dificil_v2`, 35 perguntas) feitas (migrations 130 a 135), com raciocínio e relação entre conceitos. **Próximo:** a 25.ª pergunta do seed 073 e seguintes, na ordem do ficheiro (11 faltam nesse seed), em lotes de 10 (migration 136).
 - IA, Marketing Digital, Produtividade, Tecnologia: pendentes (ordem a decidir pelo dono).
 
 Parte técnica **feita**: `submitAnswer` já devolve `feedback` ({ correctAlternativeId,
