@@ -38,8 +38,8 @@ esta atualização. Dentro de cada dificuldade segue-se a ordem dos seeds e, em 
 perguntas no ficheiro. A explicação é o "Por quê?" (coluna `questions.explanation`), curta e em
 linguagem simples nas fáceis.
 - Finanças fácil (seeds 045 → 064 → 068 → 094 → 099): **feito** o seed 045 inteiro (33 perguntas;
-  migrations 109 a 113) e as 12 primeiras do seed 064 (migrations 113 e 114) — 45 explicações escritas
-  até aqui. **Próximo:** seed 064 a partir da 13.ª pergunta ("O que é lucro?"; source
+  migrations 109 a 113) e as 22 primeiras do seed 064 (migrations 113 a 115) — 55 explicações escritas
+  até aqui. **Próximo:** seed 064 a partir da 23.ª pergunta ("O que é um desejo financeiro?"; source
   `seed_financas_facil_v2`, 59 perguntas), depois 068, 094 e 099.
 - Finanças médio (seeds 046 → 065 → 069 → 100): pendente.
 - Finanças difícil (seeds 047 → 073 → 074 → 075 → 083): pendente.
