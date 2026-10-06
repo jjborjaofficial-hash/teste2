@@ -80,6 +80,10 @@ jobs:
         run: npm ci
       - name: Aplicar as migrations num banco novo
         run: npm run migrate:up
+      # Relatório do validador de alternativas (BE-003): só leitura, nunca derruba o resultado.
+      - name: Relatório do validador de alternativas do quiz (informativo)
+        continue-on-error: true
+        run: npm run quiz:validate
       - name: Testes do backend (bloqueia se falhar)
         run: npx jest --runInBand --forceExit --testPathIgnorePatterns "auth.test.js"
       # auth.test.js tinha 3 falhas que já existiam antes do trabalho do quiz. Roda à parte e

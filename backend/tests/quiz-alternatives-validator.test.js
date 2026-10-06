@@ -1,0 +1,48 @@
+/** Teste unitário (sem banco) do validador de alternativas (BE-003). */
+const { analyzeQuestion, summarize, hasEmbeddedExplanation } = require('../src/modules/quiz/validation/alternativesValidator');
+
+const mk = (id, labels, correctIdx, group = 'T | easy') => ({
+  id,
+  group,
+  alternatives: labels.map((label, i) => ({ label, is_correct: i === correctIdx })),
+});
+
+describe('validador de alternativas', () => {
+  test('reprova correta bem mais longa que as erradas', () => {
+    const r = analyzeQuestion(mk('1', ['Poupança de longo prazo para a reforma', 'Gasto', 'Dívida', 'Lucro'], 0));
+    expect(r.correctIsLongest).toBe(true);
+    expect(r.reasons).toContain('correta_mais_longa_destacada');
+    expect(r.passes).toBe(false);
+  });
+
+  test('passa quando os tamanhos são equilibrados', () => {
+    const r = analyzeQuestion(mk('2', ['Guardar dinheiro', 'Gastar tudo hoje', 'Pedir emprestado', 'Ignorar o orçamento'], 0));
+    expect(r.passes).toBe(true);
+    expect(r.correctIsLongest).toBe(false);
+  });
+
+  test('apanha explicação embutida e alternativas duplicadas', () => {
+    expect(hasEmbeddedExplanation('Juros (o custo do dinheiro)')).toBe(true);
+    expect(hasEmbeddedExplanation('Juros')).toBe(false);
+    const r = analyzeQuestion(mk('3', ['Gastar menos que ganha', 'Gastar menos que ganha!', 'Poupar nada', 'Dívida'], 0));
+    expect(r.reasons).toContain('alternativas_duplicadas_ou_quase_iguais');
+  });
+
+  test('exige exatamente uma correta', () => {
+    const q = mk('4', ['a1', 'b2', 'c3'], 0);
+    q.alternatives[1].is_correct = true;
+    expect(analyzeQuestion(q).reasons).toContain('corretas_2');
+  });
+
+  test('summarize agrega por grupo e calcula a % da mais longa', () => {
+    const qs = [
+      mk('a', ['Resposta bem comprida e detalhada aqui', 'No', 'Ok', 'Sim'], 0),
+      mk('b', ['Guardar dinheiro', 'Gastar tudo hoje', 'Pedir emprestado', 'Ignorar o orçamento'], 0),
+    ];
+    const s = summarize(qs);
+    expect(s.total).toBe(2);
+    expect(s.groups['T | easy'].longestShare).toBe(50);
+    expect(s.groups['T | easy'].meetsTarget).toBe(false);
+    expect(s.failingCount).toBe(1);
+  });
+});

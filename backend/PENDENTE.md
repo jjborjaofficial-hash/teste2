@@ -52,11 +52,19 @@ dinheiro real, então isso permite farmar o jogo e esvazia o antifraude do cron�
 6. Reforço: embaralhar a ordem visual das alternativas a cada apresentação, sem quebrar a
    validação no backend (a posição já é equilibrada).
 
-**Decisão do dono pendente:** começar pelo validador (recomendado) ou já corrigir as 25 primeiras
-de Finanças fácil e fazer o validador depois.
+**Decisão do dono (2026-10-06):** começar pelo validador (passo 1). Passos 2 em diante só depois do
+validador feito e do dono rever o relatório.
 
-**Progresso da regularização (atualizar a cada push):** nada corrigido ainda; o validador ainda
-não foi criado. Medição inicial: 90,8% das perguntas com a correta mais longa.
+**Progresso da regularização (atualizar a cada push):**
+- Passo 1 (validador): **FEITO, falta rever o relatório**. Código em
+  `backend/src/modules/quiz/validation/alternativesValidator.js`, script `npm run quiz:validate`
+  (`-- --list` lista as reprovadas, `-- --json` dá JSON) e teste `backend/tests/quiz-alternatives-validator.test.js`.
+  Só leitura. O CI roda o relatório a cada push (passo "Relatório do validador" em Actions), então
+  o antes/depois de cada lote fica no log do GitHub. Critérios ajustáveis em `CRITERIA` no mesmo ficheiro.
+- Passo 2 (corrigir alternativas em lotes de 25, só `question_alternatives.label`): **não começou**.
+  **Próximo:** abrir o relatório do CI, registar aqui a medição inicial por grupo e propor ao dono as
+  25 primeiras de Finanças fácil para ele rever antes da migration.
+- Medição inicial já conhecida: 90,8% das perguntas com a correta mais longa.
 
 ## BE-004 — Feedback pedagógico: explicação em cada pergunta (quiz v2)
 
