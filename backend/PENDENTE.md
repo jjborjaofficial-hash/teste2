@@ -78,11 +78,11 @@ linguagem simples nas fáceis.
   129) seguiram o estilo curto das fáceis (definição + "não é X"); a especificação pede, para médio,
   raciocínio e contexto. Só o seed 100 (lote 23) já segue isso. Reescrever as 95 anteriores, se o dono
   quiser, exige um UPDATE que sobrescreva (as migrations atuais nunca sobrescrevem).
-- Finanças difícil (seeds 047 → 073 → 074 → 075 → 083): **em andamento** — feitas as 15 primeiras do
-  seed 047 (source `seed_financas_dificil_v1`, 31 perguntas; migrations 130 e 131), já com raciocínio e
-  relação entre conceitos. **Próximo:** a 16.ª pergunta do seed 047 ("Por que a taxa de inflação é
-  importante para decisões financeiras de longo prazo?" e seguintes, na ordem do ficheiro; 16 faltam),
-  em lotes de 10 (migration 132).
+- Finanças difícil (seeds 047 → 073 → 074 → 075 → 083): **em andamento** — feitas as 25 primeiras do
+  seed 047 (source `seed_financas_dificil_v1`, 31 perguntas; migrations 130 a 132), já com raciocínio e
+  relação entre conceitos. **Próximo:** a 26.ª pergunta do seed 047 ("Uma empresa aumenta suas vendas,
+  mas seus custos crescem ainda mais rapidamente. O que pode acontecer?" e seguintes, na ordem do
+  ficheiro; 6 faltam), depois o seed 073, em lotes de 10 (migration 133).
 - IA, Marketing Digital, Produtividade, Tecnologia: pendentes (ordem a decidir pelo dono).
 
 Parte técnica **feita**: `submitAnswer` já devolve `feedback` ({ correctAlternativeId,
