@@ -73,9 +73,11 @@ perguntas no ficheiro. A explicação é o "Por quê?" (coluna `questions.explan
 linguagem simples nas fáceis.
 - Finanças fácil (seeds 045 → 064 → 068 → 094 → 099; 100 perguntas no banco): **CONCLUÍDO** — as 100
   explicações escritas (migrations 109 a 120).
-- Finanças médio (seeds 046 → 065 → 069 → 100): **em andamento** — feitas as 25 primeiras do seed 046
-  (source `seed_financas_medio_v1`, migrations 120 a 122). **Próximo:** a 26.ª pergunta do seed 046
-  e seguintes, na ordem do ficheiro (13 faltam nesse seed), em lotes de 10 (migration 123 em diante).
+- Finanças médio (seeds 046 → 065 → 069 → 100): **em andamento** — feitas as 35 primeiras do seed 046
+  (source `seed_financas_medio_v1`, migrations 120 a 123). **Próximo:** as 3 que faltam do seed 046
+  (36.ª a 38.ª: "O que é patrimônio?", "O que pode acontecer com o poder de compra quando os preços
+  aumentam significativamente?" e "Por que é importante verificar a origem de uma oportunidade de
+  investimento?") e depois o seed 065, em lotes de 10 (migration 124 em diante).
 - Finanças difícil (seeds 047 → 073 → 074 → 075 → 083): pendente.
 - IA, Marketing Digital, Produtividade, Tecnologia: pendentes (ordem a decidir pelo dono).
 
