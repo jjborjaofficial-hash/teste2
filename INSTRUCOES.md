@@ -125,11 +125,14 @@ daquela rodada com os 3 botões. Testes: `backend/tests/quiz-rounds.test.js` e
    Produtividade 396, Tecnologia 320), ordem fácil → médio → difícil, em lotes de 5 com commit e push
    a cada lote. O estado atual e o próximo lote estão em "Progresso das explicações" no BE-004 de
    `backend/PENDENTE.md` — atualizar lá a cada push. Sem explicação, usar um feedback genérico seguro.
-2. **BE-003 — validador de qualidade das alternativas.** Hoje a correta é a mais longa em 90,8%
-   das perguntas (a posição já é equilibrada). Validador + fila de revisão; reprovadas não são
-   servidas nas rodadas novas. *Proposta aguardando confirmação do dono:* manter as existentes a
-   ser servidas, marcá-las para revisão e aplicar o validador estrito às novas; corrigir as
-   antigas por categoria. Não apagar perguntas sem aprovação.
+2. **BE-003 — REGULARIZAR as alternativas e criar o validador.** Padrão a corrigir: a correta é a
+   mais longa em 90,8% das perguntas (a posição já é equilibrada), o que permite acertar ~9 em 10
+   só escolhendo a opção mais longa, num quiz que paga dinheiro real. Como regularizar: validador
+   só de leitura; depois correção por lotes de 25 com revisão do dono (migrations que só mudam o
+   texto das alternativas, sem apagar perguntas), na mesma ordem das explicações e junto com elas
+   nas perguntas ainda sem explicação; relatório antes/depois a cada lote. Perguntas reprovadas
+   continuam a ser servidas, marcadas para revisão, até serem corrigidas. Plano completo, critérios
+   e progresso: `BE-003` em `backend/PENDENTE.md` — atualizar lá a cada push.
 3. **BE-005 — sobras:** retirar o uso das rotas antigas sem rodada, tipo de missão "completar
    uma rodada" (hoje o progresso conta por resposta certa), conceitos errados por rodada.
 

@@ -14,15 +14,49 @@ exigir `roundId` e remover `nextQuestion` de `frontend/src/api/quizApi.js`; (b) 
 missões conta por resposta certa); (c) guardar os conceitos errados por rodada para
 recomendações (hoje só há `reviewStatements` no resumo).
 
-## BE-003 — Qualidade das alternativas e validador de perguntas (quiz v2)
+## BE-003 — REGULARIZAR o padrão "a correta é a mais longa" e criar o validador (quiz v2)
 
-Medido no banco real (1.659 perguntas, migrations 001–106): a alternativa correta é a **mais
-longa em 90,8%** das perguntas e a mais curta em só 3,7%; a posição já é equilibrada (~25% em
-cada). Criar o validador (tamanho em caracteres/palavras, estrutura, detalhe, duplicadas/quase
-iguais, só uma correta, categoria/dificuldade) com fila de revisão: reprovadas não são servidas
-automaticamente. Embaralhar a ordem das alternativas por apresentação sem quebrar a validação no
-backend. Decisão do dono pendente: o que fazer com as perguntas já existentes que reprovarem
-(ver a mensagem do dono no chat; não apagar nada sem aprovação).
+**Problema — precisa ser regularizado (confirmado pelo dono em 2026-10-06).** A alternativa correta
+denuncia-se pelo tamanho e pelo detalhe. Medido no banco (1.659 perguntas, migrations 001–119):
+a correta é a **mais longa em 90,8%** das perguntas (ao acaso seriam ~25%) e a mais curta em só
+3,7%; tem em média 60 caracteres contra 25 das erradas, e é pelo menos 50% maior que a média das
+erradas em 82,8% das perguntas. Por categoria e dificuldade vai de 78% (fáceis de IA e de
+Produtividade) a 99% (Finanças difícil); nas difíceis fica entre 84% e 99%. A posição já é
+equilibrada (~25% em cada letra), por isso o problema é o tamanho, não a posição.
+**Risco:** quem escolhe sempre a opção mais longa acerta cerca de 9 em cada 10. O quiz paga
+dinheiro real, então isso permite farmar o jogo e esvazia o antifraude do cronómetro.
+
+**Como regularizar (plano recomendado):**
+1. **Validador, só leitura** (script no backend, p. ex. `npm run quiz:validate`): por pergunta, mede
+   caracteres e palavras de cada alternativa, a razão correta/erradas, se a correta é a mais
+   longa ou a mais curta, estrutura (pontuação, explicação embutida, listas), alternativas
+   duplicadas ou quase iguais, nº de alternativas, só uma correta e posição da correta. Gera um
+   relatório por categoria e dificuldade e a lista das que reprovam. Critério sugerido (o dono
+   pode ajustar): reprovar quando a correta é a mais longa e passa ~1,3× a média das erradas, ou
+   quando traz explicação embutida; meta por categoria e dificuldade: correta mais longa em no
+   máximo ~30–35% das perguntas.
+2. **Corrigir por lotes de 25, com revisão humana do dono** (decisão já tomada), em migrations que
+   **só alteram `question_alternatives.label`**: mantêm os ids, `is_correct`, a ordem e a pergunta,
+   e nunca apagam perguntas. Reescrever para equilibrar tamanho e estrutura (distratores plausíveis,
+   mais completos; correta mais enxuta quando preciso), sem absurdos óbvios e sem explicação
+   embutida na correta.
+3. **Ordem:** a mesma das explicações (Finanças fácil → médio → difícil, depois as outras
+   categorias). Nas perguntas ainda sem explicação, escrever a explicação (BE-004) e corrigir as
+   alternativas **no mesmo lote**, tocando em cada pergunta uma só vez. Finanças fácil (95 já com
+   explicação) entra só na correção das alternativas.
+4. **A cada lote:** rodar o validador e registar aqui o antes/depois (% de "correta mais longa") e
+   o progresso, no mesmo commit do push.
+5. **Perguntas reprovadas e ainda não corrigidas continuam a ser servidas** (cerca de 91% reprovam;
+   parar de servi-las esvaziaria o jogo) e ficam marcadas para revisão; nada é apagado sem
+   aprovação. As perguntas novas só entram se passarem no validador.
+6. Reforço: embaralhar a ordem visual das alternativas a cada apresentação, sem quebrar a
+   validação no backend (a posição já é equilibrada).
+
+**Decisão do dono pendente:** começar pelo validador (recomendado) ou já corrigir as 25 primeiras
+de Finanças fácil e fazer o validador depois.
+
+**Progresso da regularização (atualizar a cada push):** nada corrigido ainda; o validador ainda
+não foi criado. Medição inicial: 90,8% das perguntas com a correta mais longa.
 
 ## BE-004 — Feedback pedagógico: explicação em cada pergunta (quiz v2)
 
