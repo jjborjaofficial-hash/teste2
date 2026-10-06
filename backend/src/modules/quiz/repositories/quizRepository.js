@@ -29,7 +29,7 @@ async function getRandomQuestion(categoryId, executor = db) {
     `SELECT id, label
      FROM question_alternatives
      WHERE question_id = $1
-     ORDER BY display_order`,
+     ORDER BY random()`, // opções em ordem aleatória a cada apresentação (BE-003); a validação usa o id, não a posição
     [question.id]
   );
 
@@ -58,7 +58,7 @@ async function getQuestionById(questionId, categoryId, executor = db) {
     `SELECT id, label
      FROM question_alternatives
      WHERE question_id = $1
-     ORDER BY display_order`,
+     ORDER BY random()`, // opções em ordem aleatória a cada apresentação (BE-003); a validação usa o id, não a posição
     [question.id]
   );
 

@@ -49,8 +49,10 @@ dinheiro real, então isso permite farmar o jogo e esvazia o antifraude do cron�
 5. **Perguntas reprovadas e ainda não corrigidas continuam a ser servidas** (cerca de 91% reprovam;
    parar de servi-las esvaziaria o jogo) e ficam marcadas para revisão; nada é apagado sem
    aprovação. As perguntas novas só entram se passarem no validador.
-6. Reforço: embaralhar a ordem visual das alternativas a cada apresentação, sem quebrar a
-   validação no backend (a posição já é equilibrada).
+6. Reforço **FEITO (2026-10-06, pedido do dono):** a ordem das alternativas é aleatória a cada
+   apresentação (`ORDER BY random()` em `quizRepository.getRandomQuestion` e `getQuestionById`); a
+   validação usa o id da alternativa, não a posição. Teste: `tests/quiz-alternatives-shuffle.test.js`.
+   Nota: ao recarregar a página a mesma pergunta volta com nova ordem (aceite).
 
 **Decisão do dono (2026-10-06):** começar pelo validador (passo 1). Passos 2 em diante só depois do
 validador feito e do dono rever o relatório.
