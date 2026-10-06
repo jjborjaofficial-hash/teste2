@@ -28,6 +28,14 @@ function dateOnlyStringOf(dbDateValue) {
   return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
 }
 
+/**
+ * Marco de 15 dias: só concede pontos (ver `streak_milestone_15_points`),
+ * nunca o item de proteção de streak automaticamente. Decisão consciente do
+ * proprietário do projeto (confirmada explicitamente), mesmo com uma versão
+ * antiga do documento mestre sugerindo o contrário — a proteção continua
+ * disponível só por compra na Loja (ver shopService.js/inventoryService.js,
+ * gamificationRepository.setProtectionActive). Não é um bug.
+ */
 async function grantMilestoneReward(executor, userId, days) {
   const config = await configRepository.getConfigValues([
     `streak_milestone_${days}_points`,
