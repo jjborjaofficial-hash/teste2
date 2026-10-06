@@ -246,4 +246,58 @@ maybe('quiz: rodadas com banco real', () => {
     const stored = (await db.query(`SELECT COUNT(*)::int AS n FROM quiz_round_questions WHERE round_id = $1`, [round.id])).rows[0].n;
     expect(stored).toBe(0);
   });
+
+  // ---- P7: totais guardados na rodada ao concluí-la ----
+
+  async function playFullRound(wrongIdx = []) {
+    // começa de uma rodada nova (testes anteriores podem ter deixado uma em andamento)
+    await db.query(`UPDATE quiz_rounds SET status = 'abandoned' WHERE user_id = $1 AND status = 'in_progress'`, [userId]);
+    let last;
+    for (let i = 0; i < 10; i += 1) {
+      const q = await quizService.getNextQuestion(categoryId, userId);
+      const alt = wrongIdx.includes(i) ? await wrongAltOf(q.id) : await correctAltOf(q.id);
+      await new Promise((r) => setTimeout(r, 450));
+      last = await quizService.submitAnswer({ userId, questionId: q.id, alternativeId: alt });
+    }
+    return last.round.id;
+  }
+
+  it('P7: ao concluir, a rodada guarda respostas certas, tempo total, XP e pontos (= soma das tentativas)', async () => {
+    const roundId = await playFullRound([2, 7]);
+    const row = (await db.query(`SELECT * FROM quiz_rounds WHERE id = $1`, [roundId])).rows[0];
+    const sums = (await db.query(
+      `SELECT COUNT(*) FILTER (WHERE is_correct)::int AS c, SUM(response_time_ms)::int AS t,
+              SUM(xp_awarded)::int AS xp, SUM(points_awarded)::int AS pts
+       FROM quiz_attempts WHERE round_id = $1`, [roundId]
+    )).rows[0];
+    expect(row.correct_count).toBe(8);
+    expect(row.correct_count).toBe(sums.c);
+    expect(row.total_response_ms).toBe(sums.t);
+    expect(row.xp_total).toBe(sums.xp);
+    expect(row.points_total).toBe(sums.pts);
+    expect(row.xp_total).toBeGreaterThan(0);
+  });
+
+  it('P7: o resumo usa os totais guardados e traz o tempo total', async () => {
+    const roundId = await playFullRound([0]);
+    const row = (await db.query(`SELECT * FROM quiz_rounds WHERE id = $1`, [roundId])).rows[0];
+    const summary = await quizService.getRoundSummary({ userId, roundId });
+    expect(summary.xpEarned).toBe(row.xp_total);
+    expect(summary.pointsEarned).toBe(row.points_total);
+    expect(summary.totalSeconds).toBeCloseTo(row.total_response_ms / 1000, 1);
+    expect(summary.averageResponseSeconds).toBeCloseTo(row.total_response_ms / 1000 / 10, 1);
+  });
+
+  it('P7: rodada antiga já concluída (sem totais guardados) continua a ser calculada pelas tentativas', async () => {
+    const roundId = await playFullRound([1]);
+    const before = await quizService.getRoundSummary({ userId, roundId });
+    await db.query(
+      `UPDATE quiz_rounds SET correct_count = NULL, total_response_ms = NULL, xp_total = NULL, points_total = NULL WHERE id = $1`,
+      [roundId]
+    );
+    const legacy = await quizService.getRoundSummary({ userId, roundId });
+    expect(legacy.xpEarned).toBe(before.xpEarned);
+    expect(legacy.pointsEarned).toBe(before.pointsEarned);
+    expect(legacy.totalSeconds).toBe(before.totalSeconds);
+  });
 });

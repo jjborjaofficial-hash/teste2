@@ -155,9 +155,22 @@ async function markRoundCheckpoint(executor, roundId) {
 
 async function completeRound(executor, roundId) {
   await executor.query(
-    `UPDATE quiz_rounds
-     SET status = 'completed', completed_at = now(), checkpoint_at = COALESCE(checkpoint_at, now())
-     WHERE id = $1`,
+    // P7: grava os totais da rodada no momento em que ela fecha (a última tentativa já foi
+    // registada nesta mesma transação).
+    `UPDATE quiz_rounds r
+     SET status = 'completed', completed_at = now(), checkpoint_at = COALESCE(r.checkpoint_at, now()),
+         correct_count     = t.correct_count,
+         total_response_ms = t.total_response_ms,
+         xp_total          = t.xp_total,
+         points_total      = t.points_total
+     FROM (
+       SELECT COUNT(*) FILTER (WHERE is_correct)::int AS correct_count,
+              COALESCE(SUM(response_time_ms), 0)::int AS total_response_ms,
+              COALESCE(SUM(xp_awarded), 0)::int       AS xp_total,
+              COALESCE(SUM(points_awarded), 0)::int   AS points_total
+       FROM quiz_attempts WHERE round_id = $1
+     ) t
+     WHERE r.id = $1`,
     [roundId]
   );
 }
@@ -169,7 +182,8 @@ async function touchRound(executor, roundId) {
 async function getRoundOfUser(executor, { roundId, userId }) {
   const { rows } = await executor.query(
     `SELECT r.id, r.category_id, r.target_questions, r.status, r.started_at, r.completed_at,
-            r.summary_shown_at, c.name AS category_name
+            r.summary_shown_at, r.correct_count, r.total_response_ms, r.xp_total, r.points_total,
+            c.name AS category_name
      FROM quiz_rounds r JOIN categories c ON c.id = r.category_id
      WHERE r.id = $1 AND r.user_id = $2`,
     [roundId, userId]

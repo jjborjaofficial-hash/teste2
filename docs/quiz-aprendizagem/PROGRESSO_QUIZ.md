@@ -9,7 +9,8 @@ Branch de trabalho: `feat/quiz-aprendizagem`
 
 ## Leia primeiro (nota de 2026-10-04, atualizada)
 
-- **Próximo pedaço a fazer: P7** (o primeiro `[ ]` da lista abaixo): histórico da rodada, XP e recompensas guardados. Só ele, depois commit + push.
+- **Próximo pedaço a fazer: P8** (o primeiro `[ ]` da lista abaixo): integração do quiz com as missões (a rodada concluída atualiza `/missoes` sem duplicar progresso nem recompensa). Só ele, depois commit + push.
+- **Atenção, junção com o `main`**: o `main` andou muito (explicações das perguntas de Finanças, feedback pedagógico, login com Google) e um merge de teste da branch do quiz dá conflito em `Quiz.jsx`, `QuizResult.jsx` e `quizRound.js`, além de migrações com o mesmo prefixo (108, 109, 110). Fazer a junção como passo próprio, com a suíte completa a correr, antes de pedir merge.
 - **Teste obrigatório antes de qualquer código do quiz** (o cronómetro é antifraude, mexe em dinheiro).
   Para correr os testes de verdade numa sessão onde `npm install` e `apt` funcionem:
   1. `apt-get update && apt-get install -y postgresql redis-server`; `service postgresql start`;
@@ -19,7 +20,7 @@ Branch de trabalho: `feat/quiz-aprendizagem`
   3. `RUN_DB_TESTS=1 npx jest --runInBand --forceExit --testTimeout=30000` (liga também os testes de integração do quiz).
   4. Entre execuções seguidas, `redis-cli flushall`: o limitador de pedidos guarda contadores no Redis e, sem limpar, o `auth.test.js`
      e outros passam a receber 429.
-  Em 2026-10-04 (esta sessão) a suíte completa passou: 18 conjuntos, 122 testes. Uma sessão anterior teve `npm install` e `apt-get`
+  Em 2026-10-05 a suíte completa passou: 18 conjuntos, 125 testes (com `RUN_DB_TESTS=1`). Uma sessão anterior teve `npm install` e `apt-get`
   **bloqueados (erro 403)**; nesse caso NÃO implemente código do quiz sem poder testar: faça só documentação.
 - Decisões do proprietário em [`INSTRUCAO_QUIZ.md`](./INSTRUCAO_QUIZ.md) ("Decisões do proprietário"):
   intersticial inalterado, reescrita das perguntas em lotes pequenos, e atualizar este
@@ -47,7 +48,7 @@ Marcar `[x]` ao concluir e enviar. Pegar sempre o primeiro `[ ]`.
 - [x] P6a. Cronómetro antifraude: `markQuestionIssued(..., { keepExisting: true })` mantém a emissão ORIGINAL quando a mesma pergunta é servida outra vez (recarregar não dá tempo grátis para pesquisar a resposta; uma resposta fora do tempo conta como esgotada). TTL longo (12 h) só nesse modo; o modo normal fica igual. 5 testes com Redis falso passam. Ainda não é usado (P6b).
 - [x] P6b. `next-question` serve a pergunta pela posição guardada (a primeira ainda não respondida; sem perguntas guardadas, mantém o caminho antigo), com `keepExisting` e devolvendo `time_remaining_seconds` (tempo RESTANTE). Testado no banco real (Postgres + Redis): serve na ordem das posições; recarregar devolve a mesma pergunta, mantém o relógio original e não duplica respostas; tempo já esgotado ao recarregar = 0 s e a resposta conta como tempo esgotado; rodada antiga sem perguntas guardadas continua aleatória. O frontend ainda não usa o campo novo (P6c).
 - [x] P6c. Frontend (`Quiz.jsx`): o contador regressivo parte de `time_remaining_seconds` (cai para `time_limit_seconds` se o campo não vier). Recarregar a página já não devolve o tempo todo; se já esgotou, o contador começa em 0 e envia a resposta de tempo esgotado como antes (efeito já existente). Compila sem erro; falta só a prova no navegador (P18).
-- [ ] P7. Histórico da rodada: tempo total, XP e recompensas guardados na rodada.
+- [x] P7. Histórico da rodada: ao concluir, o servidor grava na própria rodada `correct_count`, `total_response_ms`, `xp_total` e `points_total` (migração `110_quiz_round_totals.sql`, aditiva, colunas opcionais). O resumo usa esses totais e passou a devolver `totalSeconds` (tempo total); rodadas antigas sem totais continuam calculadas pelas tentativas. Pontos = valor bruto por dificuldade (o líquido creditado continua em `points_ledger`). Recompensas de missões NÃO são guardadas aqui: pertencem ao P8. Aviso para a junção com o `main`: o prefixo 110 também existe lá (`110_explicacoes_financas_facil_lote02.sql`); o executor regista por NOME de ficheiro, então não colide, mas confirmar na junção.
 
 **Missões**
 - [ ] P8. Analisar a integração atual do quiz com missões; testar que a rodada concluída atualiza `/missoes` sem duplicar progresso nem recompensa (teste 16).

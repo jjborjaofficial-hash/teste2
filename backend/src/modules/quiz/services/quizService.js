@@ -312,6 +312,8 @@ async function getRoundSummary({ userId, roundId }) {
   const answered = details.length;
   const correct = details.filter((d) => d.is_correct).length;
 
+  const totalResponseMs = round.total_response_ms ?? details.reduce((sum, d) => sum + d.response_time_ms, 0);
+
   const byDifficulty = ['easy', 'medium', 'hard']
     .map((difficulty) => {
       const rows = details.filter((d) => d.difficulty === difficulty);
@@ -344,11 +346,12 @@ async function getRoundSummary({ userId, roundId }) {
     correct,
     wrong: answered - correct,
     accuracyPercent: answered ? Math.round((correct / answered) * 100) : 0,
-    xpEarned: details.reduce((sum, d) => sum + d.xp_awarded, 0),
-    pointsEarned: details.reduce((sum, d) => sum + d.points_awarded, 0),
-    averageResponseSeconds: answered
-      ? Math.round(details.reduce((sum, d) => sum + d.response_time_ms, 0) / answered / 100) / 10
-      : 0,
+    // P7: usa os totais guardados na rodada ao concluí-la; rodadas antigas (sem totais) são
+    // calculadas a partir das tentativas, como antes.
+    xpEarned: round.xp_total ?? details.reduce((sum, d) => sum + d.xp_awarded, 0),
+    pointsEarned: round.points_total ?? details.reduce((sum, d) => sum + d.points_awarded, 0),
+    totalSeconds: Math.round(totalResponseMs / 100) / 10,
+    averageResponseSeconds: answered ? Math.round(totalResponseMs / answered / 100) / 10 : 0,
     byDifficulty,
     bestDifficulty: best,
     reviewDifficulty: weakest,
