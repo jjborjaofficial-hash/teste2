@@ -32,6 +32,9 @@ function detectPhoneProvider(phone) {
   return null; // já barrado pela validação de entrada, mas defensivo
 }
 
+// Tolerância para renovações simultâneas do mesmo cookie (F5, várias abas). Ver authRepository.
+const REFRESH_GRACE_SECONDS = 15;
+
 function hashToken(token) {
   return crypto.createHash('sha256').update(token).digest('hex');
 }
@@ -305,7 +308,7 @@ async function completeProfile(userId, { phone, isAdultDeclared }, context) {
 
 async function refresh({ refreshToken }, context) {
   const tokenHash = hashToken(refreshToken);
-  const stored = await repository.findValidRefreshToken(tokenHash);
+  const stored = await repository.findValidRefreshToken(tokenHash, { graceSeconds: REFRESH_GRACE_SECONDS });
 
   if (!stored) {
     throw new UnauthorizedError('Refresh token inválido ou expirado.');
@@ -326,7 +329,7 @@ async function refresh({ refreshToken }, context) {
 }
 
 async function logout({ refreshToken }) {
-  await repository.revokeRefreshToken(hashToken(refreshToken));
+  await repository.revokeRefreshToken(hashToken(refreshToken), { logout: true });
 }
 
 function sanitizeUser(user) {
@@ -365,6 +368,7 @@ async function acceptTerms(userId, context = {}) {
 }
 
 module.exports = {
+  hashToken,
   register,
   login,
   loginWithGoogle,

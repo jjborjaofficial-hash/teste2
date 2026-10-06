@@ -108,8 +108,16 @@ Se uma tarefa nova não encaixar em nenhuma área, crie um `PENDENTE.md` na past
   frontend e backend ficam em subdomínios diferentes de `onrender.com`. Corrigido com
   `COOKIE_SAMESITE=none` no `render.yaml` (commit `4fc79ad`), nota em `docs/deploy-render.md`,
   e a variável já foi aplicada no serviço `teste2-backend` do Render (deploy Live).
-- Falta: o dono (e o amigo) confirmarem no ar: sair, entrar de novo (obrigatório, cookie
-  antigo), atualizar a página em várias telas e continuar logado.
+- 2.ª causa achada (2026-10-06, relato do dono: "repete quando atualizo 2 ou 3 vezes"): ao dar F5
+  vários pedidos recebem 401 juntos e cada um renovava o token com o MESMO cookie; só o primeiro
+  ganhava e a sessão caía. Corrigido em duas frentes: frontend com renovação única compartilhada
+  (`refreshSession` em `frontend/src/api/client.js`) e backend com janela de tolerância de 15 s
+  para token recém-rodado (`authRepository.findValidRefreshToken`, `REFRESH_GRACE_SECONDS`;
+  logout grava data antiga e nunca renova). Teste: `backend/tests/auth-refresh-race.test.js`.
+  **Exige deploy manual do backend E do frontend no Render.**
+- Falta: o dono (e o amigo) confirmarem no ar (depois do deploy dos dois): sair, entrar de novo
+  (obrigatório, cookie antigo), atualizar a página várias vezes seguidas, em várias telas, e
+  continuar logado.
 - Se ainda cair no login só no Safari/iPhone: navegadores bloqueiam cookies entre sites mesmo
   com `none`. Solução definitiva = domínio próprio com frontend e API no mesmo site (ex.:
   `app.dominio.com` e `api.dominio.com`) e `COOKIE_SAMESITE=lax`/`strict`. Explicar o passo a

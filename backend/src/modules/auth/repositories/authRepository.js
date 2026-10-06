@@ -149,20 +149,36 @@ async function storeRefreshToken({ userId, tokenHash, userAgent, ipAddress, expi
   );
 }
 
-async function findValidRefreshToken(tokenHash) {
+/**
+ * Token de renovação válido. Com `graceSeconds` > 0 aceita também um token revogado há
+ * poucos segundos (revogado POR ROTAÇÃO): quando a página é atualizada, vários pedidos
+ * (ou duas abas) chegam juntos com o mesmo cookie e só o primeiro ganharia; os outros
+ * davam 401 e a sessão caía (bug do F5 repetido 2-3 vezes). Fora dessa janela, um token
+ * revogado continua inválido (logout e roubo de token seguem protegidos).
+ */
+async function findValidRefreshToken(tokenHash, { graceSeconds = 0 } = {}) {
   const { rows } = await db.query(
     `SELECT id, user_id, expires_at
      FROM refresh_tokens
-     WHERE token_hash = $1 AND revoked_at IS NULL AND expires_at > now()`,
-    [tokenHash]
+     WHERE token_hash = $1
+       AND expires_at > now()
+       AND (revoked_at IS NULL
+            OR ($2::int > 0
+                AND revoked_at > now() - ($2::int * interval '1 second')))`,
+    [tokenHash, graceSeconds]
   );
   return rows[0] || null;
 }
 
-async function revokeRefreshToken(tokenHash) {
+// Só marca a primeira revogação (a janela de tolerância conta a partir dela).
+// Rotação normal grava revoked_at = agora (entra na janela). Logout grava uma data antiga
+// (fora da janela), para o token de quem saiu nunca mais renovar a sessão.
+async function revokeRefreshToken(tokenHash, { logout = false } = {}) {
   await db.query(
-    `UPDATE refresh_tokens SET revoked_at = now() WHERE token_hash = $1`,
-    [tokenHash]
+    `UPDATE refresh_tokens
+        SET revoked_at = CASE WHEN $2::boolean THEN now() - interval '1 day' ELSE now() END
+      WHERE token_hash = $1 AND revoked_at IS NULL`,
+    [tokenHash, logout]
   );
 }
 

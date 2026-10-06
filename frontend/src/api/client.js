@@ -67,6 +67,24 @@ async function rawRequest(path, { method = 'GET', body, auth = true } = {}) {
  * original. Se a renovação falhar, propaga o erro (o AuthContext trata isso como
  * sessão expirada e desloga o usuário).
  */
+// Renovação única: ao atualizar a página (F5) o access token some da memória e VÁRIOS pedidos
+// recebem 401 ao mesmo tempo. Se cada um renovasse por conta própria, gastariam o mesmo
+// cookie em paralelo e a sessão caía. Todos esperam a mesma renovação.
+let refreshInFlight = null;
+function refreshSession() {
+  if (!refreshInFlight) {
+    refreshInFlight = rawRequest('/auth/refresh', { method: 'POST', auth: false })
+      .then((result) => {
+        setTokens(result.data);
+        return result;
+      })
+      .finally(() => {
+        refreshInFlight = null;
+      });
+  }
+  return refreshInFlight;
+}
+
 async function request(path, options = {}) {
   try {
     return await rawRequest(path, options);
@@ -75,11 +93,7 @@ async function request(path, options = {}) {
     // para /auth/refresh — não precisamos, e não conseguimos, lê-lo aqui).
     if (err.status === 401 && options.auth !== false && path !== '/auth/refresh') {
       try {
-        const refreshResult = await rawRequest('/auth/refresh', {
-          method: 'POST',
-          auth: false,
-        });
-        setTokens(refreshResult.data);
+        await refreshSession();
         return await rawRequest(path, options);
       } catch (refreshErr) {
         clearTokens();
