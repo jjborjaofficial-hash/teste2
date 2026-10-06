@@ -67,16 +67,16 @@ por categoria, começando por uma (decisão do dono pendente: qual primeiro). Se
 um feedback genérico seguro enquanto o conteúdo não existir.
 
 **Progresso das explicações (atualizar a cada push).** Decisão do dono: começar por Finanças; ordem
-fácil → médio → difícil; lotes de 5 perguntas, e cada lote = migration + testes + commit + push +
+fácil → médio → difícil; lotes de 10 perguntas (o dono pediu 10 em 2026-10-06), e cada lote = migration + testes + commit + push +
 esta atualização. Dentro de cada dificuldade segue-se a ordem dos seeds e, em cada seed, a ordem das
 perguntas no ficheiro. A explicação é o "Por quê?" (coluna `questions.explanation`), curta e em
 linguagem simples nas fáceis.
-- Finanças fácil (seeds 045 → 064 → 068 → 094 → 099; 100 perguntas no banco): **feito** os seeds 045
-  (33), 064 (59) e 068 (3) — 95 explicações escritas até aqui (migrations 109 a 119). **Próximo:** as
-  5 que faltam para fechar Finanças fácil: seed 094 (1: "O que é uma conta poupança?", source
-  `seed_financas_facil_v4`) e seed 099 (4, começa em "O que é uma fatura?", source
-  `seed_financas_facil_v5`). Depois, Finanças médio.
-- Finanças médio (seeds 046 → 065 → 069 → 100): pendente.
+- Finanças fácil (seeds 045 → 064 → 068 → 094 → 099; 100 perguntas no banco): **CONCLUÍDO** — as 100
+  explicações escritas (migrations 109 a 120).
+- Finanças médio (seeds 046 → 065 → 069 → 100): **em andamento** — feitas as 5 primeiras do seed 046
+  (source `seed_financas_medio_v1`, migration 120). **Próximo:** a 6.ª pergunta do seed 046
+  (a 6.ª pergunta, "O que é crédito?", e seguintes, na ordem do ficheiro; 33 faltam nesse seed), em
+  lotes de 10 (migration 121 em diante).
 - Finanças difícil (seeds 047 → 073 → 074 → 075 → 083): pendente.
 - IA, Marketing Digital, Produtividade, Tecnologia: pendentes (ordem a decidir pelo dono).
 
