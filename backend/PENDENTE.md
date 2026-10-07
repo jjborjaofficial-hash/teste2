@@ -67,10 +67,10 @@ validador feito e do dono rever o relatório.
   Só leitura. O CI roda o relatório a cada push (passo "Relatório do validador" em Actions), então
   o antes/depois de cada lote fica no log do GitHub. Critérios ajustáveis em `CRITERIA` no mesmo ficheiro.
 - Passo 2 (corrigir alternativas em lotes de 25, só `question_alternatives.label`): **EM ANDAMENTO**. Finanças fácil lote 1 (perguntas 1 a 25 do seed 045; 56 alternativas erradas ajustadas) aprovado pelo dono em 2026-10-07 e gravado na migration 141 (`tests/quiz-alternatives-financas-facil-lote01.test.js`). Rascunhos dos lotes: `docs/quiz-lotes-alternativas/`.
-  **Lotes feitos:** Finanças fácil lote 1 (migration 141) e lote 2 (migration 142). **AUTORIZAÇÃO DO DONO (2026-10-07):
+  **Lotes feitos:** Finanças fácil lote 1 (migration 141), lote 2 (142) e lote 3 (143, perguntas 18 a 42 do seed 064). **AUTORIZAÇÃO DO DONO (2026-10-07):
   gravar cada lote direto, sem esperar aprovação** (ele já validou a regra); avisá-lo depois e deixar o rascunho em
-  `docs/quiz-lotes-alternativas/` para ele conferir. **PRÓXIMO: Finanças fácil lote 3** (seguintes 25 perguntas: seed 064
-  a partir da 18.ª, depois 068 → 094 → 099), migration 143, e assim até acabar Finanças fácil, médio e difícil.
+  `docs/quiz-lotes-alternativas/` para ele conferir. **PRÓXIMO: Finanças fácil lote 4** (seguintes 25 perguntas: seed 064
+  a partir da 43.ª, depois 068 → 094 → 099), migration 144, e assim até acabar Finanças fácil, médio e difícil.
   Cada lote: rascunho em `docs/quiz-lotes-alternativas/` (tabela com a coluna "Seed" no formato 064#18) → migration gerada
   a partir da tabela (a certa nunca muda) → `tests/quiz-alternatives-lotes.test.js` (cobre todos os lotes) → push → CI verde →
   deploy do backend → atualizar este bloco.
@@ -106,7 +106,7 @@ linguagem simples nas fáceis.
      (fácil 88%, médio 90%, difícil 98% com a correta mais longa). Ordem das perguntas: a dos seeds (fácil: 045 → 064 → 068 → 094 → 099).
   2. **IA** (fácil → médio → difícil): em cada lote, explicações **e** alternativas juntas (a pergunta é tocada uma só vez).
   3. Depois: Marketing Digital, Produtividade e Tecnologia, também com as duas coisas juntas (ordem entre elas a decidir pelo dono).
-  Cada lote = migration + teste + relatório do validador (antes/depois) + commit + push + deploy do backend + esta atualização. Próxima migration: 143.
+  Cada lote = migration + teste + relatório do validador (antes/depois) + commit + push + deploy do backend + esta atualização. Próxima migration: 144.
 
 Parte técnica **feita**: `submitAnswer` já devolve `feedback` ({ correctAlternativeId,
 correctAlternativeLabel, explanation }) depois de responder, só se a pergunta foi entregue ao
