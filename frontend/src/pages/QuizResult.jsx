@@ -26,7 +26,7 @@ export function QuizResult() {
   const roundFinished = Boolean(round?.finished && summary);
 
   // Calculada uma única vez por resultado (useState evita mudar de frase a cada re-render).
-  const [title] = useState(() => (result ? buildResultMessage(result) : ''));
+  const [heading] = useState(() => (result ? buildResultMessage(result) : { title: '', detail: '' }));
   const [showAd, setShowAd] = useState(true);
   const [adSecondsLeft, setAdSecondsLeft] = useState(5);
 
@@ -92,8 +92,11 @@ export function QuizResult() {
           )}
         </div>
         <h1 className="font-display text-h1 text-text mb-1">
-          {title}
+          {heading.title}
         </h1>
+        {heading.detail && (
+          <p className="text-body text-text-secondary">{heading.detail}</p>
+        )}
         {result.timeExpired && (
           <p className="text-caption text-text-secondary">O tempo esgotou desta vez.</p>
         )}
