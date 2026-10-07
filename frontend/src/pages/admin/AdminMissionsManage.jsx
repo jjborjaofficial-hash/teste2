@@ -7,12 +7,29 @@ import { ApiError } from '../../api/client';
 
 const TYPE_LABELS = { daily: 'Diária', weekly: 'Semanal', special: 'Especial', sponsored: 'Patrocinada' };
 
+// Só estes dois tipos podem ser criados pelo painel (o servidor recusa os outros);
+// os restantes (entrar, tempo ativo, explorar categorias) vêm das migrations.
+const CREATABLE_ACTIVITY_TYPES = {
+  quiz_count: { label: 'Quizzes (respostas certas)', targetLabel: 'Quizzes necessários' },
+  round_complete: { label: 'Rodadas completas (10 perguntas)', targetLabel: 'Rodadas necessárias' },
+};
+
+// Como a meta de cada tipo de missão é contada, para mostrar na lista.
+const ACTIVITY_UNITS = {
+  quiz_count: 'quiz(zes)',
+  round_complete: 'rodada(s)',
+  login: 'entrada(s)',
+  time_active_minutes: 'minuto(s) ativo(s)',
+  category_exploration: 'categoria(s)',
+};
+
 function MissionForm({ categories, onCreated, onCancel }) {
   const { showToast } = useToast();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [type, setType] = useState('daily');
   const [categoryId, setCategoryId] = useState('');
+  const [activityType, setActivityType] = useState('quiz_count');
   const [targetQuizCount, setTargetQuizCount] = useState(1);
   const [xpReward, setXpReward] = useState(20);
   const [pointsReward, setPointsReward] = useState(10);
@@ -34,6 +51,7 @@ function MissionForm({ categories, onCreated, onCancel }) {
         description: description || undefined,
         type,
         categoryId: categoryId || undefined,
+        activityType,
         targetQuizCount: Number(targetQuizCount),
         xpReward: Number(xpReward),
         pointsReward: Number(pointsReward),
@@ -81,9 +99,19 @@ function MissionForm({ categories, onCreated, onCancel }) {
             {categories?.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
         </div>
+        <label className="block text-caption text-text-secondary">
+          O que a missão conta
+          <select
+            value={activityType}
+            onChange={(e) => setActivityType(e.target.value)}
+            className="w-full rounded-button border border-border bg-background px-3 py-2 text-body text-text mt-1"
+          >
+            {Object.entries(CREATABLE_ACTIVITY_TYPES).map(([v, a]) => <option key={v} value={v}>{a.label}</option>)}
+          </select>
+        </label>
         <div className="grid grid-cols-2 gap-2">
           <label className="text-caption text-text-secondary">
-            Quizzes necessários
+            {CREATABLE_ACTIVITY_TYPES[activityType].targetLabel}
             <input type="number" value={targetQuizCount} onChange={(e) => setTargetQuizCount(e.target.value)}
               className="w-full rounded-button border border-border bg-background px-3 py-2 text-body text-text mt-1" />
           </label>
@@ -103,6 +131,13 @@ function MissionForm({ categories, onCreated, onCancel }) {
               className="w-full rounded-button border border-border bg-background px-3 py-2 text-body text-text mt-1" />
           </label>
         </div>
+
+        {activityType === 'round_complete' && Number(moneyRewardMzn) > 0 && (
+          <p className="text-caption text-warning">
+            ⚠️ Esta missão conta rodadas concluídas mesmo com poucos acertos (responder ao acaso também a completa).
+            Antes de pagar dinheiro real, decida se exige um mínimo de acertos por rodada.
+          </p>
+        )}
 
         {Number(moneyRewardMzn) > 0 && (
           <p className="text-caption text-warning">
@@ -176,7 +211,7 @@ export function AdminMissionsManage() {
                   {m.title} {!m.isActive && <span className="text-danger text-caption font-semibold">(inativa)</span>}
                 </p>
                 <p className="text-caption text-text-secondary">
-                  {TYPE_LABELS[m.type]} · {m.categoryName || 'Qualquer categoria'} · {m.targetQuizCount} quiz(zes)
+                  {TYPE_LABELS[m.type]} · {m.categoryName || 'Qualquer categoria'} · {m.targetQuizCount} {ACTIVITY_UNITS[m.activityType] || 'meta'}
                 </p>
                 <p className="text-caption text-gold font-semibold">
                   {m.xpReward} XP · {m.pointsReward} Pontos {m.moneyRewardMzn > 0 && `· ${m.moneyRewardMzn.toFixed(2)} MZN`}
