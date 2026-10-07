@@ -4,6 +4,7 @@ import { PrimaryButton, SecondaryButton } from '../components/Button';
 import { RewardBadge } from '../components/RewardBadge';
 import { CheckIcon, CloseDrawIcon, FireIcon, XpIcon, WalletIcon, PointsIcon, AchievementIcon } from '../icons';
 import { InterstitialAds } from '../ads';
+import { buildResultMessage } from '../lib/resultMessage';
 
 /**
  * Tela de Resultados (Doc. Mestre Seção 19.5). "Momento de maior pico de dopamina."
@@ -18,12 +19,14 @@ export function QuizResult() {
   const { categoryId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const { result, message } = location.state || {};
+  const { result } = location.state || {};
   // O progresso da rodada e o resumo final vêm do servidor (resposta de /quiz/answers).
   const round = result?.round;
   const summary = result?.roundSummary;
   const roundFinished = Boolean(round?.finished && summary);
 
+  // Calculada uma única vez por resultado (useState evita mudar de frase a cada re-render).
+  const [title] = useState(() => (result ? buildResultMessage(result) : ''));
   const [showAd, setShowAd] = useState(true);
   const [adSecondsLeft, setAdSecondsLeft] = useState(5);
 
@@ -89,7 +92,7 @@ export function QuizResult() {
           )}
         </div>
         <h1 className="font-display text-h1 text-text mb-1">
-          {result.isCorrect ? 'Resposta certa! Muito bem.' : message}
+          {title}
         </h1>
         {result.timeExpired && (
           <p className="text-caption text-text-secondary">O tempo esgotou desta vez.</p>
