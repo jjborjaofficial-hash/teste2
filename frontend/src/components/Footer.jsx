@@ -46,18 +46,18 @@ export function Footer() {
           dependentes do cumprimento de missões, não constituindo promessa de renda.
         </p>
 
-        {/* Logótipo (só texto), com as cores do desenho do dono. O subtítulo leva a linha de
-            direitos de autor, por isso substitui a linha de "©" que existia aqui. */}
-        <div className="flex justify-center rounded-card bg-[#191918] px-4 py-5">
-          <div className="inline-flex flex-col items-start">
-            <span className="text-[28px] font-bold uppercase leading-[0.95] tracking-[1.2px] text-[#858583]">
-              Aprenda e Ganhe
-            </span>
-            {/* Cores exatas do desenho do dono: título #858583 e linha pequena #626260. */}
-            <span className="mt-2 text-[10px] tracking-[0.2px] text-[#626260]">
-              © {new Date().getFullYear()} APRENDA E GANHE. Todos os direitos reservados.
-            </span>
-          </div>
+        {/* Logótipo só em texto, sem caixa de fundo. Usa a cor de texto secundária do tema (e não os
+            cinzas fixos do desenho, pensados para fundo escuro), para ler bem no tema claro e no escuro.
+            O subtítulo leva a linha de direitos de autor. */}
+        <div className="flex flex-col items-center pt-2 text-center">
+          <span className="text-[24px] font-bold uppercase leading-none tracking-[1.2px] text-text-secondary">
+            Aprenda e Ganhe
+          </span>
+          <span className="mt-2 text-[11px] leading-4 tracking-[0.2px] text-text-secondary">
+            © {new Date().getFullYear()} APRENDA E GANHE.
+            <br />
+            Todos os direitos reservados.
+          </span>
         </div>
       </div>
     </footer>
