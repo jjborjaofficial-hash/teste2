@@ -69,8 +69,8 @@ validador feito e do dono rever o relatório.
 - Passo 2 (corrigir alternativas em lotes de 25, só `question_alternatives.label`): **EM ANDAMENTO**. Finanças fácil lote 1 (perguntas 1 a 25 do seed 045; 56 alternativas erradas ajustadas) aprovado pelo dono em 2026-10-07 e gravado na migration 141 (`tests/quiz-alternatives-financas-facil-lote01.test.js`). Rascunhos dos lotes: `docs/quiz-lotes-alternativas/`.
   **Lotes feitos:** Finanças fácil lote 1 (migration 141), lote 2 (142) e lote 3 (143, perguntas 18 a 42 do seed 064). **AUTORIZAÇÃO DO DONO (2026-10-07):
   gravar cada lote direto, sem esperar aprovação** (ele já validou a regra); avisá-lo depois e deixar o rascunho em
-  `docs/quiz-lotes-alternativas/` para ele conferir. **PRÓXIMO: Finanças fácil lote 4** (seguintes 25 perguntas: seed 064
-  a partir da 43.ª, depois 068 → 094 → 099), migration 144, e assim até acabar Finanças fácil, médio e difícil.
+  `docs/quiz-lotes-alternativas/` para ele conferir. **PRÓXIMO: Finanças fácil lote 4** (seguintes 25 perguntas: as 17 que sobram do seed 064
+  (da 43.ª à 59.ª), as 3 do seed 068 e as 5 primeiras do seed 094; depois 094 → 099), migration 144, e assim até acabar Finanças fácil, médio e difícil.
   Cada lote: rascunho em `docs/quiz-lotes-alternativas/` (tabela com a coluna "Seed" no formato 064#18) → migration gerada
   a partir da tabela (a certa nunca muda) → `tests/quiz-alternatives-lotes.test.js` (cobre todos os lotes) → push → CI verde →
   deploy do backend → atualizar este bloco.
