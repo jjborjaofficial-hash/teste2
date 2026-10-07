@@ -81,7 +81,7 @@ o mesmo formato.
 - 60.500 MZN ✔
 - 55.000 MZN (só um ano de juros)
 - 60.000 MZN (juros simples)
-- 61.000 MZN (taxa de 10% aplicada duas vezes sobre o valor inicial e arredondada)
+- 66.550 MZN (resultado de três anos em vez de dois)
 
 (A nota entre parênteses é só aqui no guia, **não** vai para a alternativa: na alternativa fica apenas
 o valor. Os erros de cálculo servem para escolher os valores errados.)
