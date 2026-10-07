@@ -10,7 +10,7 @@ BE-002 (rodadas no servidor: migration 107, `quiz_rounds`, seleção das 10, ret
 resumo só da rodada) já foi feito e testado. Sobram: (a) a rota antiga
 `GET /quiz/categories/:id/next-question` + `POST /quiz/answers` sem `roundId` continua a servir
 perguntas fora de rodada; o frontend já não os usa (usa só `/quiz/rounds`); decidir se o servidor passa a
-exigir `roundId` e remover `nextQuestion` de `frontend/src/api/quizApi.js`; (b) não existe tipo de missão "completar uma rodada" (hoje o progresso das
+exigir `roundId` (**`nextQuestion` já foi removido do frontend em 2026-10-07**; falta só decidir o servidor: o dono tem de dizer se pode cortar a rota antiga, por causa de versões antigas da app instaladas; o teste `quiz-wallet-ranking` teria de ser reescrito); (b) não existe tipo de missão "completar uma rodada" (hoje o progresso das
 missões conta por resposta certa); (c) guardar os conceitos errados por rodada para
 recomendações (hoje só há `reviewStatements` no resumo).
 

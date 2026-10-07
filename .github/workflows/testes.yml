@@ -89,12 +89,23 @@ jobs:
           cat quiz-validador.txt | head -60 >> "$GITHUB_STEP_SUMMARY"
           # Resumo também como anotação (aparece no topo da execução, sem abrir os logs).
           echo "::notice title=Validador do quiz::$(head -30 quiz-validador.txt | sed ':a;N;$!ba;s/%/%25/g;s/\r/%0D/g;s/\n/%0A/g')"
+      # Auditoria completa do quiz (integridade, duplicadas, viés de tamanho e de posição). Por enquanto
+      # informativa: "--strict" faz o passo falhar se houver defeitos graves, mas continue-on-error
+      # evita que isso deixe o CI vermelho. Quando estiver sempre limpa, remova o continue-on-error.
+      - name: Auditoria do quiz (informativa)
+        continue-on-error: true
+        run: |
+          npm run quiz:audit -- --strict > quiz-auditoria.txt
+          cat quiz-auditoria.txt
+          head -60 quiz-auditoria.txt >> "$GITHUB_STEP_SUMMARY"
       - name: Guardar o relatório do validador
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: relatorio-validador-quiz
-          path: backend/quiz-validador.txt
+          path: |
+            backend/quiz-validador.txt
+            backend/quiz-auditoria.txt
           if-no-files-found: ignore
       - name: Testes do backend (bloqueia se falhar)
         run: npx jest --runInBand --forceExit --testPathIgnorePatterns "auth.test.js"
