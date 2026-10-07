@@ -87,6 +87,8 @@ jobs:
           npm run quiz:validate -- --list > quiz-validador.txt
           cat quiz-validador.txt
           cat quiz-validador.txt | head -60 >> "$GITHUB_STEP_SUMMARY"
+          # Resumo também como anotação (aparece no topo da execução, sem abrir os logs).
+          echo "::notice title=Validador do quiz::$(head -30 quiz-validador.txt | sed ':a;N;$!ba;s/%/%25/g;s/\r/%0D/g;s/\n/%0A/g')"
       - name: Guardar o relatório do validador
         if: always()
         uses: actions/upload-artifact@v4
