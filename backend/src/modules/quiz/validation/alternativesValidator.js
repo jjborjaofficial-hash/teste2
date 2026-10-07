@@ -44,7 +44,11 @@ function similarity(a, b) {
 
 // Explicação embutida na correta: parênteses, travessão/dois-pontos ou "porque/pois/ou seja".
 function hasEmbeddedExplanation(label) {
-  return /\(|\s[—–-]\s|:|\b(porque|pois|ou seja|isto e|isto é)\b/i.test(String(label || ''));
+  // Um "Porque" no INÍCIO da alternativa é a resposta natural a uma pergunta "Por que…?" e não conta como
+  // explicação embutida; só conta quando aparece no meio ("X, porque Y"). Corrigido após a auditoria de Finanças
+  // (9 falsos alarmes em perguntas "Por que…?"): o portão de perguntas novas recusaria qualquer "Por que…?" bem escrita.
+  const text = String(label || '').replace(/^\s*porque\s+/i, '');
+  return /\(|\s[—–-]\s|:|\b(porque|pois|ou seja|isto e|isto é)\b/i.test(text);
 }
 
 /**

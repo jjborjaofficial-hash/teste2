@@ -73,3 +73,21 @@ describe('correta muito mais curta que as erradas (teste 12 da especificação)'
     expect(r.reasons).not.toContain('correta_muito_mais_curta');
   });
 });
+
+describe('explicação embutida: "Porque" no início não conta (respostas a "Por que…?")', () => {
+  const { hasEmbeddedExplanation } = require('../src/modules/quiz/validation/alternativesValidator');
+
+  test('"Porque …" no início da alternativa não é explicação embutida', () => {
+    expect(hasEmbeddedExplanation('Porque pode ser necessária para despesas inesperadas')).toBe(false);
+    expect(hasEmbeddedExplanation('  porque a perda dessa fonte afeta os recursos')).toBe(false);
+  });
+
+  test('continua a apanhar explicação de verdade (porque no meio, parênteses, dois-pontos, ou seja)', () => {
+    expect(hasEmbeddedExplanation('Poupar dinheiro, porque assim sobra mais')).toBe(true);
+    expect(hasEmbeddedExplanation('Porque sobe, pois o custo aumenta')).toBe(true);
+    expect(hasEmbeddedExplanation('Juros (taxa cobrada)')).toBe(true);
+    expect(hasEmbeddedExplanation('Inflação: subida dos preços')).toBe(true);
+    expect(hasEmbeddedExplanation('Reserva, ou seja, dinheiro guardado')).toBe(true);
+  });
+});
+
