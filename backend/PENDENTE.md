@@ -81,9 +81,10 @@ validador feito e do dono rever o relatório.
   depois do deploy manual do backend.**
   **Auditoria do banco (2026-10-07, 1.659 ativas, após os lotes até a migration 201):** correta mais longa em **85,4%** (1.372 reprovam);
   posição equilibrada (A 25,7 / B 25,5 / C 24,9 / D 23,9%, qui² 1,24, nenhum grupo previsível); 0 enunciados idênticos; **18 pares
-  quase iguais** (lista para o dono decidir em `docs/quiz-duplicadas-para-revisao.md`; nada foi apagado); 0 defeitos estruturais; 0
+  quase iguais** (**REGULARIZADOS** pela migration 390: uma versão de cada par desativada, nada apagado; lista e regra em
+  `docs/quiz-duplicadas-para-revisao.md`; hoje ficam 1.641 ativas e 0 duplicadas); 0 defeitos estruturais; 0
   "todas/nenhuma das anteriores". A pista mais comum fora o tamanho é `palavras_desequilibradas` (aviso, 1.199 perguntas).
-  **Decisões do dono pendentes:** (a) o que fazer com os 18 pares quase iguais; (b) pôr `npm run quiz:audit` também no CI
+  **Decisão do dono pendente:** pôr `npm run quiz:audit` também no CI
   (`.github/workflows/testes.yml`; não foi mexido: alterar workflows exige uma permissão a mais no token de push).
 - **P15 (07/10): critério `correta_muito_mais_curta` FEITO** (teste 12 da especificação; simétrico ao da mais longa:
   a correta é a mais curta e fica abaixo de 0,75x a média das erradas; `CRITERIA.shortestRatio`). Evita trocar o padrão

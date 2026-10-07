@@ -1,7 +1,7 @@
 /**
  * Teste de integração (PostgreSQL com migrations): as explicações reescritas junto com cada lote de alternativas
  * (regra 9 do padrão: explicações que citavam as erradas antigas) estão no banco com o texto novo, e as perguntas
- * continuam ativas. Cada migration *_alternativas_*.sql que reescreve explicações traz, num segundo bloco, a
+ * continuam ativas (exceto as desativadas de propósito por duplicadas, migration 390). Cada migration *_alternativas_*.sql que reescreve explicações traz, num segundo bloco, a
  * lista (fonte, pergunta, texto antigo, texto novo) e o total em "previstas: N".
  */
 const fs = require('fs');
@@ -11,6 +11,12 @@ const db = require('../src/config/database');
 const dir = path.join(__dirname, '../database/migrations');
 const re = /^\s+\('(seed_[a-z_0-9]+)', '((?:[^']|'')+)', '((?:[^']|'')+)', '((?:[^']|'')+)'\),?$/gm;
 const un = (s) => s.replace(/''/g, "'");
+
+// Perguntas desativadas DE PROPÓSITO por serem duplicadas (migration 390, BE-003 P10): continuam no banco com a
+// explicação nova, mas inativas. Qualquer outra pergunta de um lote tem de continuar ativa.
+const dedupSql = fs.readFileSync(path.join(dir, '390_desativar_perguntas_duplicadas.sql'), 'utf8');
+const dedupRe = /^\s+\('(?:[^']|'')+', '(\w+)', '((?:[^']|'')+)', '(?:[^']|'')+', '\w+', '(?:[^']|'')+'\),?$/gm;
+const deactivatedOnPurpose = new Set([...dedupSql.matchAll(dedupRe)].map((m) => `${m[1]}|${un(m[2])}`));
 
 const lots = fs
   .readdirSync(dir)
@@ -41,12 +47,12 @@ describe.each(lots)('lote $f', ({ announced, rows }) => {
   test('cada explicação reescrita está no banco com o texto novo, e a pergunta continua ativa', async () => {
     for (const r of rows) {
       const { rows: found } = await db.query(
-        'SELECT explanation, is_active FROM questions WHERE source = $1 AND statement = $2',
+        'SELECT explanation, is_active, difficulty FROM questions WHERE source = $1 AND statement = $2',
         [r.source, r.statement]
       );
       expect(found).toHaveLength(1);
       expect(found[0].explanation).toBe(r.newText);
-      expect(found[0].is_active).toBe(true);
+      expect(found[0].is_active).toBe(!deactivatedOnPurpose.has(`${found[0].difficulty}|${r.statement}`));
     }
   });
 
