@@ -124,3 +124,31 @@ Lotes de 25 perguntas; o dono revê o texto **antes** da migration. Cada lote = 
 (`UPDATE question_alternatives SET label = …` casando por pergunta + posição + `is_correct`),
 teste, relatório do validador (antes/depois), commit, push, deploy do backend e atualização do
 `backend/PENDENTE.md`. Perguntas ainda não corrigidas continuam a ser servidas e nada é apagado.
+
+## Validador estendido (BE-003, P9 a P14)
+
+`npm run quiz:audit` (só leitura) junta o validador de tamanho com quatro verificações novas. A coluna **Quando bloqueia**
+vale para **perguntas novas ou reescritas** no admin; nas perguntas antigas tudo é só informativo.
+
+| Alerta | O que significa | Regra | Quando bloqueia | Como corrigir |
+|---|---|---|---|---|
+| `correta_mais_longa_destacada` | a correta é a mais longa e passa ~1,3x a média das erradas | 1, 2 | sim | encurtar a correta ou completar as erradas |
+| `explicacao_embutida_na_correta` | parênteses, dois-pontos, "porque", "ou seja" na correta | 5 | sim | mover para a explicação |
+| `alternativas_duplicadas_ou_quase_iguais` | duas opções quase iguais | 7 | sim | trocar uma por outro distrator |
+| `todas_ou_nenhuma_das_anteriores` | a opção inteira é "todas/nenhuma das anteriores", "ambas estão corretas"… | 7 | sim | usar uma opção normal |
+| `pergunta_duplicada` | enunciado igual ou >= 85% parecido com outro (ignora "de, que, qual, um…") | — | sim | reformular ou não criar |
+| `pista_absoluta_so_nas_erradas` | "sempre, nunca, apenas…" só nas erradas | 6 | não (aviso) | usar em todas ou em nenhuma |
+| `pista_cautela_so_na_correta` | "geralmente, pode…" só na correta | 6 | não (aviso) | usar em todas ou em nenhuma |
+| `estrutura_so_na_correta` | só a correta tem vírgula, parênteses, aspas ou "e/ou" | 3 | não (aviso) | dar a mesma forma às quatro |
+| `inicio_diferente_so_na_correta` | as erradas começam igual e a correta não | 3 | não (aviso) | mesmo início nas quatro |
+| `palavras_desequilibradas` | diferença de palavras entre a maior e a menor opção > 50% (só opções de 4+ palavras) | 1 | não (aviso) | aproximar os tamanhos |
+| `opcao_contida_noutra` | uma opção (2+ palavras) está inteira dentro de outra | 7 | não (aviso) | tornar as opções independentes |
+
+**Posição da correta.** Analisa a ordem GUARDADA (o servidor embaralha ao servir). Acusa `distribuicao_desigual` (qui² a 1%),
+`sequencia_longa_na_mesma_posicao` e `padrao_ciclico` (A, B, C, D, A, B, C, D…) por grupo, com mínimo de 20 perguntas. Em dados ao
+acaso dá ~2% de falsos alarmes por grupo, por isso um grupo isolado a acusar pede conferência, não pânico. A sequência usa a ordem de
+criação aproximada (`created_at`, depois a ordem física); o teste de distribuição não depende da ordem.
+
+**`--strict`** termina com código 1 só com defeitos graves: pergunta sem exatamente 1 correta ou com opção/enunciado vazio, enunciados
+idênticos e "todas/nenhuma das anteriores". Tamanho e avisos de viés são meta em andamento e não derrubam nada.
+

@@ -51,7 +51,7 @@ dinheiro real, então isso permite farmar o jogo e esvazia o antifraude do cron�
    o progresso, no mesmo commit do push.
 5. **Perguntas reprovadas e ainda não corrigidas continuam a ser servidas** (cerca de 91% reprovam;
    parar de servi-las esvaziaria o jogo) e ficam marcadas para revisão; nada é apagado sem
-   aprovação. As perguntas novas só entram se passarem no validador.
+   aprovação. As perguntas novas só entram se passarem no validador (**FEITO em código, P13**).
 6. Reforço **FEITO (2026-10-06, pedido do dono):** a ordem das alternativas é aleatória a cada
    apresentação (`ORDER BY random()` em `quizRepository.getRandomQuestion` e `getQuestionById`); a
    validação usa o id da alternativa, não a posição. Teste: `tests/quiz-alternatives-shuffle.test.js`.
@@ -66,6 +66,25 @@ validador feito e do dono rever o relatório.
   (`-- --list` lista as reprovadas, `-- --json` dá JSON) e teste `backend/tests/quiz-alternatives-validator.test.js`.
   Só leitura. O CI roda o relatório a cada push (passo "Relatório do validador" em Actions), então
   o antes/depois de cada lote fica no log do GitHub. Critérios ajustáveis em `CRITERIA` no mesmo ficheiro.
+- **Validador estendido (P9 a P14): FEITO.** Só leitura, sem tocar nas migrations nem na medição histórica do validador acima.
+  `biasDetector.js` (P9: pistas de linguagem e estrutura das regras 1, 3, 6 e 7), `duplicateQuestions.js` (P10: enunciados duplicados
+  ou quase iguais), `positionAnalysis.js` (P11: posição previsível da correta — qui², sequências longas e padrão cíclico),
+  `auditReport.js` + `npm run quiz:audit` (P12: relatório único; `--list`, `--json`, `--strict` que falha só com defeitos graves) e
+  `newQuestionGate.js` (P13: ligado a `createQuestion`/`updateQuestion` do admin). Legenda dos alertas e como corrigir cada um:
+  `docs/quiz-v2-alternativas-padrao.md` (secção "Validador estendido"). Testes: `quiz-bias-detector`, `quiz-duplicate-questions`,
+  `quiz-position-analysis`, `quiz-audit-report` e `quiz-new-question-gate`.
+  **Portão das perguntas novas (passo 5, agora em código):** pergunta nova, ou com enunciado/alternativas reescritos, só é gravada se
+  não tiver correta bem mais longa, explicação embutida, "todas/nenhuma das anteriores", alternativas repetidas nem enunciado
+  duplicado. Erro 400 com os motivos em `message`; viés leve volta em `qualityWarnings`. Mudar só `isActive`, tempo ou XP não passa pelo
+  portão e as perguntas antigas continuam a ser servidas. Efeito prático: uma pergunta escrita ao jeito antigo é recusada até ser
+  equilibrada. Só ~17% das perguntas atuais passariam hoje, o que bate com os ~91% que reprovam no validador. **Só vale em produção
+  depois do deploy manual do backend.**
+  **Auditoria do banco (2026-10-07, 1.659 ativas, após os lotes até a migration 201):** correta mais longa em **85,4%** (1.372 reprovam);
+  posição equilibrada (A 25,7 / B 25,5 / C 24,9 / D 23,9%, qui² 1,24, nenhum grupo previsível); 0 enunciados idênticos; **18 pares
+  quase iguais** (lista para o dono decidir em `docs/quiz-duplicadas-para-revisao.md`; nada foi apagado); 0 defeitos estruturais; 0
+  "todas/nenhuma das anteriores". A pista mais comum fora o tamanho é `palavras_desequilibradas` (aviso, 1.199 perguntas).
+  **Decisões do dono pendentes:** (a) o que fazer com os 18 pares quase iguais; (b) pôr `npm run quiz:audit` também no CI
+  (`.github/workflows/testes.yml`; não foi mexido: alterar workflows exige uma permissão a mais no token de push).
 - Passo 2 (corrigir alternativas em lotes de 25, só `question_alternatives.label`): **EM ANDAMENTO**. Finanças fácil lote 1 (perguntas 1 a 25 do seed 045; 56 alternativas erradas ajustadas) aprovado pelo dono em 2026-10-07 e gravado na migration 141 (`tests/quiz-alternatives-financas-facil-lote01.test.js`). Rascunhos dos lotes: `docs/quiz-lotes-alternativas/`.
   **Lotes feitos:** Finanças fácil lote 1 (migration 141), lote 2 (142) e lote 3 (143, perguntas 18 a 42 do seed 064). **AUTORIZAÇÃO DO DONO (2026-10-07):
   gravar cada lote direto, sem esperar aprovação** (ele já validou a regra); avisá-lo depois e deixar o rascunho em
