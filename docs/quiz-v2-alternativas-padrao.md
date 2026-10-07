@@ -133,6 +133,7 @@ vale para **perguntas novas ou reescritas** no admin; nas perguntas antigas tudo
 | Alerta | O que significa | Regra | Quando bloqueia | Como corrigir |
 |---|---|---|---|---|
 | `correta_mais_longa_destacada` | a correta é a mais longa e passa ~1,3x a média das erradas | 1, 2 | sim | encurtar a correta ou completar as erradas |
+| `correta_muito_mais_curta` | a correta é a mais curta e fica abaixo de ~0,75x a média das erradas (o inverso do padrão acima; evita trocar "a mais longa" por "a mais curta" ao enxugar as corretas) | 1, 2 | sim | completar a correta ou encurtar as erradas |
 | `explicacao_embutida_na_correta` | parênteses, dois-pontos, "porque", "ou seja" na correta | 5 | sim | mover para a explicação |
 | `alternativas_duplicadas_ou_quase_iguais` | duas opções quase iguais | 7 | sim | trocar uma por outro distrator |
 | `todas_ou_nenhuma_das_anteriores` | a opção inteira é "todas/nenhuma das anteriores", "ambas estão corretas"… | 7 | sim | usar uma opção normal |

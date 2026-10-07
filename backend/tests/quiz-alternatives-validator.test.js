@@ -46,3 +46,30 @@ describe('validador de alternativas', () => {
     expect(s.failingCount).toBe(1);
   });
 });
+
+describe('correta muito mais curta que as erradas (teste 12 da especificação)', () => {
+  const make = (correct, wrongs) => ({
+    id: 'q',
+    alternatives: [{ label: correct, is_correct: true }, ...wrongs.map((label) => ({ label, is_correct: false }))],
+  });
+
+  it('reprova quando a correta é a mais curta e bem abaixo da média das erradas', () => {
+    const r = analyzeQuestion(
+      make('Um banco', [
+        'Uma instituição que guarda dinheiro e concede crédito aos clientes',
+        'Uma empresa que vende seguros e investimentos de longo prazo',
+        'Um órgão público que fiscaliza os preços praticados no mercado',
+      ])
+    );
+    expect(r.correctIsShortest).toBe(true);
+    expect(r.reasons).toContain('correta_muito_mais_curta');
+    expect(r.passes).toBe(false);
+  });
+
+  it('não reprova quando a correta é a mais curta por pouco (sem padrão evidente)', () => {
+    const r = analyzeQuestion(
+      make('Taxa de juro fixa anual', ['Taxa de juro variável mensal', 'Taxa de câmbio oficial diária', 'Taxa de inflação média anual'])
+    );
+    expect(r.reasons).not.toContain('correta_muito_mais_curta');
+  });
+});

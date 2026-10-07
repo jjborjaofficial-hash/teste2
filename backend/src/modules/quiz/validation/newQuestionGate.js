@@ -17,6 +17,7 @@ const MESSAGES = {
   menos_de_2_alternativas: 'precisa de pelo menos 2 alternativas',
   corretas_0: 'precisa de uma alternativa correta',
   correta_mais_longa_destacada: 'a alternativa correta é bem mais longa que as erradas (denuncia a resposta); deixe as quatro com tamanho parecido',
+  correta_muito_mais_curta: 'a alternativa correta é bem mais curta que as erradas (denuncia a resposta ao contrário); deixe as quatro com tamanho parecido',
   explicacao_embutida_na_correta: 'a correta traz explicação dentro (parênteses, dois-pontos, "porque", "ou seja"); a explicação vai no campo próprio',
   alternativas_duplicadas_ou_quase_iguais: 'há alternativas repetidas ou quase iguais',
   todas_ou_nenhuma_das_anteriores: 'não use "todas/nenhuma das anteriores"',

@@ -11,6 +11,10 @@
 const CRITERIA = {
   // Reprova se a correta é a mais longa E passa esta razão sobre a média das erradas.
   longestRatio: 1.3,
+  // Simétrico: reprova se a correta é a mais CURTA E fica abaixo desta razão da média das
+  // erradas (o jogador passaria a acertar escolhendo sempre a mais curta; sobretudo ao
+  // "enxugar" as corretas nos lotes de correção, para não trocar um padrão por outro).
+  shortestRatio: 0.75,
   // Meta por categoria + dificuldade: correta mais longa em no máximo esta fração.
   targetLongestShare: 0.35,
   // "Quase igual": semelhança mínima entre duas alternativas para serem consideradas duplicadas.
@@ -67,6 +71,7 @@ function analyzeQuestion(q, criteria = CRITERIA) {
   const ratio = wrongAvg ? correctLen / wrongAvg : 0;
 
   if (correctIsLongest && ratio >= criteria.longestRatio) reasons.push('correta_mais_longa_destacada');
+  if (correctIsShortest && ratio <= criteria.shortestRatio) reasons.push('correta_muito_mais_curta');
   if (correct[0] && hasEmbeddedExplanation(correct[0].label)) reasons.push('explicacao_embutida_na_correta');
 
   for (let i = 0; i < alts.length; i += 1) {

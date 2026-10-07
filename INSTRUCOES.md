@@ -147,7 +147,7 @@ daquela rodada com os 3 botões. Testes: `backend/tests/quiz-rounds.test.js` e
    corrigir + explicar). A coluna `questions.explanation` existe mas está vazia nas 1.659
    perguntas. Escrever as explicações **por categoria**, começando por uma. *Decisão do dono
    tomada: Finanças primeiro* (de 301 perguntas; as outras: IA 336, Marketing Digital 306,
-   Produtividade 396, Tecnologia 320), ordem fácil → médio → difícil, em lotes de 5 com commit e push
+   Produtividade 396, Tecnologia 320), ordem fácil → médio → difícil, em lotes de 10 (pedido do dono em 06/10) com commit e push
    a cada lote. O estado atual e o próximo lote estão em "Progresso das explicações" no BE-004 de
    `backend/PENDENTE.md` — atualizar lá a cada push. Sem explicação, usar um feedback genérico seguro.
 2. **BE-003 — REGULARIZAR as alternativas e criar o validador.** Padrão a corrigir: a correta é a
@@ -161,9 +161,12 @@ daquela rodada com os 3 botões. Testes: `backend/tests/quiz-rounds.test.js` e
 3. **BE-005 — sobras:** retirar o uso das rotas antigas sem rodada, tipo de missão "completar
    uma rodada" (hoje o progresso conta por resposta certa), conceitos errados por rodada.
 
-**Testes da especificação ainda por confirmar:** 9 (botão "Ver missões em andamento" abre as
-Missões com o progresso certo), 11 a 14 (dependem do validador), 16 (rodada que atualiza uma
-missão). Já verificados no servidor e por HTTP: 1, 2 (contagem), 4, 5, 6, 10 e 15.
+**Testes da especificação:** ainda por confirmar no ecrã, com o site no ar: 9 (botão "Ver missões em
+andamento" abre as Missões com o progresso certo) e 16 (rodada que atualiza uma missão). Já verificados
+no servidor e por HTTP: 1, 2 (contagem), 4, 5, 6, 10 e 15. Cobertos por testes automáticos do
+validador (`backend/tests/quiz-alternatives-validator`, `quiz-bias-detector`, `quiz-duplicate-questions`,
+`quiz-position-analysis`, `quiz-new-question-gate`): 11 (correta muito maior), 12 (correta muito menor,
+critério `correta_muito_mais_curta`), 13 (duplicadas) e 14 (posição da correta).
 
 ## Ideias ainda NÃO aprovadas (NÃO implementar até o dono pedir)
 
