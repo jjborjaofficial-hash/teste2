@@ -1,9 +1,11 @@
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Card } from '../components/Card';
 import { SecondaryButton } from '../components/Button';
 import { ChevronRightIcon } from '../icons';
-import { WITHDRAWAL_MIN_MZN } from './Wallet';
+import { walletApi } from '../api/gameplayApi';
+import { DEFAULT_WITHDRAWAL_MIN_MZN } from './Wallet';
 
 function mzn(v) {
   return `${Number(v).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MZN`;
@@ -17,9 +19,20 @@ export function Settings() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
+  // Saque mínimo vindo do servidor (valor de reserva até a resposta chegar).
+  const [withdrawalMin, setWithdrawalMin] = useState(DEFAULT_WITHDRAWAL_MIN_MZN);
+  useEffect(() => {
+    walletApi.getBalance()
+      .then((res) => {
+        const min = Number(res.data.withdrawalMinMzn);
+        if (Number.isFinite(min) && min > 0) setWithdrawalMin(min);
+      })
+      .catch(() => {});
+  }, []);
+
   const balance = Number(user?.walletBalanceMzn ?? 0);
-  const missing = Math.max(0, WITHDRAWAL_MIN_MZN - balance);
-  const percent = Math.min(100, Math.round((balance / WITHDRAWAL_MIN_MZN) * 100));
+  const missing = Math.max(0, withdrawalMin - balance);
+  const percent = Math.min(100, Math.round((balance / withdrawalMin) * 100));
 
   async function handleLogout() {
     await logout();
@@ -67,7 +80,7 @@ export function Settings() {
           </div>
           <p className="text-caption text-text-secondary">
             {missing > 0
-              ? `Faltam ${mzn(missing)} para o saque mínimo de ${mzn(WITHDRAWAL_MIN_MZN)}.`
+              ? `Faltam ${mzn(missing)} para o saque mínimo de ${mzn(withdrawalMin)}.`
               : 'Você já pode solicitar saque na Carteira.'}
           </p>
           <Link to="/carteira" className="text-primary text-caption font-semibold">Ir para a Carteira</Link>

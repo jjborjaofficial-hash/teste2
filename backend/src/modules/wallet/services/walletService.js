@@ -20,10 +20,16 @@ const { BusinessRuleError, ForbiddenError, NotFoundError } = require('../../../c
  *   acumulado. Não existe "esperar até amanhã para sacar mais".
  */
 
+// Fonte única do saque mínimo (system_config `withdrawal_min_mzn`). O frontend lê-o daqui,
+// para que um ajuste feito pelo admin apareça na tela sem novo deploy.
+async function getWithdrawalMin() {
+  return Number((await configRepository.getConfigValue('withdrawal_min_mzn')) ?? 100);
+}
+
 async function getBalance(userId) {
   const balance = await repository.getWalletBalance(userId);
   if (balance === null) throw new NotFoundError('Usuário não encontrado.');
-  return { walletBalanceMzn: balance };
+  return { walletBalanceMzn: balance, withdrawalMinMzn: await getWithdrawalMin() };
 }
 
 async function getHistory(userId, pagination) {
@@ -121,9 +127,7 @@ async function creditReward({ userId, amountMzn, source, referenceId, metadata, 
  *   manual (ver módulo Admin).
  */
 async function requestWithdrawal({ userId, amountMzn, method }) {
-  const minAmount = Number(
-    (await configRepository.getConfigValue('withdrawal_min_mzn')) ?? 100
-  );
+  const minAmount = await getWithdrawalMin();
 
   if (amountMzn < minAmount) {
     throw new BusinessRuleError(`O valor mínimo de saque é ${minAmount.toFixed(2)} MZN.`);

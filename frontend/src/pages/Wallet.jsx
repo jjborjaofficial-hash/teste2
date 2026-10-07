@@ -10,11 +10,14 @@ import { transactionInfo } from '../lib/walletLabels';
 
 // Regras confirmadas pelo proprietário do projeto (documentadas em
 // docs/fluxo-saque-manual-permissoes-admin-ui.md e no backend, system_config):
-// - Saque mínimo: 100 MZN acumulado (sem depósito — só o que já foi ganho).
+// - Saque mínimo: 100 MZN acumulado hoje, configurável no servidor (sem depósito — só o que já foi ganho).
 // - Teto de GANHO diário: 7,20 MZN, só das missões (não é teto de saque).
 // - Não existe teto diário de SAQUE — pode sacar quando quiser, qualquer valor
 //   acima do mínimo, respeitado o saldo disponível.
-export const WITHDRAWAL_MIN_MZN = 100;
+//
+// O valor real vem da API (`withdrawalMinMzn` em GET /wallet). Este número é só o valor de
+// reserva enquanto a resposta não chega (ou se ela vier sem o campo).
+export const DEFAULT_WITHDRAWAL_MIN_MZN = 100;
 
 /**
  * Carteira (Doc. Mestre Seção 19.6). Saldo, resgate M-Pesa/e-Mola, histórico
@@ -25,7 +28,8 @@ export function Wallet() {
   const [balance, setBalance] = useState(null);
   const [history, setHistory] = useState([]);
   const [method, setMethod] = useState('mpesa');
-  const [amount, setAmount] = useState(WITHDRAWAL_MIN_MZN.toFixed(2));
+  const [withdrawalMin, setWithdrawalMin] = useState(DEFAULT_WITHDRAWAL_MIN_MZN);
+  const [amount, setAmount] = useState(DEFAULT_WITHDRAWAL_MIN_MZN.toFixed(2));
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -45,6 +49,12 @@ export function Wallet() {
       walletApi.getConversionRate(),
     ]);
     setBalance(balanceRes.data.walletBalanceMzn);
+    const serverMin = Number(balanceRes.data.withdrawalMinMzn);
+    if (Number.isFinite(serverMin) && serverMin > 0) {
+      setWithdrawalMin(serverMin);
+      // só troca o valor sugerido se a pessoa ainda não o mexeu
+      setAmount((prev) => (prev === DEFAULT_WITHDRAWAL_MIN_MZN.toFixed(2) ? serverMin.toFixed(2) : prev));
+    }
     setHistory(historyRes.data);
     setPointsBalance(gamificationRes.data.pointsBalance ?? 0);
     setConversionRate(rateRes.data);
@@ -69,7 +79,7 @@ export function Wallet() {
     }
   }
 
-  const canWithdraw = balance !== null && balance >= WITHDRAWAL_MIN_MZN;
+  const canWithdraw = balance !== null && balance >= withdrawalMin;
 
   const pointsNumber = Number(pointsToConvert) || 0;
   const isMultipleOfRate = !!conversionRate && pointsNumber > 0 && pointsNumber % conversionRate.ratePoints === 0;
@@ -107,7 +117,7 @@ export function Wallet() {
           {loading ? '...' : balance.toFixed(2)} <span className="text-h2 font-sans">MZN</span>
         </p>
         <p className="text-caption text-text-secondary mt-2">
-          Saque mínimo: {WITHDRAWAL_MIN_MZN.toFixed(2)} MZN — sem teto diário de saque.
+          Saque mínimo: {withdrawalMin.toFixed(2)} MZN — sem teto diário de saque.
         </p>
       </Card>
 
@@ -169,7 +179,7 @@ export function Wallet() {
 
         {!canWithdraw && !loading && (
           <p className="text-caption text-warning bg-warning/10 rounded-button px-3 py-2 mb-3">
-            Você ainda não atingiu o mínimo de {WITHDRAWAL_MIN_MZN.toFixed(2)} MZN para
+            Você ainda não atingiu o mínimo de {withdrawalMin.toFixed(2)} MZN para
             solicitar um saque. Continue estudando para acumular mais.
           </p>
         )}
@@ -193,7 +203,7 @@ export function Wallet() {
           <input
             type="number"
             step="0.01"
-            min={WITHDRAWAL_MIN_MZN}
+            min={withdrawalMin}
             max={balance ?? undefined}
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
