@@ -46,6 +46,19 @@ const POOLS = {
     'Sequência de campeão, não pare!',
     'Está a voar! Acertos em cadeia.',
   ],
+  correctCloseCall: [
+    'Essa foi por pouco! Acertou mesmo em cima da hora.',
+    'Por um fio! Acertou no último instante.',
+    'Foi por pouco, mas acertou. Respondeu mesmo a tempo!',
+    'Raspou no tempo e acertou! Boa.',
+    'Coração a mil? Acertou quase no fim do tempo.',
+  ],
+  correctFast: [
+    'Rápido e certo! Sabia bem essa.',
+    'Respondeu num instante e acertou!',
+    'Resposta veloz e correta, sabia bem esta.',
+    'Nem precisou pensar muito, hein? Certinho!',
+  ],
   correctAfterWrong: [
     'Esta foi certa! Deu a volta por cima.',
     'Agora sim! Acertou.',
@@ -126,6 +139,33 @@ const POOLS = {
 };
 
 const KEY = 'quiz:resultMessageHistory';
+const ROUNDS_KEY = 'quiz:lastRounds';
+
+/** Última rodada concluída por categoria (guardada no navegador) para comparar "desta vez" com a anterior. */
+function readLastRound(categoryId) {
+  try {
+    const all = JSON.parse(localStorage.getItem(ROUNDS_KEY) || '{}');
+    const r = all[categoryId];
+    return r && typeof r.correct === 'number' ? r : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeLastRound(categoryId, summary) {
+  try {
+    const all = JSON.parse(localStorage.getItem(ROUNDS_KEY) || '{}');
+    const prev = all[categoryId];
+    all[categoryId] = {
+      correct: summary.correct,
+      total: summary.total,
+      best: Math.max(summary.correct, prev && typeof prev.best === 'number' ? prev.best : 0),
+    };
+    localStorage.setItem(ROUNDS_KEY, JSON.stringify(all));
+  } catch {
+    /* sem armazenamento: apenas não compara com a rodada anterior */
+  }
+}
 
 function readHistory() {
   try {
@@ -158,12 +198,24 @@ function plural(n, one, many) {
 }
 
 /** Linha de contexto com números reais do progresso (ou '' quando não há nada útil a dizer). */
-function buildDetail(result, correct) {
+function buildDetail(result, correct, previousRound) {
   const round = result.round;
   const summary = result.roundSummary;
 
   if (summary) {
-    return `Acertou ${summary.correct} de ${summary.total} (${summary.accuracyPercent}%).`;
+    const base = `Dessa vez acertou ${summary.correct} de ${summary.total} (${summary.accuracyPercent}%).`;
+    const prev = previousRound;
+    if (!prev) return base;
+    if (summary.correct > prev.correct) {
+      return `${base} Na anterior foram ${prev.correct}: melhorou!`;
+    }
+    if (summary.correct === prev.correct) {
+      return `${base} Igual à rodada anterior.`;
+    }
+    if (prev.best > summary.correct && summary.correct === prev.best - 1) {
+      return `${base} Por pouco não igualou o seu melhor (${prev.best}).`;
+    }
+    return `${base} Na anterior foram ${prev.correct}. Dá para recuperar!`;
   }
   if (correct && result.streakMilestoneReached) {
     return `${result.streakMilestoneReached.days} dias seguidos a estudar. A constância compensa!`;
@@ -188,7 +240,7 @@ function buildDetail(result, correct) {
       return `Falta só 1 pergunta para fechar a rodada (${round.correctCount} certas até agora).`;
     }
     if (left > 1 && round.answered >= 1) {
-      return `${round.correctCount} ${plural(round.correctCount, 'certa', 'certas')} em ${round.answered} respondidas. Faltam ${left}.`;
+      return `${round.correctCount} ${plural(round.correctCount, 'certa', 'certas')} em ${round.answered} ${plural(round.answered, 'respondida', 'respondidas')}. Faltam ${left}.`;
     }
   }
   return '';
@@ -206,6 +258,13 @@ export function buildResultMessage(result) {
     wrongRun: correct ? 0 : h.wrongRun + 1,
   };
   const answered = result.round?.answered || 0;
+  const limitMs = (result.timeLimitSeconds || 0) * 1000;
+  const ratio = limitMs > 0 && typeof result.responseTimeMs === 'number' ? result.responseTimeMs / limitMs : null;
+  const secondsLeft = ratio === null ? null : Math.max(0, Math.round((limitMs - result.responseTimeMs) / 1000));
+  const closeCall = ratio !== null && ratio >= 0.85 && !result.timeExpired;
+  const fast = ratio !== null && ratio <= 0.25;
+  const categoryId = result.roundSummary?.categoryId;
+  const previousRound = categoryId ? readLastRound(categoryId) : null;
 
   let pool;
   if (result.roundSummary) {
@@ -213,9 +272,11 @@ export function buildResultMessage(result) {
     pool = pct >= 80 ? POOLS.finished.great : pct >= 50 ? POOLS.finished.ok : POOLS.finished.low;
   } else if (correct && result.leveledUp) pool = POOLS.levelUp;
   else if (correct && result.streakMilestoneReached) pool = POOLS.milestone;
+  else if (correct && closeCall) pool = POOLS.correctCloseCall;
   else if (correct && next.correctRun >= 5) pool = POOLS.correctStreakLong;
   else if (correct && next.correctRun >= 3) pool = POOLS.correctStreak;
   else if (correct && h.wrongRun >= 1) pool = POOLS.correctAfterWrong;
+  else if (correct && fast) pool = POOLS.correctFast;
   else if (correct && answered === 1) pool = POOLS.correctFirst;
   else if (correct) pool = POOLS.correct;
   else if (result.timeExpired) pool = POOLS.timeExpired;
@@ -226,5 +287,10 @@ export function buildResultMessage(result) {
 
   const title = pick(pool, h.last);
   writeHistory({ ...next, last: title });
-  return { title, detail: buildDetail(result, correct) };
+  let detail = buildDetail(result, correct, previousRound);
+  if (correct && closeCall && !result.roundSummary && secondsLeft !== null) {
+    detail = `Sobraram só ${secondsLeft} ${plural(secondsLeft, 'segundo', 'segundos')}.${detail ? ` ${detail}` : ''}`;
+  }
+  if (result.roundSummary && categoryId) writeLastRound(categoryId, result.roundSummary);
+  return { title, detail };
 }

@@ -343,6 +343,10 @@ async function submitAnswer({ userId, questionId, alternativeId, roundId = null 
       roundSummary,
       isCorrect,
       timeExpired,
+      // Tempo gasto (medido pelo servidor) e limite da pergunta: o front usa para dizer
+      // "foi por pouco" ou "rápido e certo". São dados do próprio utilizador.
+      responseTimeMs: Math.min(responseTimeMs, question.time_limit_seconds * 1000),
+      timeLimitSeconds: question.time_limit_seconds,
       feedback,
       xpAwarded,
       pointsAwarded: xpResult ? xpResult.pointsCredited : 0,
