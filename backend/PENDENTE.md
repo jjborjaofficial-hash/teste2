@@ -16,6 +16,9 @@ recomendações (hoje só há `reviewStatements` no resumo).
 
 ## BE-003 — REGULARIZAR o padrão "a correta é a mais longa" e criar o validador (quiz v2)
 
+**Padrão obrigatório para reescrever alternativas (regras, passo a passo e modelos por tipo de pergunta):
+`docs/quiz-v2-alternativas-padrao.md`.** Ler antes de tocar em qualquer alternativa.
+
 **Problema — precisa ser regularizado (confirmado pelo dono em 2026-10-06).** A alternativa correta
 denuncia-se pelo tamanho e pelo detalhe. Medido no banco (1.659 perguntas, migrations 001–119):
 a correta é a **mais longa em 90,8%** das perguntas (ao acaso seriam ~25%) e a mais curta em só

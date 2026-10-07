@@ -10,7 +10,7 @@ por fazer fica escrito aqui e nos ficheiros `PENDENTE.md` de cada área.
 > 1. Feedback pedagógico depois de cada resposta (`BE-004` + `FE-003`). Finanças (fácil, médio, difícil) está
 >    **concluída**; **a próxima categoria é IA** (fácil → médio → difícil, lotes de 10, migration 141).
 > 2. Validador de qualidade das alternativas (`BE-003`): validador **feito** (`npm run quiz:validate`, relatório no CI) e
->    ordem das opções já aleatória; **próximo:** o dono ver o relatório e aprovar o 1.º lote de 25 correções.
+>    ordem das opções já aleatória; padrão e modelos em `docs/quiz-v2-alternativas-padrao.md`; **próximo:** o dono ver o relatório e aprovar o 1.º lote de 25 correções.
 > 3. Sobras das rodadas (`BE-005`).
 >
 > Os pontos da secção **"Ideias ainda NÃO aprovadas"** (fim do ficheiro) **não** são para
