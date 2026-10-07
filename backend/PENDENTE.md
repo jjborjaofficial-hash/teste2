@@ -66,7 +66,10 @@ validador feito e do dono rever o relatório.
 - Passo 2 (corrigir alternativas em lotes de 25, só `question_alternatives.label`): **não começou**.
   **Próximo:** abrir o relatório do CI, registar aqui a medição inicial por grupo e propor ao dono as
   25 primeiras de Finanças fácil para ele rever antes da migration.
-- Medição inicial já conhecida: 90,8% das perguntas com a correta mais longa.
+- **Medição inicial do validador (CI, 2026-10-07, 1.659 perguntas ativas):** correta mais longa em **89,4%**;
+  **1.457 perguntas reprovam** nos critérios. Por grupo (% correta mais longa): Finanças fácil 88, médio 90, difícil 98;
+  IA fácil 76, médio 90, difícil 97,1; Marketing fácil 91, médio 90, difícil 97,2; Produtividade fácil 75, médio 93,2,
+  difícil 83; Tecnologia fácil 86, médio 94,2, difícil 93. Nenhum grupo cumpre a meta (<= 35%). Pior: Finanças difícil (98%).
 
 ## BE-004 — Feedback pedagógico: explicação em cada pergunta (quiz v2)
 
