@@ -10,8 +10,17 @@ BE-002 (rodadas no servidor: migration 107, `quiz_rounds`, seleção das 10, ret
 resumo só da rodada) já foi feito e testado. Sobram: (a) a rota antiga
 `GET /quiz/categories/:id/next-question` + `POST /quiz/answers` sem `roundId` continua a servir
 perguntas fora de rodada; o frontend já não os usa (usa só `/quiz/rounds`); decidir se o servidor passa a
-exigir `roundId` (**`nextQuestion` já foi removido do frontend em 2026-10-07**; falta só decidir o servidor: o dono tem de dizer se pode cortar a rota antiga, por causa de versões antigas da app instaladas; o teste `quiz-wallet-ranking` teria de ser reescrito); (c) guardar os conceitos errados por rodada para
-recomendações (hoje só há `reviewStatements` no resumo).
+exigir `roundId` (**`nextQuestion` já foi removido do frontend em 2026-10-07**; falta só decidir o servidor: o dono tem de dizer se pode cortar a rota antiga, por causa de versões antigas da app instaladas; o teste `quiz-wallet-ranking` teria de ser reescrito).
+
+**(c) FEITO — conceitos errados por rodada** (`tests/quiz-round-review.test.js`, sem migration). Não foi preciso tabela nova:
+cada resposta já fica em `quiz_attempts` com `round_id`, `question_id` e `is_correct`, ou seja, os conceitos errados de cada
+rodada já estavam guardados; faltava expô-los. Agora: (1) o resumo da rodada traz `mistakes` (todos os errados, no máximo
+10, com enunciado, "Por quê?" e dificuldade) e mantém `reviewStatements` por compatibilidade; (2) `GET /quiz/rounds/:roundId/summary`
+reabre o resumo de uma rodada terminada (antes só saía uma vez e perdia-se ao recarregar); (3)
+`GET /quiz/review/recommendations?categoryId=&limit=` (limite 1 a 20, padrão 10) lista o que rever: perguntas erradas em
+rodadas cuja resposta mais recente continua errada, com `timesMissed`, mais recentes primeiro; ao acertar depois deixa de
+aparecer, e perguntas desativadas não entram. Só dados do próprio utilizador e nunca devolve a alternativa certa nem a
+escolhida. **O frontend ainda não usa estas rotas** (falta a tela de revisão; o resumo atual continua a funcionar).
 
 **(b) FEITO — missão "completar uma rodada"** (`activity_type = 'round_complete'`, migration 391,
 `tests/missions-round-complete.test.js`). Conta +1 quando uma rodada termina por completo (a 10.ª resposta), dentro da

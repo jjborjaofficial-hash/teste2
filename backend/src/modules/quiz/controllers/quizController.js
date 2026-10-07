@@ -1,4 +1,6 @@
 const quizService = require('../services/quizService');
+const { ValidationError } = require('../../../common/errors/AppError');
+const { roundIdParamSchema, recommendationsQuerySchema } = require('../validators/quizValidators');
 
 async function listCategories(req, res, next) {
   try {
@@ -73,6 +75,37 @@ async function getRoundQuestion(req, res, next) {
   }
 }
 
+function parseOrFail(schema, input) {
+  const result = schema.safeParse(input);
+  if (!result.success) {
+    throw new ValidationError(
+      'Dados inválidos',
+      result.error.issues.map((i) => ({ field: i.path.join('.'), message: i.message }))
+    );
+  }
+  return result.data;
+}
+
+async function getRoundSummary(req, res, next) {
+  try {
+    const { roundId } = parseOrFail(roundIdParamSchema, req.params);
+    const summary = await quizService.getRoundSummary({ userId: req.user.id, roundId });
+    return res.status(200).json({ status: 'success', message: null, data: summary });
+  } catch (err) {
+    return next(err);
+  }
+}
+
+async function getReviewRecommendations(req, res, next) {
+  try {
+    const { categoryId, limit } = parseOrFail(recommendationsQuerySchema, req.query);
+    const items = await quizService.getReviewRecommendations({ userId: req.user.id, categoryId: categoryId || null, limit });
+    return res.status(200).json({ status: 'success', message: null, data: items });
+  } catch (err) {
+    return next(err);
+  }
+}
+
 module.exports = {
   listCategories,
   getNextQuestion,
@@ -80,4 +113,6 @@ module.exports = {
   startRound,
   getActiveRound,
   getRoundQuestion,
+  getRoundSummary,
+  getReviewRecommendations,
 };

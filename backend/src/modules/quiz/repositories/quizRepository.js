@@ -204,12 +204,43 @@ async function advanceRound(executor, { roundId, isCorrect, xpAwarded, pointsAwa
 /** Respostas da rodada, com a pergunta, para montar o resumo (só desta rodada). */
 async function listRoundAttempts(roundId, executor = db) {
   const { rows } = await executor.query(
-    `SELECT a.question_id, a.is_correct, a.xp_awarded, q.difficulty, q.statement
+    `SELECT a.question_id, a.is_correct, a.xp_awarded, q.difficulty, q.statement, q.explanation
      FROM quiz_attempts a
      JOIN questions q ON q.id = a.question_id
      WHERE a.round_id = $1
      ORDER BY a.created_at`,
     [roundId]
+  );
+  return rows;
+}
+
+/**
+ * Conceitos a rever (BE-005 c): perguntas que o utilizador errou em rodadas e cuja resposta MAIS RECENTE
+ * continua errada (se acertou depois, deixa de ser sugerida). Só dados do próprio utilizador. Os conceitos
+ * errados já ficam gravados em quiz_attempts (round_id + question_id + is_correct), por isso não há tabela nova.
+ * Perguntas desativadas (ex.: duplicadas retiradas) não entram.
+ */
+async function listReviewCandidates(userId, { categoryId = null, limit = 10 } = {}, executor = db) {
+  const { rows } = await executor.query(
+    `WITH latest AS (
+       SELECT DISTINCT ON (a.question_id) a.question_id, a.is_correct, a.created_at, a.round_id
+         FROM quiz_attempts a
+        WHERE a.user_id = $1 AND a.round_id IS NOT NULL
+        ORDER BY a.question_id, a.created_at DESC
+     )
+     SELECT l.question_id, l.created_at AS last_missed_at, l.round_id,
+            q.statement, q.explanation, q.difficulty, q.category_id, c.name AS category_name,
+            (SELECT COUNT(*)::int FROM quiz_attempts x
+              WHERE x.user_id = $1 AND x.question_id = l.question_id
+                AND x.round_id IS NOT NULL AND NOT x.is_correct) AS times_missed
+       FROM latest l
+       JOIN questions q ON q.id = l.question_id AND q.is_active
+       JOIN categories c ON c.id = q.category_id
+      WHERE NOT l.is_correct
+        AND ($2::uuid IS NULL OR q.category_id = $2::uuid)
+      ORDER BY l.created_at DESC
+      LIMIT $3`,
+    [userId, categoryId, limit]
   );
   return rows;
 }
@@ -230,4 +261,5 @@ module.exports = {
   replaceRoundQuestion,
   advanceRound,
   listRoundAttempts,
+  listReviewCandidates,
 };

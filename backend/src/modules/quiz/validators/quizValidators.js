@@ -15,4 +15,12 @@ const startRoundSchema = z.object({
   categoryId: z.string().uuid('ID de categoria inválido'),
 });
 
-module.exports = { submitAnswerSchema, startRoundSchema };
+// BE-005 c: parâmetros das rotas de revisão (um roundId inválido não pode chegar ao banco como erro 500).
+const roundIdParamSchema = z.object({ roundId: z.string().uuid('ID de rodada inválido') });
+
+const recommendationsQuerySchema = z.object({
+  categoryId: z.string().uuid('ID de categoria inválido').optional(),
+  limit: z.coerce.number().int().min(1).max(20).default(10),
+});
+
+module.exports = { submitAnswerSchema, startRoundSchema, roundIdParamSchema, recommendationsQuerySchema };

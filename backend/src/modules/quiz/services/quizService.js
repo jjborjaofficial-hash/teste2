@@ -212,7 +212,40 @@ async function buildRoundSummary(round, executor = db) {
     bestDifficulty,
     // "Vale a pena rever": as perguntas que errou nesta rodada
     reviewStatements: attempts.filter((a) => !a.is_correct).map((a) => a.statement).slice(0, 5),
+    // BE-005 c: TODOS os conceitos errados da rodada (no máximo 10), com o "Por quê?" para estudar.
+    mistakes: attempts
+      .filter((a) => !a.is_correct)
+      .map((a) => ({ questionId: a.question_id, statement: a.statement, explanation: a.explanation || null, difficulty: a.difficulty })),
   };
+}
+
+/**
+ * Resumo de uma rodada JÁ TERMINADA do próprio utilizador (BE-005 c). Antes o resumo só saía uma vez, na resposta
+ * da 10.ª pergunta, e perdia-se se a app recarregasse. É reconstruído das tentativas gravadas (round_id).
+ */
+async function getRoundSummary({ userId, roundId }) {
+  const round = await repository.getRoundForUser(roundId, userId);
+  if (!round) throw new NotFoundError('Rodada não encontrada.');
+  if (round.status !== 'completed') throw new BusinessRuleError('A rodada ainda não terminou.');
+  return buildRoundSummary(round);
+}
+
+/**
+ * Conceitos a rever: perguntas que o utilizador errou em rodadas e ainda não acertou depois (BE-005 c).
+ * Serve para recomendar o que estudar; só devolve o "Por quê?" e o enunciado, nunca a alternativa certa em bruto.
+ */
+async function getReviewRecommendations({ userId, categoryId = null, limit = 10 }) {
+  const rows = await repository.listReviewCandidates(userId, { categoryId, limit });
+  return rows.map((r) => ({
+    questionId: r.question_id,
+    statement: r.statement,
+    explanation: r.explanation || null,
+    difficulty: r.difficulty,
+    categoryId: r.category_id,
+    categoryName: r.category_name,
+    timesMissed: r.times_missed,
+    lastMissedAt: r.last_missed_at,
+  }));
 }
 
 /**
@@ -381,5 +414,7 @@ module.exports = {
   startRound,
   getActiveRoundState,
   getRoundQuestion,
+  getRoundSummary,
+  getReviewRecommendations,
   ROUND_SIZE,
 };
