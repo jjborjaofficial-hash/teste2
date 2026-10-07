@@ -31,8 +31,8 @@ async function submitAnswer(req, res, next) {
     return res.status(200).json({
       status: 'success',
       message: result.isCorrect
-        ? 'Incrível! Você dominou este assunto.'
-        : 'Quase! Você está mais perto da resposta certa. Vamos tentar outra?',
+        ? 'Resposta certa! Muito bem.'
+        : 'Não foi desta vez. Veja a explicação e tente a próxima.',
       data: result,
     });
   } catch (err) {

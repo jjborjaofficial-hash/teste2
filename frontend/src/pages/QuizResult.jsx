@@ -89,7 +89,7 @@ export function QuizResult() {
           )}
         </div>
         <h1 className="font-display text-h1 text-text mb-1">
-          {result.isCorrect ? 'Incrível! Você dominou este assunto.' : message}
+          {result.isCorrect ? 'Resposta certa! Muito bem.' : message}
         </h1>
         {result.timeExpired && (
           <p className="text-caption text-text-secondary">O tempo esgotou desta vez.</p>
@@ -105,7 +105,7 @@ export function QuizResult() {
           className="bg-surface border border-border rounded-card p-5 space-y-3"
         >
           {result.isCorrect ? (
-            <p className="text-body font-semibold text-text">Você identificou a resposta certa.</p>
+            <p className="text-body font-semibold text-text">Escolheu a alternativa correta.</p>
           ) : (
             <div className="space-y-1">
               <p className="text-caption font-semibold text-text">Resposta correta</p>
