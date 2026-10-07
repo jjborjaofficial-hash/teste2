@@ -333,7 +333,11 @@ async function submitAnswer({ userId, questionId, alternativeId, roundId = null 
         pointsAwarded: xpResult ? xpResult.pointsCredited : 0,
       });
       roundState = serializeRound(updated);
-      if (updated.status === 'completed') roundSummary = await buildRoundSummary(updated, client);
+      if (updated.status === 'completed') {
+        roundSummary = await buildRoundSummary(updated, client);
+        // BE-005 b: missões "completar uma rodada" (mesma transação; advanceRound fecha a rodada uma só vez).
+        await missionsService.incrementRoundCompletion(client, { userId, categoryId: round.category_id });
+      }
     }
 
     await client.query('COMMIT');

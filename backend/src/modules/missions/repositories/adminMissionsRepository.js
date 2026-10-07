@@ -22,13 +22,13 @@ async function findMissionById(id) {
   return rows[0] || null;
 }
 
-async function createMission({ title, description, type, categoryId, targetQuizCount, xpReward, pointsReward, moneyRewardMzn, startsAt, endsAt }) {
+async function createMission({ title, description, type, categoryId, activityType = 'quiz_count', targetQuizCount, xpReward, pointsReward, moneyRewardMzn, startsAt, endsAt }) {
   const { rows } = await db.query(
     `INSERT INTO missions
-        (title, description, type, category_id, target_quiz_count, xp_reward, points_reward, money_reward_mzn, starts_at, ends_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        (title, description, type, category_id, target_quiz_count, xp_reward, points_reward, money_reward_mzn, starts_at, ends_at, activity_type)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
      RETURNING *`,
-    [title, description || null, type, categoryId || null, targetQuizCount, xpReward, pointsReward, moneyRewardMzn, startsAt || null, endsAt || null]
+    [title, description || null, type, categoryId || null, targetQuizCount, xpReward, pointsReward, moneyRewardMzn, startsAt || null, endsAt || null, activityType]
   );
   return rows[0];
 }

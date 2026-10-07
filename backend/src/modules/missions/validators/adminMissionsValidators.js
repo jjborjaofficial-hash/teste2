@@ -5,6 +5,8 @@ const createMissionSchema = z.object({
   description: z.string().trim().max(500).optional(),
   type: z.enum(['daily', 'weekly', 'special', 'sponsored']).default('daily'),
   categoryId: z.string().uuid().optional(),
+  // Só tipos com lógica de progresso real e criáveis pelo admin (login, tempo ativo etc. vêm das migrations).
+  activityType: z.enum(['quiz_count', 'round_complete']).default('quiz_count'),
   targetQuizCount: z.number().int().positive().default(1),
   xpReward: z.number().int().min(0).default(0),
   pointsReward: z.number().int().min(0).default(0),

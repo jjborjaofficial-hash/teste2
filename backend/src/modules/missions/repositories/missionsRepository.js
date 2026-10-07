@@ -102,6 +102,36 @@ async function incrementProgressForCategory(executor, { userId, categoryId }) {
 }
 
 /**
+ * Progresso de missões activity_type='round_complete' (BE-005 b): +1 por rodada concluída. Mesmo molde do
+ * quiz_count: só missões em andamento do dia, e se a missão tiver categoria só conta rodadas dessa categoria.
+ * Chamado pelo Quiz DENTRO da transação que fecha a rodada (por isso nunca conta a mesma rodada duas vezes).
+ */
+async function incrementRoundCompletion(executor, { userId, categoryId }) {
+  const { rows } = await executor.query(
+    `UPDATE user_missions um
+     SET progress_count = um.progress_count + 1,
+         status = CASE
+             WHEN um.progress_count + 1 >= m.target_quiz_count THEN 'completed'
+             ELSE um.status
+         END,
+         completed_at = CASE
+             WHEN um.progress_count + 1 >= m.target_quiz_count THEN now()
+             ELSE um.completed_at
+         END
+     FROM missions m
+     WHERE um.mission_id = m.id
+       AND um.user_id = $1
+       AND um.status = 'in_progress'
+       AND um.period_date = ${dateInPlatformTz('now()')}
+       AND m.activity_type = 'round_complete'
+       AND (m.category_id IS NULL OR m.category_id = $2)
+     RETURNING um.id, um.mission_id, um.status, m.title`,
+    [userId, categoryId]
+  );
+  return rows;
+}
+
+/**
  * Progresso de missões activity_type='login': marca como concluída em
  * qualquer login válido do dia — sempre alvo 1 (não incrementa contador,
  * completa direto, já que "logar" não tem graus intermediários).
@@ -224,6 +254,7 @@ module.exports = {
   assignMissionIfNotPresent,
   expireStaleDailyForUser,
   incrementProgressForCategory,
+  incrementRoundCompletion,
   completeLoginMissions,
   incrementCategoryExploration,
   addActiveTime,

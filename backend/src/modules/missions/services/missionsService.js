@@ -69,6 +69,22 @@ async function incrementProgressForCategory(executor, { userId, categoryId }) {
   return updated;
 }
 
+/**
+ * Chamado pelo módulo Quiz quando uma rodada termina por completo (BE-005 b), dentro da mesma transação.
+ * Missões 'round_complete' ganham +1 (só de rodadas concluídas, nunca abandonadas).
+ */
+async function incrementRoundCompletion(executor, { userId, categoryId }) {
+  const updated = await repository.incrementRoundCompletion(executor, { userId, categoryId });
+
+  const justCompleted = updated.filter((m) => m.status === 'completed');
+  for (const mission of justCompleted) {
+    // eslint-disable-next-line no-await-in-loop
+    await notificationsService.notifyMissionCompleted(executor, userId, mission.title);
+  }
+
+  return updated;
+}
+
 async function claimReward(userId, userMissionId) {
   const client = await db.getClient();
   try {
@@ -186,6 +202,7 @@ async function registerPresenceOncePerDay(userId) {
 module.exports = {
   listMyMissions,
   incrementProgressForCategory,
+  incrementRoundCompletion,
   claimReward,
   registerHeartbeat,
   registerPresence,

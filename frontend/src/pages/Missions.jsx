@@ -20,6 +20,7 @@ const UNIT_BY_ACTIVITY = {
   quiz_count: 'quizzes',
   time_active_minutes: 'min',
   category_exploration: 'categorias',
+  round_complete: 'rodadas',
   login: '',
 };
 

@@ -18,6 +18,7 @@ function mapMission(m) {
     type: m.type,
     categoryId: m.category_id,
     categoryName: m.category_name,
+    activityType: m.activity_type,
     targetQuizCount: m.target_quiz_count,
     xpReward: m.xp_reward,
     pointsReward: m.points_reward,
