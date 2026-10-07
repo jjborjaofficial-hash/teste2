@@ -8,6 +8,12 @@ Hoje a alternativa correta é a mais longa em **89,4%** das 1.659 perguntas (ao 
 Quem escolhe sempre a mais longa acerta ~9 em 10, e o quiz paga dinheiro real. O objetivo é que o
 tamanho, o detalhe e a posição **não revelem** a resposta: só o conhecimento revela.
 
+## REGRA DE OURO DO DONO (2026-10-07)
+**A resposta CERTA e a explicação dela não se mudam.** O trabalho é ajustar as **erradas** (em geral as curtas)
+até terem tamanho e forma parecidos com os da certa. A certa só se mexe se tiver explicação embutida ou
+defeito real, e isso exige avisar o dono. Os "Depois" dos modelos abaixo mostram o princípio (opções
+equilibradas); na prática, mantenha a certa original e reescreva as erradas à volta dela.
+
 ## As 8 regras
 1. **Tamanho parecido.** As 4 opções com número de palavras próximo (diferença de até ~30% entre a
    maior e a menor). A correta **não** pode ser a mais longa por larga margem.

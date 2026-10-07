@@ -97,7 +97,7 @@ linguagem simples nas fáceis.
 - Finanças difícil (seeds 047 → 073 → 074 → 075 → 083): **CONCLUÍDO** — todas as perguntas dos seeds 047, 073, 074, 075 e 083 têm explicação (migrations 130 a 140; o lote 33, migration 140, fechou com 6 perguntas). **Finanças (fácil, médio e difícil) está terminada** em explicações. Falta só conferir, no banco de produção, se sobra alguma pergunta ativa de Finanças sem explicação (perguntas fora desses seeds).
 - **ORDEM DECIDIDA PELO DONO (2026-10-07), a seguir sem perguntar de novo:**
   1. **Finanças, só correção das alternativas** (301 perguntas, que já têm explicação): fácil → médio → difícil,
-     lotes de 25 com revisão do dono ANTES da migration, seguindo `docs/quiz-v2-alternativas-padrao.md`
+     lotes de 25 com revisão do dono ANTES da migration, seguindo `docs/quiz-v2-alternativas-padrao.md`; **regra do dono: a certa e a explicação NÃO mudam, só se ajustam as erradas**
      (fácil 88%, médio 90%, difícil 98% com a correta mais longa). Ordem das perguntas: a dos seeds (fácil: 045 → 064 → 068 → 094 → 099).
   2. **IA** (fácil → médio → difícil): em cada lote, explicações **e** alternativas juntas (a pergunta é tocada uma só vez).
   3. Depois: Marketing Digital, Produtividade e Tecnologia, também com as duas coisas juntas (ordem entre elas a decidir pelo dono).
