@@ -14,6 +14,18 @@ describe('detetor de viés (P9)', () => {
     expect(detectBias(mk(['Juros', 'Multa', 'Taxa', 'Nenhuma das opções acima'], 0)).blockers).toContain('todas_ou_nenhuma_das_anteriores');
   });
 
+  test('não dispara com frases normais que só contêm "todas as respostas" (casos reais do banco)', () => {
+    const reais = [
+      ['Aceitar todas as respostas automaticamente', 'Verificar fontes oficiais', 'Pedir uma segunda opinião', 'Comparar com um livro'],
+      ['Traduzir todas as respostas', 'Buscar documentos relevantes', 'Gerar imagens novas', 'Guardar dados de utilizadores'],
+      ['Considerar todas as respostas automaticamente verdadeiras', 'Rever o conteúdo antes de entregar', 'Citar as fontes', 'Pedir ajuda ao professor'],
+      ['Aceitar todas as respostas sem questionar', 'Confirmar em fontes confiáveis', 'Ler a política de uso', 'Testar com exemplos'],
+    ];
+    reais.forEach((labels) => expect(detectBias(mk(labels, 1)).blockers).toEqual([]));
+    expect(detectBias(mk(['Juros', 'Multa', 'Taxa', 'Todas as respostas acima'], 3)).blockers).toContain('todas_ou_nenhuma_das_anteriores');
+    expect(detectBias(mk(['Juros', 'Multa', 'Taxa', 'Ambas estão corretas'], 3)).blockers).toContain('todas_ou_nenhuma_das_anteriores');
+  });
+
   test('avisa absolutos só nas erradas', () => {
     const r = detectBias(mk(['Nunca gastar mais', 'Sempre pedir emprestado', 'Apenas poupar', 'Guardar parte do que ganha'], 3));
     expect(r.warnings).toContain('pista_absoluta_so_nas_erradas');

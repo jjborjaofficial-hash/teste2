@@ -36,8 +36,13 @@ const hasAny = (label, words, phrases = []) => {
   return words.some((w) => t.has(w)) || phrases.some((p) => n.includes(` ${p} `));
 };
 
-// "Todas/nenhuma das anteriores" e variantes ("todas as opções", "nenhuma das opções acima").
-const ALL_NONE_RE = /\b(todas|todos|nenhuma|nenhum|ambas|ambos)\s+(as|os|das|dos)?\s*(anteriores|acima|opcoes|alternativas|respostas|outras)\b/;
+// "Todas/nenhuma das anteriores" e variantes ("todas as opções", "nenhuma das opções acima",
+// "ambas estão corretas"). ANCORADA: só vale quando a opção INTEIRA é isso. Frases normais como
+// "Aceitar todas as respostas automaticamente" (uma errada legítima) não podem disparar.
+const ALL_NONE_RE = /^(todas|todos|nenhuma|nenhum|ambas|ambos) (as |os |das |dos )?(anteriores|acima|opcoes|alternativas|respostas|outras opcoes)( acima| anteriores)?( (estao|sao) (corretas|certas|erradas|incorretas|verdadeiras|falsas))?$/;
+// Variante curta: "Ambas estão corretas", "Todas são verdadeiras" (a opção inteira).
+const ALL_NONE_SHORT_RE = /^(todas|todos|nenhuma|nenhum|ambas|ambos) (estao|sao) (corretas|corretos|certas|certos|erradas|errados|incorretas|incorretos|verdadeiras|verdadeiros|falsas|falsos)$/;
+const isAllNone = (label) => ALL_NONE_RE.test(normalize(label)) || ALL_NONE_SHORT_RE.test(normalize(label));
 
 // Pontuação "de estrutura": vírgula, ponto e vírgula, parênteses, aspas, " e/ou ", barra.
 const hasStructure = (label) => /[,;()"“”/]|\be\/ou\b/i.test(String(label || ''));
@@ -56,7 +61,7 @@ function detectBias(q) {
   const add = (code, severity, message) => flags.push({ code, severity, message });
 
   // Regra 7: "todas/nenhuma das anteriores".
-  if (alts.some((a) => ALL_NONE_RE.test(normalize(a.label)))) {
+  if (alts.some((a) => isAllNone(a.label))) {
     add('todas_ou_nenhuma_das_anteriores', 'block', 'Não use "todas/nenhuma das anteriores": a posição e o formato denunciam a resposta.');
   }
 
