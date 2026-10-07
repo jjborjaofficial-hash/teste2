@@ -26,6 +26,7 @@ export function Quiz() {
   const [secondsLeft, setSecondsLeft] = useState(null);
 
   const timerRef = useRef(null);
+  const statementRef = useRef(null);
 
   const loadQuestion = useCallback(() => {
     setLoading(true);
@@ -76,6 +77,28 @@ export function Quiz() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [question]);
 
+  // Acessibilidade: ao entrar uma pergunta nova, o foco vai para o enunciado, para o leitor de
+  // ecrã o ler logo e o teclado continuar dali (Tab chega às alternativas).
+  useEffect(() => {
+    if (question) statementRef.current?.focus({ preventScroll: true });
+  }, [question]);
+
+  // Atalhos de teclado: 1 a 4 escolhem a alternativa pela ordem em que aparecem.
+  useEffect(() => {
+    if (!question) return undefined;
+    function onKeyDown(e) {
+      if (e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
+      const index = ['1', '2', '3', '4'].indexOf(e.key);
+      const alt = index >= 0 ? question.alternatives[index] : null;
+      if (!alt || selecting || secondsLeft === 0) return;
+      e.preventDefault();
+      handleAnswer(alt.id);
+    }
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [question, selecting, secondsLeft]);
+
   async function handleAnswer(alternativeId) {
     if (selecting || !question) return;
     setSelecting(true);
@@ -110,6 +133,14 @@ export function Quiz() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [secondsLeft]);
 
+  // O leitor de ecrã NÃO deve anunciar todos os segundos: só no aviso dos 30 %, aos 10 s, 5 s e no fim.
+  const liveAnnouncement = (() => {
+    if (secondsLeft === null || !question) return '';
+    if (secondsLeft === 0) return 'Tempo esgotado';
+    const warnAt = new Set([Math.ceil(question.time_limit_seconds * 0.3), 10, 5]);
+    return warnAt.has(secondsLeft) ? `${secondsLeft} segundos restantes` : '';
+  })();
+
   const timeIsRunningOut = secondsLeft !== null && question && secondsLeft <= Math.ceil(question.time_limit_seconds * 0.3);
 
   if (loading) {
@@ -134,6 +165,8 @@ export function Quiz() {
       <div
         className="h-1 w-full bg-border rounded-full overflow-hidden mb-4"
         role="progressbar"
+        aria-label="Tempo restante"
+        aria-valuetext={`${secondsLeft ?? 0} segundos`}
         aria-valuemin={0}
         aria-valuemax={question.time_limit_seconds}
         aria-valuenow={secondsLeft ?? 0}
@@ -160,16 +193,19 @@ export function Quiz() {
         >
           {secondsLeft ?? 0}s
         </span>
-        <span className="sr-only" aria-live="polite">{secondsLeft ?? 0} segundos restantes</span>
+        <span className="sr-only" role="status" aria-live="polite">{liveAnnouncement}</span>
       </header>
 
-      <h1 className="font-display text-h1 text-text mb-8">{question.statement}</h1>
+      <h1 id="quiz-statement" ref={statementRef} tabIndex={-1} className="font-display text-h1 text-text mb-8 focus:outline-none">
+        {question.statement}
+      </h1>
 
-      <div className="flex-1 space-y-3">
-        {question.alternatives.map((alt) => (
+      <div className="flex-1 space-y-3" role="group" aria-labelledby="quiz-statement">
+        {question.alternatives.map((alt, i) => (
           <button
             key={alt.id}
             onClick={() => handleAnswer(alt.id)}
+            aria-keyshortcuts={String(i + 1)}
             disabled={selecting || secondsLeft === 0}
             className="w-full text-left bg-surface border border-border rounded-card px-4 py-4
                        text-body text-text transition-all duration-micro

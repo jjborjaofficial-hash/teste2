@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { PrimaryButton, SecondaryButton } from '../components/Button';
 import { RewardBadge } from '../components/RewardBadge';
@@ -27,6 +27,7 @@ export function QuizResult() {
 
   // Calculada uma única vez por resultado (useState evita mudar de frase a cada re-render).
   const [heading] = useState(() => (result ? buildResultMessage(result) : { title: '', detail: '' }));
+  const headingRef = useRef(null);
   const [showAd, setShowAd] = useState(true);
   const [adSecondsLeft, setAdSecondsLeft] = useState(5);
 
@@ -54,6 +55,11 @@ export function QuizResult() {
   if (!result) {
     return null;
   }
+
+  // Depois do anúncio, o foco vai para o título do resultado, para o leitor de ecrã o ler.
+  useEffect(() => {
+    if (!showAd) headingRef.current?.focus({ preventScroll: true });
+  }, [showAd]);
 
   if (showAd) {
     return (
@@ -91,7 +97,7 @@ export function QuizResult() {
             <CloseDrawIcon className="w-8 h-8 text-danger" animated />
           )}
         </div>
-        <h1 className="font-display text-h1 text-text mb-1">
+        <h1 ref={headingRef} tabIndex={-1} className="font-display text-h1 text-text mb-1 focus:outline-none">
           {heading.title}
         </h1>
         {heading.detail && (
