@@ -89,7 +89,7 @@ linguagem simples nas fáceis.
   raciocínio e contexto. Só o seed 100 (lote 23) já segue isso. Reescrever as 95 anteriores, se o dono
   quiser, exige um UPDATE que sobrescreva (as migrations atuais nunca sobrescrevem).
 - Finanças difícil (seeds 047 → 073 → 074 → 075 → 083): **CONCLUÍDO** — todas as perguntas dos seeds 047, 073, 074, 075 e 083 têm explicação (migrations 130 a 140; o lote 33, migration 140, fechou com 6 perguntas). **Finanças (fácil, médio e difícil) está terminada** em explicações. Falta só conferir, no banco de produção, se sobra alguma pergunta ativa de Finanças sem explicação (perguntas fora desses seeds).
-- **Próxima categoria: o dono decide** entre IA, Marketing Digital, Produtividade e Tecnologia (pendentes). Perguntar antes de começar; depois seguir fácil → médio → difícil, em lotes de 10 (próxima migration: 141).
+- **PRÓXIMA CATEGORIA (decidido pelo dono em 2026-10-07): IA.** Começar por IA fácil, depois médio e difícil, em lotes de 10 (próxima migration: 141), seguindo a ordem dos seeds e das perguntas no ficheiro. Depois de IA: Marketing Digital, Produtividade e Tecnologia (ordem a decidir pelo dono).
 
 Parte técnica **feita**: `submitAnswer` já devolve `feedback` ({ correctAlternativeId,
 correctAlternativeLabel, explanation }) depois de responder, só se a pergunta foi entregue ao
