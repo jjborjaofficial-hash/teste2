@@ -58,6 +58,12 @@ async function listQuestionsByCategory(categoryId, { limit = 50, offset = 0 } = 
   return rows;
 }
 
+// Enunciados de TODAS as perguntas (ativas e inativas), para o validador apanhar duplicadas.
+async function listAllStatements() {
+  const { rows } = await db.query(`SELECT id, statement FROM questions`);
+  return rows;
+}
+
 async function findQuestionById(id) {
   const { rows } = await db.query(`SELECT * FROM questions WHERE id = $1`, [id]);
   return rows[0] || null;
@@ -155,6 +161,7 @@ module.exports = {
   findQuestionById,
   getAlternatives,
   createQuestionWithAlternatives,
+  listAllStatements,
   updateQuestion,
   replaceAlternatives,
 };
