@@ -14,7 +14,8 @@
     "migrate:down": "node src/database/migrate.js down",
     "test": "jest --runInBand",
     "lint": "eslint src",
-    "quiz:validate": "node scripts/quizValidate.js"
+    "quiz:validate": "node scripts/quizValidate.js",
+    "quiz:audit": "node scripts/quizAudit.js"
   },
   "dependencies": {
     "express": "^4.19.2",
