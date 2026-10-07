@@ -30,6 +30,11 @@ tamanho, o detalhe e a posição **não revelem** a resposta: só o conhecimento
    ao reescrever, **mantém-se** o `is_correct` e o `display_order` originais (a migration só altera
    `question_alternatives.label`).
 
+9. **Explicação coerente com as novas opções.** Várias explicações dizem "Não é X, Y nem Z", citando as
+   alternativas erradas antigas. Ao trocar as erradas, conferir a explicação da pergunta: se ela citar
+   opções que deixaram de existir, **reescrevê-la no mesmo lote** (a migration desse lote faz um UPDATE que
+   sobrescreve só essas explicações). Nas fáceis de Finanças a maioria não cita; no médio e no difícil muitas citam.
+
 ## Como reescrever (passo a passo, por pergunta)
 1. Ler a pergunta e a explicação (se já existir) para ter certeza do conceito certo.
 2. Escrever a correta numa frase curta e natural (8 a 14 palavras em conceitos; 1 a 3 palavras em
