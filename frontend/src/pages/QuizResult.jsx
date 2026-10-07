@@ -22,24 +22,25 @@ export function QuizResult() {
   const round = result?.round || null;
   const roundFinished = Boolean(round?.completed);
 
-  // Destino pendente: ao tocar num botão, o intersticial aparece e só depois navega.
-  const [pendingNav, setPendingNav] = useState(null);
+  // Intersticial como sempre foi: aparece logo depois de responder, por 5 s, e só depois
+  // mostra o resultado (decisão do proprietário: lógica dos anúncios inalterada).
+  const [showAd, setShowAd] = useState(true);
   const [adSecondsLeft, setAdSecondsLeft] = useState(5);
 
   useEffect(() => {
-    if (!pendingNav) return undefined;
-    setAdSecondsLeft(5);
+    if (!result) return undefined;
     const interval = setInterval(() => {
       setAdSecondsLeft((s) => {
         if (s <= 1) {
           clearInterval(interval);
+          setShowAd(false);
           return 0;
         }
         return s - 1;
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [pendingNav]);
+  }, [result]);
 
   useEffect(() => {
     if (!result) {
@@ -51,11 +52,7 @@ export function QuizResult() {
     return null;
   }
 
-  function goWithAd(to, options) {
-    setPendingNav({ to, options });
-  }
-
-  if (pendingNav) {
+  if (showAd) {
     return (
       <div className="min-h-screen bg-text flex flex-col items-center justify-center text-white px-6">
         {/* InterstitialAds controla a própria UI de tela cheia do Adcash por
@@ -70,11 +67,9 @@ export function QuizResult() {
         <div className="bg-white/10 rounded-card w-full max-w-sm h-64 flex items-center justify-center mb-4">
           <p className="text-body text-white/70">Espaço de anúncio (Intersticial)</p>
         </div>
-        {adSecondsLeft > 0 ? (
-          <p className="text-caption text-white/60">Continuar em {adSecondsLeft}s</p>
-        ) : (
-          <PrimaryButton onClick={() => navigate(pendingNav.to, pendingNav.options)}>Continuar</PrimaryButton>
-        )}
+        <p className="text-caption text-white/60">
+          {adSecondsLeft > 0 ? `Continuar em ${adSecondsLeft}s` : 'Você já pode continuar'}
+        </p>
       </div>
     );
   }
@@ -253,20 +248,20 @@ export function QuizResult() {
         {/* Na 10.ª pergunta o único caminho é o resumo da rodada (instrução mestre, secção 6):
             o atalho para o Painel passa a existir dentro do próprio resumo. */}
         {!roundFinished && (
-          <SecondaryButton onClick={() => goWithAd('/dashboard')} className="flex-1">
+          <SecondaryButton onClick={() => navigate('/dashboard')} className="flex-1">
             Painel
           </SecondaryButton>
         )}
         {roundFinished ? (
           <PrimaryButton
-            onClick={() => goWithAd(`/quiz/${categoryId}/rodada/${round.id}`, { replace: true })}
+            onClick={() => navigate(`/quiz/${categoryId}/rodada/${round.id}`, { replace: true })}
             className="flex-1"
           >
             Ver resumo da rodada
           </PrimaryButton>
         ) : (
           <PrimaryButton
-            onClick={() => goWithAd(`/quiz/${categoryId}`, { replace: true })}
+            onClick={() => navigate(`/quiz/${categoryId}`, { replace: true })}
             className="flex-1"
           >
             Próxima pergunta

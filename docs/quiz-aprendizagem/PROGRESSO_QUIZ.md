@@ -223,3 +223,5 @@ digital difícil 97%, tecnologia médio 94%.
   credenciais no repositório.
 - **Commit / Push:** ver histórico da branch.
 - **Próximo bloco:** ver "Próximos pedaços" (P1 em diante).
+
+- [x] FIX-ANUNCIO. Restaurado o fluxo ORIGINAL do intersticial em `QuizResult.jsx` (5 s logo depois de responder, depois o resultado), como pediu o proprietário. A versão anterior, minha, mostrava o resultado primeiro e o anúncio só ao tocar num botão: era uma mudança indevida. Bloco do anúncio idêntico ao da base.
