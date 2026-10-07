@@ -46,7 +46,19 @@ export function Footer() {
           dependentes do cumprimento de missões, não constituindo promessa de renda.
         </p>
 
-        <p className="text-[11px]">© {new Date().getFullYear()} Plataforma Aprenda e Ganhe. Todos os direitos reservados.</p>
+        {/* Logótipo (só texto), com as cores do desenho do dono. O subtítulo leva a linha de
+            direitos de autor, por isso substitui a linha de "©" que existia aqui. */}
+        <div className="flex justify-center rounded-card bg-[#191918] px-4 py-5">
+          <div className="inline-flex flex-col items-start">
+            <span className="text-[28px] font-bold uppercase leading-[0.95] tracking-[1.2px] text-[#858583]">
+              Aprenda e Ganhe
+            </span>
+            {/* Cores exatas do desenho do dono: título #858583 e linha pequena #626260. */}
+            <span className="mt-2 text-[10px] tracking-[0.2px] text-[#626260]">
+              © {new Date().getFullYear()} APRENDA E GANHE. Todos os direitos reservados.
+            </span>
+          </div>
+        </div>
       </div>
     </footer>
   );
