@@ -19,6 +19,16 @@ const lots = files.map((f) => {
   return { f, expected, rows };
 });
 
+// Correções POSTERIORES a lotes já aplicados (*_ajuste_alternativas_*.sql, mesmo formato de linhas). Quando uma delas muda
+// uma alternativa que um lote já tinha escrito, o texto esperado passa a ser o da correção (a mais recente vence).
+const adjustFiles = fs.readdirSync(dir).filter((f) => /^\d+_ajuste_alternativas_.*\.sql$/.test(f)).sort();
+const adjusted = new Map();
+for (const f of adjustFiles) {
+  const sql = fs.readFileSync(path.join(dir, f), 'utf8');
+  for (const m of sql.matchAll(re)) adjusted.set(`${m[1]}|${un(m[2])}|${m[3]}`, un(m[5]));
+}
+const expectedLabel = (r) => adjusted.get(`${r.source}|${r.statement}|${r.pos}`) ?? r.newLabel;
+
 afterAll(async () => {
   await db.pool.end();
 });
@@ -41,7 +51,7 @@ describe.each(lots)('lote $f', ({ expected, rows }) => {
         [r.source, r.statement, r.pos]
       );
       expect(found).toHaveLength(1);
-      expect(found[0].label).toBe(r.newLabel);
+      expect(found[0].label).toBe(expectedLabel(r));
       expect(found[0].is_correct).toBe(false);
     }
   });

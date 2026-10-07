@@ -1,6 +1,6 @@
 # Finanças — ajuste residual (7 perguntas que o validador ainda assinala)
 
-Estado: **RASCUNHO, aguarda aprovação do dono. Nada foi gravado no banco nem em migration.**
+Estado: **A) APROVADO pelo dono em 2026-10-07 e gravado na migration 392** (`tests/quiz-ajuste-alternativas.test.js`); **B) as 3 alternativas espelho foram aceitas como estão.**
 
 Origem: depois de corrigir um falso alarme do validador (um "Porque" no início da alternativa não é explicação embutida),
 Finanças ficou com **7 de 298** perguntas assinaladas (eram 16). Regra do dono mantida: **a certa e a explicação não mudam,
