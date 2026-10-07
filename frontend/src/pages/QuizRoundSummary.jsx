@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { quizApi } from '../api/quizApi';
 import { ApiError } from '../api/client';
@@ -25,6 +25,7 @@ export function QuizRoundSummary() {
   const [summary, setSummary] = useState(null);
   const [error, setError] = useState(null);
 
+  const headingRef = useRef(null);
   useEffect(() => {
     let cancelled = false;
     quizApi.roundSummary(roundId)
@@ -46,6 +47,11 @@ export function QuizRoundSummary() {
     );
   }
 
+  // Quando o resumo aparece, o foco vai para o título (o leitor de ecrã lê "Rodada concluída").
+  useEffect(() => {
+    if (summary) headingRef.current?.focus({ preventScroll: true });
+  }, [summary]);
+
   if (!summary) {
     return <p className="text-center text-body text-text-secondary mt-10">Carregando resumo...</p>;
   }
@@ -53,7 +59,7 @@ export function QuizRoundSummary() {
   return (
     <div className="space-y-5 pt-6 pb-4">
       <div className="text-center space-y-1">
-        <h1 className="font-display text-h1 text-text">Rodada concluída</h1>
+        <h1 ref={headingRef} tabIndex={-1} className="font-display text-h1 text-text focus:outline-none">Rodada concluída</h1>
         <p className="text-body text-text-secondary">
           {summary.answered} perguntas respondidas em {summary.categoryName}
         </p>

@@ -66,7 +66,7 @@ Marcar `[x]` ao concluir e enviar. Pegar sempre o primeiro `[ ]`.
 - [ ] P16 em diante. Restantes lotes por categoria e dificuldade (1.659 perguntas; ~66 lotes de 25).
 
 **Acabamento**
-- [ ] P17. Acessibilidade: `prefers-reduced-motion` e navegação por teclado nas alternativas.
+- [x] P17. Acessibilidade. Já existia (global, `index.css`): `prefers-reduced-motion` (cobre a barra do cronómetro, a única animação do quiz) e foco visível `:focus-visible`; confirmado. Acrescentado: atalhos de teclado **1 a 4** para as alternativas (`aria-keyshortcuts`), alternativas agrupadas e ligadas ao enunciado (`role="group"`), barra do tempo com nome e valor, aviso do tempo ao leitor de ecrã só nos momentos-chave (30 %, 10 s, 5 s e fim, em vez de todos os segundos) e foco automático no enunciado / no resultado / no resumo. Verificado só por build e leitura do código: **não** testado com leitor de ecrã nem no navegador (fica no P18).
 - [ ] P18. Teste manual no navegador e relatório final.
 
 ## Matriz dos 16 testes obrigatórios (estado real)

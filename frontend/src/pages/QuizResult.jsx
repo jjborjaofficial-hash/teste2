@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { PrimaryButton, SecondaryButton } from '../components/Button';
 import { RewardBadge } from '../components/RewardBadge';
@@ -24,6 +24,7 @@ export function QuizResult() {
 
   // Intersticial como sempre foi: aparece logo depois de responder, por 5 s, e só depois
   // mostra o resultado (decisão do proprietário: lógica dos anúncios inalterada).
+  const headingRef = useRef(null);
   const [showAd, setShowAd] = useState(true);
   const [adSecondsLeft, setAdSecondsLeft] = useState(5);
 
@@ -41,6 +42,11 @@ export function QuizResult() {
     }, 1000);
     return () => clearInterval(interval);
   }, [result]);
+
+  // Depois do anúncio, o foco vai para o resultado ('Correto!' / 'Resposta incorreta.') para o leitor de ecrã o ler.
+  useEffect(() => {
+    if (!showAd && result) headingRef.current?.focus({ preventScroll: true });
+  }, [showAd, result]);
 
   useEffect(() => {
     if (!result) {
@@ -91,7 +97,7 @@ export function QuizResult() {
             <CloseDrawIcon className="w-8 h-8 text-danger" animated />
           )}
         </div>
-        <h1 className="font-display text-h1 text-text mb-1">
+        <h1 ref={headingRef} tabIndex={-1} className="font-display text-h1 text-text mb-1 focus:outline-none">
           {result.isCorrect ? 'Correto!' : message || 'Resposta incorreta.'}
         </h1>
         {result.isCorrect && (
