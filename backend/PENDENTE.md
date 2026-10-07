@@ -131,6 +131,7 @@ linguagem simples nas fáceis.
   2. **IA** (fácil → médio → difícil): em cada lote, explicações **e** alternativas juntas (a pergunta é tocada uma só vez).
   3. Depois: Marketing Digital, Produtividade e Tecnologia, também com as duas coisas juntas (ordem entre elas a decidir pelo dono).
   Cada lote = migration + teste + relatório do validador (antes/depois) + commit + push + deploy do backend + esta atualização. Próxima migration: 146.
+- **Tecnologia (faixa de migrations 300+; explicações + alternativas juntas, lotes de 25):** fácil, lote 1 (perguntas 1 a 25 do seed `seed_tecnologia_facil_v1`) está **em REVISÃO do dono** no branch `tecnologia-facil-lote01` (rascunho em `docs/quiz-lotes-alternativas/tecnologia-facil-lote01.md`; migrations 300 = alternativas, 301 = explicações; testes passam). Medição: a correta mais longa em 22/25 (88%) → 6/25 (24%) neste lote. Depois de aprovado, integrar no `main`; **próximo:** lote 2 (perguntas 26 a 50 do mesmo seed), migrations 302 e 303.
 
 Parte técnica **feita**: `submitAnswer` já devolve `feedback` ({ correctAlternativeId,
 correctAlternativeLabel, explanation }) depois de responder, só se a pergunta foi entregue ao
