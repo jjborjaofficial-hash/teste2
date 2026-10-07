@@ -95,8 +95,13 @@ linguagem simples nas fáceis.
   raciocínio e contexto. Só o seed 100 (lote 23) já segue isso. Reescrever as 95 anteriores, se o dono
   quiser, exige um UPDATE que sobrescreva (as migrations atuais nunca sobrescrevem).
 - Finanças difícil (seeds 047 → 073 → 074 → 075 → 083): **CONCLUÍDO** — todas as perguntas dos seeds 047, 073, 074, 075 e 083 têm explicação (migrations 130 a 140; o lote 33, migration 140, fechou com 6 perguntas). **Finanças (fácil, médio e difícil) está terminada** em explicações. Falta só conferir, no banco de produção, se sobra alguma pergunta ativa de Finanças sem explicação (perguntas fora desses seeds).
-- **Decisão do dono (2026-10-07): explicações e correção das alternativas andam JUNTAS** em cada lote (a mesma pergunta é tocada uma vez só, seguindo `docs/quiz-v2-alternativas-padrao.md`; lotes de 25 com revisão do dono antes da migration, ou 10 se o dono preferir). **Finanças já tem todas as explicações mas AINDA NÃO teve as alternativas corrigidas** (301 perguntas: fácil 88%, médio 90%, difícil 98% com a correta mais longa): entra depois, só com a correção das alternativas.
-- **PRÓXIMA CATEGORIA (decidido pelo dono em 2026-10-07): IA.** Começar por IA fácil, depois médio e difícil, em lotes de 10 (próxima migration: 141), seguindo a ordem dos seeds e das perguntas no ficheiro. Depois de IA: Marketing Digital, Produtividade e Tecnologia (ordem a decidir pelo dono).
+- **ORDEM DECIDIDA PELO DONO (2026-10-07), a seguir sem perguntar de novo:**
+  1. **Finanças, só correção das alternativas** (301 perguntas, que já têm explicação): fácil → médio → difícil,
+     lotes de 25 com revisão do dono ANTES da migration, seguindo `docs/quiz-v2-alternativas-padrao.md`
+     (fácil 88%, médio 90%, difícil 98% com a correta mais longa). Ordem das perguntas: a dos seeds (fácil: 045 → 064 → 068 → 094 → 099).
+  2. **IA** (fácil → médio → difícil): em cada lote, explicações **e** alternativas juntas (a pergunta é tocada uma só vez).
+  3. Depois: Marketing Digital, Produtividade e Tecnologia, também com as duas coisas juntas (ordem entre elas a decidir pelo dono).
+  Cada lote = migration + teste + relatório do validador (antes/depois) + commit + push + deploy do backend + esta atualização. Próxima migration: 141.
 
 Parte técnica **feita**: `submitAnswer` já devolve `feedback` ({ correctAlternativeId,
 correctAlternativeLabel, explanation }) depois de responder, só se a pergunta foi entregue ao
