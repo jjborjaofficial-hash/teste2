@@ -66,7 +66,7 @@ validador feito e do dono rever o relatório.
   (`-- --list` lista as reprovadas, `-- --json` dá JSON) e teste `backend/tests/quiz-alternatives-validator.test.js`.
   Só leitura. O CI roda o relatório a cada push (passo "Relatório do validador" em Actions), então
   o antes/depois de cada lote fica no log do GitHub. Critérios ajustáveis em `CRITERIA` no mesmo ficheiro.
-- Passo 2 (corrigir alternativas em lotes de 25, só `question_alternatives.label`): **não começou**.
+- Passo 2 (corrigir alternativas em lotes de 25, só `question_alternatives.label`): **EM ANDAMENTO**. Finanças fácil lote 1 (perguntas 1 a 25 do seed 045; 56 alternativas erradas ajustadas) aprovado pelo dono em 2026-10-07 e gravado na migration 141 (`tests/quiz-alternatives-financas-facil-lote01.test.js`). Rascunhos dos lotes: `docs/quiz-lotes-alternativas/`.
   **Próximo:** abrir o relatório do CI, registar aqui a medição inicial por grupo e propor ao dono as
   25 primeiras de Finanças fácil para ele rever antes da migration.
 - **Medição inicial do validador (CI, 2026-10-07, 1.659 perguntas ativas):** correta mais longa em **89,4%**;
@@ -101,7 +101,7 @@ linguagem simples nas fáceis.
      (fácil 88%, médio 90%, difícil 98% com a correta mais longa). Ordem das perguntas: a dos seeds (fácil: 045 → 064 → 068 → 094 → 099).
   2. **IA** (fácil → médio → difícil): em cada lote, explicações **e** alternativas juntas (a pergunta é tocada uma só vez).
   3. Depois: Marketing Digital, Produtividade e Tecnologia, também com as duas coisas juntas (ordem entre elas a decidir pelo dono).
-  Cada lote = migration + teste + relatório do validador (antes/depois) + commit + push + deploy do backend + esta atualização. Próxima migration: 141.
+  Cada lote = migration + teste + relatório do validador (antes/depois) + commit + push + deploy do backend + esta atualização. Próxima migration: 142.
 
 Parte técnica **feita**: `submitAnswer` já devolve `feedback` ({ correctAlternativeId,
 correctAlternativeLabel, explanation }) depois de responder, só se a pergunta foi entregue ao
