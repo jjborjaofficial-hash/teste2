@@ -62,8 +62,15 @@ Marcar `[x]` ao concluir e enviar. Pegar sempre o primeiro `[ ]`.
 - [ ] P14. Gancho do validador nos pontos de entrada de novas perguntas (importação/admin, se existirem).
 
 **Conteúdo (por lotes pequenos, uma migration de UPDATE por lote, com revisão humana recomendada)**
-- [ ] P15. Piloto: 25 perguntas (alternativas equilibradas + explicações) e validar com o validador.
-- [ ] P16 em diante. Restantes lotes por categoria e dificuldade (1.659 perguntas; ~66 lotes de 25).
+- [x] P15. Piloto (lote 01): Finanças / difícil, 25 perguntas, migration `111_content_financas_dificil_lote_01.sql`. Antes: a correta era a mais longa em 25 de 25 (99% na categoria) e as erradas eram absurdas. Depois: a correta é a mais longa em 6 de 25 (24%), razão média correta/erradas 1,02 (entre 0,91 e 1,10), sem alternativas quase iguais e sem palavras absolutas só nas erradas; erradas plausíveis; cada pergunta com explicação, "Aprenda" e "Dica". Verificado no banco: mesmos IDs de alternativa, mesma posição da correta e mesmo `is_correct`; rodar de novo não altera nada (idempotente, só preenche perguntas sem explicação). Viés da categoria: 99% -> 80% (restam 76 perguntas). **Revisão humana do texto recomendada.** Medido só com scripts próprios: o validador (P9 a P12) ainda não existe, por isso o P15 não foi "validado com o validador" e deve ser reconferido quando ele existir.
+- [ ] P16. Restantes lotes, um por vez (de 25), na mesma receita. Próximo: Finanças / difícil (76 restantes), depois Marketing Digital / difícil (98%), Finanças / médio (97%), IA / difícil (97%).
+
+**Receita de um lote (P16)** — cada lote = 1 migration `NNN_content_<categoria>_<dificuldade>_lote_NN.sql`:
+1. Escolher 25 perguntas ativas sem `explanation`, das mais enviesadas: `correta / média das erradas` por pergunta, ordem decrescente.
+2. Para cada uma, escrever 4 alternativas (a correta em primeiro na lista de trabalho; no SQL cada texto vai para o `display_order` que a alternativa já tinha) e `explanation`, `learn_point`, `memory_tip`. Manter enunciado, dificuldade e significado da correta; distratores plausíveis (confusões reais, conceito vizinho), nunca absurdos.
+3. Metas medidas por script antes de gerar: correta estritamente a mais longa em cerca de 25% do lote (não em 0%: ser sempre a mais curta também denuncia); razão correta/erradas entre 0,8 e 1,2; sem alternativas com similaridade > 0,8; sem absolutos (sempre, nunca, apenas, todos...) só nas erradas.
+4. Gerar o SQL com `UPDATE ... FROM (VALUES ...)` das alternativas e das perguntas, ambos protegidos por `explanation IS NULL`; aplicar no banco de teste e comparar antes/depois (IDs, posições, `is_correct` inalterados; segunda execução não altera nada).
+5. Testes do quiz, commit, push. Texto em português do projeto (ortografia já usada no banco: "econômica", "planejamento", "controle").
 
 **Acabamento**
 - [x] P17. Acessibilidade. Já existia (global, `index.css`): `prefers-reduced-motion` (cobre a barra do cronómetro, a única animação do quiz) e foco visível `:focus-visible`; confirmado. Acrescentado: atalhos de teclado **1 a 4** para as alternativas (`aria-keyshortcuts`), alternativas agrupadas e ligadas ao enunciado (`role="group"`), barra do tempo com nome e valor, aviso do tempo ao leitor de ecrã só nos momentos-chave (30 %, 10 s, 5 s e fim, em vez de todos os segundos) e foco automático no enunciado / no resultado / no resumo. Verificado só por build e leitura do código: **não** testado com leitor de ecrã nem no navegador (fica no P18).
