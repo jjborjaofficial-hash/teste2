@@ -18,6 +18,7 @@ import { Shop } from './pages/Shop';
 import { MeusRecursos } from './pages/MeusRecursos';
 import { Quiz } from './pages/Quiz';
 import { QuizResult } from './pages/QuizResult';
+import { QuizReview } from './pages/QuizReview';
 import { Wallet } from './pages/Wallet';
 import { Profile } from './pages/Profile';
 import { Settings } from './pages/Settings';
@@ -104,6 +105,7 @@ export default function App() {
               <Route path="/notificacoes" element={<Notifications />} />
               <Route path="/perfil" element={<Profile />} />
               <Route path="/configuracoes" element={<Settings />} />
+              <Route path="/revisao" element={<QuizReview />} />
             </Route>
 
             {/* Protegido, foco absoluto — sem nav/rodapé (Seção 19.4 e 19.5) */}

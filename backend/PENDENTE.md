@@ -20,7 +20,7 @@ reabre o resumo de uma rodada terminada (antes só saía uma vez e perdia-se ao 
 `GET /quiz/review/recommendations?categoryId=&limit=` (limite 1 a 20, padrão 10) lista o que rever: perguntas erradas em
 rodadas cuja resposta mais recente continua errada, com `timesMissed`, mais recentes primeiro; ao acertar depois deixa de
 aparecer, e perguntas desativadas não entram. Só dados do próprio utilizador e nunca devolve a alternativa certa nem a
-escolhida. **O frontend ainda não usa estas rotas** (falta a tela de revisão; o resumo atual continua a funcionar).
+escolhida. A lista de recomendações já é usada pela tela "Rever o que errei" (`/revisao`, aberta pelo Hub de Estudos); o resumo da rodada continua a funcionar como antes e `GET /quiz/rounds/:roundId/summary` ainda não é usado pelo frontend.
 
 **(b) FEITO — missão "completar uma rodada"** (`activity_type = 'round_complete'`, migration 391,
 `tests/missions-round-complete.test.js`). Conta +1 quando uma rodada termina por completo (a 10.ª resposta), dentro da

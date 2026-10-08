@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { quizApi } from '../api/quizApi';
 import { Card } from '../components/Card';
+import { SecondaryButton } from '../components/Button';
 import { QuizIcon, ChevronRightIcon } from '../icons';
 import { DisplayAds } from '../ads';
 
@@ -59,6 +60,10 @@ export function HubEstudos() {
 
         {categories.slice(midpoint).map(renderCategory)}
       </div>
+
+      <SecondaryButton onClick={() => navigate('/revisao')} className="w-full">
+        Rever o que errei
+      </SecondaryButton>
     </div>
   );
 }
