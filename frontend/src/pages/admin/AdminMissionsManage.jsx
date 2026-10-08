@@ -6,6 +6,8 @@ import { useToast } from '../../components/Toast';
 import { ApiError } from '../../api/client';
 
 const TYPE_LABELS = { daily: 'Diária', weekly: 'Semanal', special: 'Especial', sponsored: 'Patrocinada' };
+// Tipos de atividade que o painel pode criar (os outros, como login, vêm das migrations).
+const ACTIVITY_LABELS = { quiz_count: 'Acertar perguntas', round_complete: 'Completar rodadas' };
 
 function MissionForm({ categories, onCreated, onCancel }) {
   const { showToast } = useToast();
@@ -13,6 +15,7 @@ function MissionForm({ categories, onCreated, onCancel }) {
   const [description, setDescription] = useState('');
   const [type, setType] = useState('daily');
   const [categoryId, setCategoryId] = useState('');
+  const [activityType, setActivityType] = useState('quiz_count');
   const [targetQuizCount, setTargetQuizCount] = useState(1);
   const [xpReward, setXpReward] = useState(20);
   const [pointsReward, setPointsReward] = useState(10);
@@ -34,6 +37,7 @@ function MissionForm({ categories, onCreated, onCancel }) {
         description: description || undefined,
         type,
         categoryId: categoryId || undefined,
+        activityType,
         targetQuizCount: Number(targetQuizCount),
         xpReward: Number(xpReward),
         pointsReward: Number(pointsReward),
@@ -81,9 +85,24 @@ function MissionForm({ categories, onCreated, onCancel }) {
             {categories?.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
         </div>
+        <label className="block text-caption text-text-secondary">
+          O que a missão pede
+          <select
+            value={activityType}
+            onChange={(e) => setActivityType(e.target.value)}
+            className="w-full rounded-button border border-border bg-background px-3 py-2 text-body text-text mt-1"
+          >
+            {Object.entries(ACTIVITY_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+          </select>
+        </label>
+        {activityType === 'round_complete' && (
+          <p className="text-caption text-text-secondary">
+            Conta cada rodada de 10 perguntas que o jogador termina. Rodadas abandonadas não contam.
+          </p>
+        )}
         <div className="grid grid-cols-2 gap-2">
           <label className="text-caption text-text-secondary">
-            Quizzes necessários
+            {activityType === 'round_complete' ? 'Rodadas necessárias' : 'Quizzes necessários'}
             <input type="number" value={targetQuizCount} onChange={(e) => setTargetQuizCount(e.target.value)}
               className="w-full rounded-button border border-border bg-background px-3 py-2 text-body text-text mt-1" />
           </label>
@@ -107,6 +126,13 @@ function MissionForm({ categories, onCreated, onCancel }) {
         {Number(moneyRewardMzn) > 0 && (
           <p className="text-caption text-warning">
             ⚠️ Esta missão paga dinheiro real. Ela é limitada pelo teto de ganho diário (7,20 MZN) automaticamente.
+          </p>
+        )}
+
+        {activityType === 'round_complete' && Number(moneyRewardMzn) > 0 && (
+          <p className="text-caption text-warning">
+            ⚠️ Uma rodada conta mesmo que o jogador erre quase tudo. Com dinheiro, dá para completar esta missão
+            respondendo ao acaso. Prefira pagar só XP e pontos, ou decida antes um mínimo de acertos.
           </p>
         )}
 
@@ -176,8 +202,11 @@ export function AdminMissionsManage() {
                   {m.title} {!m.isActive && <span className="text-danger text-caption font-semibold">(inativa)</span>}
                 </p>
                 <p className="text-caption text-text-secondary">
-                  {TYPE_LABELS[m.type]} · {m.categoryName || 'Qualquer categoria'} · {m.targetQuizCount} quiz(zes)
+                  {TYPE_LABELS[m.type]} · {m.categoryName || 'Qualquer categoria'} · {m.targetQuizCount} {m.activityType === 'round_complete' ? 'rodada(s)' : 'quiz(zes)'}
                 </p>
+                {m.activityType === 'round_complete' && (
+                  <p className="text-caption text-text-secondary">{ACTIVITY_LABELS.round_complete}</p>
+                )}
                 <p className="text-caption text-gold font-semibold">
                   {m.xpReward} XP · {m.pointsReward} Pontos {m.moneyRewardMzn > 0 && `· ${m.moneyRewardMzn.toFixed(2)} MZN`}
                 </p>

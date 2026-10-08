@@ -27,8 +27,9 @@ escolhida. **O frontend ainda não usa estas rotas** (falta a tela de revisão; 
 mesma transação; rodadas abandonadas não contam; se a missão tiver categoria só conta rodadas dessa categoria; o alvo é
 `target_quiz_count` (nº de rodadas). O admin cria-a pela API com `activityType: "round_complete"` (só `quiz_count` e
 `round_complete` são criáveis; os outros tipos continuam a vir das migrations). **Nenhuma missão foi criada**: o catálogo
-paga dinheiro real (teto 7,20 MZN/dia) e é decisão do dono. Sobram, para o dono/frontend: (1) o formulário de missões do
-painel admin ainda não tem o seletor de tipo (hoje só a API); (2) **decisão de negócio:** uma rodada conta mesmo que o
+paga dinheiro real (teto 7,20 MZN/dia) e é decisão do dono. Sobram, para o dono/frontend: (1) ~~o formulário de missões do
+painel admin não tinha o seletor de tipo~~ **FEITO**: `AdminMissionsManage.jsx` tem agora "O que a missão pede" (Acertar perguntas /
+Completar rodadas), mostra a unidade certa na lista e avisa quando uma missão de rodadas paga dinheiro; (2) **decisão de negócio:** uma rodada conta mesmo que o
 jogador erre quase tudo, e, ao contrário de `quiz_count`, que só conta respostas certas, isto permite completar missões
 pagas respondendo ao acaso; antes de criar uma missão com dinheiro decidir se exige um mínimo de acertos por rodada.
 
