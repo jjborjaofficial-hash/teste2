@@ -27,9 +27,16 @@ escolhida. **O frontend ainda não usa estas rotas** (falta a tela de revisão; 
 mesma transação; rodadas abandonadas não contam; se a missão tiver categoria só conta rodadas dessa categoria; o alvo é
 `target_quiz_count` (nº de rodadas). O admin cria-a pelo painel (campo "O que a missão conta") ou pela API com `activityType: "round_complete"` (só `quiz_count` e
 `round_complete` são criáveis; os outros tipos continuam a vir das migrations). **Nenhuma missão foi criada**: o catálogo
-paga dinheiro real (teto 7,20 MZN/dia) e é decisão do dono. Sobra, para o dono: **decisão de negócio:** uma rodada conta mesmo que o
-jogador erre quase tudo, e, ao contrário de `quiz_count`, que só conta respostas certas, isto permite completar missões
-pagas respondendo ao acaso; antes de criar uma missão com dinheiro decidir se exige um mínimo de acertos por rodada.
+paga dinheiro real (teto 7,20 MZN/dia) e é decisão do dono. O seletor de tipo no formulário do painel admin já existe (campo "O que a missão conta").
+**Dinheiro em missões de rodada: DECIDIDO E FEITO (dono, 2026-10-08).** Uma rodada conta mesmo com 0 acertos, então
+missões `round_complete` **não podem pagar dinheiro** (só XP e Pontos); as de `quiz_count`, que só contam respostas certas,
+continuam a poder. Aplicado em quatro camadas: (1) a API recusa criar (`createMissionSchema`) e editar
+(`adminMissionsService.updateMission`) uma missão de rodada com `moneyRewardMzn > 0`, com mensagem em pt; (2) migration 392:
+zera o dinheiro das missões de rodada que já existam (XP e Pontos intactos) e cria a regra
+`missions_round_complete_sem_dinheiro_check`, que vale também para INSERT/UPDATE diretos; (3) `claimReward` nunca credita
+dinheiro numa missão de rodada, mesmo que exista por outra via; (4) o formulário do admin só deixa pôr dinheiro em missões de quizzes. Testes: `missions-round-no-money` (API, banco e migration) e `missions-claim-round-no-money` (pagamento).
+Se um dia se quiser pagar dinheiro por rodadas, a alternativa é exigir um mínimo de acertos por rodada (precisa de código
+novo e de o dono fixar o número).
 
 ## BE-003 — REGULARIZAR o padrão "a correta é a mais longa" e criar o validador (quiz v2)
 

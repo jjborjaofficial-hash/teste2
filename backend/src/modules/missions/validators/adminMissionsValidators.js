@@ -1,5 +1,8 @@
 const { z } = require('zod');
 
+const ROUND_MONEY_MESSAGE =
+  'Missões de "completar rodada" não podem pagar dinheiro: a rodada conta mesmo sem acertos. Use XP e Pontos, ou uma missão de quizzes (que só conta respostas certas).';
+
 const createMissionSchema = z.object({
   title: z.string().trim().min(3).max(120),
   description: z.string().trim().max(500).optional(),
@@ -13,6 +16,10 @@ const createMissionSchema = z.object({
   moneyRewardMzn: z.number().min(0).default(0),
   startsAt: z.string().datetime().optional(),
   endsAt: z.string().datetime().optional(),
+}).refine((d) => !(d.activityType === 'round_complete' && d.moneyRewardMzn > 0), {
+  // Uma rodada conta mesmo sem acertar nada: pagar dinheiro por ela premiaria responder ao acaso.
+  message: ROUND_MONEY_MESSAGE,
+  path: ['moneyRewardMzn'],
 });
 
 const updateMissionSchema = z.object({
@@ -27,4 +34,4 @@ const updateMissionSchema = z.object({
   endsAt: z.string().datetime().optional(),
 });
 
-module.exports = { createMissionSchema, updateMissionSchema };
+module.exports = { createMissionSchema, updateMissionSchema, ROUND_MONEY_MESSAGE };

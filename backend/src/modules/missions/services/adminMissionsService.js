@@ -1,3 +1,4 @@
+const { ROUND_MONEY_MESSAGE } = require('../validators/adminMissionsValidators');
 const repository = require('../repositories/adminMissionsRepository');
 const { NotFoundError, BusinessRuleError } = require('../../../common/errors/AppError');
 
@@ -46,6 +47,9 @@ async function createMission(data) {
 async function updateMission(id, data) {
   const existing = await repository.findMissionById(id);
   if (!existing) throw new NotFoundError('Missão não encontrada.');
+  if (existing.activity_type === 'round_complete' && Number(data.moneyRewardMzn) > 0) {
+    throw new BusinessRuleError(ROUND_MONEY_MESSAGE);
+  }
   const updated = await repository.updateMission(id, data);
   return mapMission(updated);
 }
