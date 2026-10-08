@@ -91,7 +91,8 @@ Se uma tarefa nova não encaixar em nenhuma área, crie um `PENDENTE.md` na past
 - **Bónus de boas-vindas:** calendário de 7 dias, dia 1 = 2,00 MZN, cada dia só é coletado no
   próprio dia, dia perdido fica bloqueado. Valores em `system_config` (`welcome_rewards_mzn`).
   Fica fora do teto diário e é independente de missões e streak. **Não misturar** as duas coisas.
-- **Saque mínimo:** 100 MZN. O utilizador nunca deposita, só levanta o que ganhou.
+- **Saque mínimo:** 100 MZN (configuração `withdrawal_min_mzn`). O utilizador nunca deposita, só levanta o que ganhou.
+  O servidor devolve o valor em `GET /wallet` (`withdrawalMinMzn`) e a Carteira e as Configurações já o leem de lá. **Ficam fixos, de propósito, por serem texto legal publicado:** `frontend/src/pages/Legal.jsx` (Termos, linha ~245, e FAQ, linha ~308) e os documentos em `docs/`. **Se o dono mudar o mínimo**, é preciso atualizar esses textos à mão e decidir, com o dono, se sobe `TERMS_VERSION` (o que obriga todos a reaceitar os Termos, ver `docs/reaceite-termos-e-correcao-regras-saque.md`).
 - **Deploys no Render são manuais**: o auto-deploy está ligado, mas na prática nenhum push
   dispara deploy sozinho (todos os deploys recentes foram manuais). Depois de dar push, é preciso
   fazer o deploy de `teste2-backend` e `teste2-frontend`.
