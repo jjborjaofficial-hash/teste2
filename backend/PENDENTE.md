@@ -102,8 +102,13 @@ validador feito e do dono rever o relatório.
   quase iguais** (**REGULARIZADOS** pela migration 390: uma versão de cada par desativada, nada apagado; lista e regra em
   `docs/quiz-duplicadas-para-revisao.md`; hoje ficam 1.641 ativas e 0 duplicadas); 0 defeitos estruturais; 0
   "todas/nenhuma das anteriores". A pista mais comum fora o tamanho é `palavras_desequilibradas` (aviso, 1.199 perguntas).
-  **Decisão do dono pendente:** pôr `npm run quiz:audit` também no CI
-  (`.github/workflows/testes.yml`; não foi mexido: alterar workflows exige uma permissão a mais no token de push).
+  **`npm run quiz:audit -- --strict` no CI: FEITO (decisão do dono).** Passo "Auditoria do quiz (bloqueia se houver
+  defeitos graves)" em `.github/workflows/testes.yml`, depois dos testes: o CI fica vermelho só com DEFEITOS GRAVES
+  (integridade, enunciados duplicados exatos, "todas/nenhuma das anteriores"; hoje 0). Viés de tamanho e de posição
+  continuam informativos (o passo "Relatório do validador" mantém `continue-on-error`), porque as perguntas antigas ainda
+  estão a ser corrigidas em lotes. O relatório aparece sempre no log e no resumo, mesmo quando o passo falha, e fica no
+  artefacto `relatorio-validador-quiz`. Testado com o mesmo bloco sob `bash -e`: limpo sai 0; com um enunciado duplicado
+  provocado sai 1 e mostra o relatório.
 - **P15 (07/10): critério `correta_muito_mais_curta` FEITO** (teste 12 da especificação; simétrico ao da mais longa:
   a correta é a mais curta e fica abaixo de 0,75x a média das erradas; `CRITERIA.shortestRatio`). Evita trocar o padrão
   "a mais longa" por "a mais curta" ao enxugar as corretas nos lotes. Medido: só 23 de 1.659 perguntas (1,4%) o
