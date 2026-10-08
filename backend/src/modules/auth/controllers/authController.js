@@ -108,7 +108,8 @@ async function refresh(req, res, next) {
 
     const result = await authService.refresh({ refreshToken }, buildContext(req));
 
-    setRefreshTokenCookie(res, result.refreshToken);
+    // Sem refreshToken novo (token ainda recente), o cookie atual continua valendo.
+    if (result.refreshToken) setRefreshTokenCookie(res, result.refreshToken);
 
     return res.status(200).json({
       status: 'success',
@@ -116,7 +117,9 @@ async function refresh(req, res, next) {
       data: sanitizeAuthResult(result),
     });
   } catch (err) {
-    clearRefreshTokenCookie(res);
+    // Só apaga o cookie quando ele realmente não serve (401). Um erro passageiro do servidor
+    // (banco lento, reinício) não pode apagar um cookie válido: antes isso derrubava a sessão.
+    if (err instanceof UnauthorizedError) clearRefreshTokenCookie(res);
     return next(err);
   }
 }

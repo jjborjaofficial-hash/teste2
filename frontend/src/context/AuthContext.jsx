@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { authApi } from '../api/authApi';
-import { setTokens, clearTokens } from '../api/client';
+import { setTokens, clearTokens, ApiError } from '../api/client';
 import { usersApi } from '../api/profileApi';
 
 const AuthContext = createContext(null);
@@ -26,18 +26,37 @@ export function AuthProvider({ children }) {
   // cookie httpOnly, ilegível para o JS. Se não houver cookie válido, o 401
   // do /me acontece, o client.js tenta /auth/refresh (que também falha sem
   // cookie) e caímos no catch normalmente, sem sessão restaurada.
+  // Falha passageira (servidor a acordar — o plano gratuito do Render dorme —, rede fraca,
+  // erro 5xx) NÃO significa "sem sessão": tenta de novo uns segundos depois, mantendo a tela
+  // de carregamento. Só um 401/403 (cookie ausente ou inválido) encerra como "sem sessão".
   useEffect(() => {
+    let cancelled = false;
+    const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
     async function restoreSession() {
-      try {
-        const profile = await usersApi.me();
-        setUser(profile.data);
-      } catch {
-        clearTokens();
-      } finally {
-        setLoading(false);
+      const delays = [0, 3000, 6000, 10000];
+      for (let attempt = 0; attempt < delays.length; attempt += 1) {
+        if (delays[attempt]) await wait(delays[attempt]);
+        if (cancelled) return;
+        try {
+          const profile = await usersApi.me();
+          if (cancelled) return;
+          setUser(profile.data);
+          break;
+        } catch (err) {
+          const definitive = err instanceof ApiError && err.status >= 400 && err.status < 500;
+          if (definitive || attempt === delays.length - 1) {
+            clearTokens();
+            break;
+          }
+        }
       }
+      if (!cancelled) setLoading(false);
     }
     restoreSession();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const register = useCallback(async (formData) => {

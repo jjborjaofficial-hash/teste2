@@ -47,18 +47,37 @@ describe('renovação do token (bug do F5 repetido)', () => {
     );
     results.forEach((r) => {
       expect(r.accessToken).toBeTruthy();
-      expect(r.refreshToken).toBeTruthy();
     });
   });
 
-  it('renovar de novo logo depois (cookie antigo, dentro da janela) ainda funciona', async () => {
+  it('F5 repetido com cookie recente: não troca o cookie e ele segue valendo (10 vezes)', async () => {
     const raw = await newRawToken();
-    await authService.refresh({ refreshToken: raw }, ctx);
+    for (let i = 0; i < 10; i += 1) {
+      const r = await authService.refresh({ refreshToken: raw }, ctx);
+      expect(r.accessToken).toBeTruthy();
+      expect(r.refreshToken).toBeUndefined();
+    }
+    const { rows } = await db.query('SELECT revoked_at FROM refresh_tokens WHERE token_hash = $1', [
+      authService.hashToken(raw),
+    ]);
+    expect(rows[0].revoked_at).toBeNull();
+  });
+
+  it('cookie com mais de 12 horas é trocado (rotação) e o antigo ainda vale na janela', async () => {
+    const raw = await newRawToken();
+    await db.query(`UPDATE refresh_tokens SET created_at = now() - interval '13 hours' WHERE token_hash = $1`, [
+      authService.hashToken(raw),
+    ]);
+    const r = await authService.refresh({ refreshToken: raw }, ctx);
+    expect(r.refreshToken).toBeTruthy();
     await expect(authService.refresh({ refreshToken: raw }, ctx)).resolves.toBeTruthy();
   });
 
   it('token antigo fora da janela é recusado', async () => {
     const raw = await newRawToken();
+    await db.query(`UPDATE refresh_tokens SET created_at = now() - interval '13 hours' WHERE token_hash = $1`, [
+      authService.hashToken(raw),
+    ]);
     await authService.refresh({ refreshToken: raw }, ctx);
     await db.query(
       `UPDATE refresh_tokens SET revoked_at = now() - interval '1 minute' WHERE token_hash = $1`,

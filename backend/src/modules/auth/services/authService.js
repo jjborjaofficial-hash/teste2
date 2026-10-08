@@ -34,6 +34,11 @@ function detectPhoneProvider(phone) {
 
 // Tolerância para renovações simultâneas do mesmo cookie (F5, várias abas). Ver authRepository.
 const REFRESH_GRACE_SECONDS = 15;
+// O cookie só é trocado quando já tem mais de X horas. Antes, CADA atualização de página (F5)
+// trocava o cookie; com o servidor lento, o navegador abandonava a resposta, ficava com o
+// cookie antigo (já revogado) e, passada a janela, a sessão caía. Agora um F5 só devolve um
+// novo token de acesso e deixa o cookie como está.
+const REFRESH_ROTATE_AFTER_HOURS = Number(process.env.REFRESH_ROTATE_AFTER_HOURS) || 12;
 
 function hashToken(token) {
   return crypto.createHash('sha256').update(token).digest('hex');
@@ -319,10 +324,19 @@ async function refresh({ refreshToken }, context) {
     throw new UnauthorizedError('Usuário não encontrado.');
   }
 
+  // Sessão restaurada (ex.: abriu o app com o login ainda válido) também conta como entrar hoje.
+  const ageMs = Date.now() - new Date(stored.created_at).getTime();
+  const isRecent = !stored.revoked_at && ageMs < REFRESH_ROTATE_AFTER_HOURS * 3600 * 1000;
+  if (isRecent) {
+    // Token ainda novo: só renova o token de acesso; o cookie continua válido (sem refreshToken
+    // na resposta o controller não mexe no cookie).
+    await markDailyPresence(user.id, { once: true });
+    return { user: sanitizeUser(user), accessToken: generateAccessToken(user) };
+  }
+
   // Rotação de refresh token: revoga o antigo e emite um novo par (mitiga replay)
   await repository.revokeRefreshToken(tokenHash);
   const tokens = await issueTokenPair(user, context);
-  // Sessão restaurada (ex.: abriu o app com o login ainda válido) também conta como entrar hoje.
   await markDailyPresence(user.id, { once: true });
 
   return { user: sanitizeUser(user), ...tokens };

@@ -158,7 +158,7 @@ async function storeRefreshToken({ userId, tokenHash, userAgent, ipAddress, expi
  */
 async function findValidRefreshToken(tokenHash, { graceSeconds = 0 } = {}) {
   const { rows } = await db.query(
-    `SELECT id, user_id, expires_at
+    `SELECT id, user_id, expires_at, created_at, revoked_at
      FROM refresh_tokens
      WHERE token_hash = $1
        AND expires_at > now()
