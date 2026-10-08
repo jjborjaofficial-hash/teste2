@@ -13,6 +13,7 @@ import { Register } from './pages/Register';
 import { CompleteProfile } from './pages/CompleteProfile';
 import { Dashboard } from './pages/Dashboard';
 import { HubEstudos } from './pages/HubEstudos';
+import { Revisao } from './pages/Revisao';
 import { Missions } from './pages/Missions';
 import { Shop } from './pages/Shop';
 import { MeusRecursos } from './pages/MeusRecursos';
@@ -95,6 +96,7 @@ export default function App() {
             >
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/hub-estudos" element={<HubEstudos />} />
+              <Route path="/revisao" element={<Revisao />} />
               <Route path="/missoes" element={<Missions />} />
               <Route path="/loja" element={<Shop />} />
               <Route path="/meus-recursos" element={<MeusRecursos />} />

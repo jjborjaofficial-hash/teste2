@@ -49,6 +49,14 @@ export function HubEstudos() {
         <p className="text-body text-text-secondary">O que você quer aprender hoje?</p>
       </header>
 
+      <Card onClick={() => navigate('/revisao')} className="flex items-center gap-3">
+        <div className="flex-1">
+          <p className="text-body font-semibold text-text">Rever o que errei</p>
+          <p className="text-caption text-text-secondary">Conceitos que você errou e ainda não acertou.</p>
+        </div>
+        <ChevronRightIcon className="w-5 h-5 text-text-secondary" />
+      </Card>
+
       {loading && <p className="text-caption text-text-secondary">Carregando categorias...</p>}
       {error && <p className="text-caption text-danger">{error}</p>}
 

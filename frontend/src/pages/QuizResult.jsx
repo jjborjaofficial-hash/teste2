@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { PrimaryButton, SecondaryButton } from '../components/Button';
 import { RewardBadge } from '../components/RewardBadge';
 import { CheckIcon, CloseDrawIcon, FireIcon, XpIcon, WalletIcon, PointsIcon, AchievementIcon } from '../icons';
@@ -24,6 +24,10 @@ export function QuizResult() {
   const round = result?.round;
   const summary = result?.roundSummary;
   const roundFinished = Boolean(round?.finished && summary);
+  // Erros da rodada: usa `mistakes` (com o "Por quê?"); servidores antigos só mandam `reviewStatements`.
+  const mistakesToReview = summary?.mistakes?.length
+    ? summary.mistakes.map((m) => ({ key: m.questionId, statement: m.statement, explanation: m.explanation }))
+    : (summary?.reviewStatements || []).map((statement) => ({ key: statement, statement, explanation: null }));
 
   // Calculada uma única vez por resultado (useState evita mudar de frase a cada re-render).
   const [heading] = useState(() => (result ? buildResultMessage(result) : { title: '', detail: '' }));
@@ -244,14 +248,20 @@ export function QuizResult() {
               Melhor desempenho: perguntas de nível {DIFFICULTY_LABEL[summary.bestDifficulty]}.
             </p>
           )}
-          {summary.reviewStatements.length > 0 && (
-            <div className="border-t border-border pt-3 space-y-1">
+          {mistakesToReview.length > 0 && (
+            <div className="border-t border-border pt-3 space-y-3">
               <p className="text-caption font-semibold text-text">Vale a pena rever</p>
-              <ul className="list-disc pl-5 space-y-1">
-                {summary.reviewStatements.slice(0, 3).map((statement) => (
-                  <li key={statement} className="text-caption text-text-secondary">{statement}</li>
+              <ul className="space-y-3">
+                {mistakesToReview.slice(0, 5).map((m) => (
+                  <li key={m.key} className="space-y-1">
+                    <p className="text-caption font-semibold text-text">{m.statement}</p>
+                    {m.explanation && <p className="text-caption text-text-secondary">{m.explanation}</p>}
+                  </li>
                 ))}
               </ul>
+              <Link to={`/revisao?categoryId=${categoryId}`} className="block text-caption font-semibold text-primary">
+                Ver tudo o que preciso rever
+              </Link>
             </div>
           )}
         </div>
