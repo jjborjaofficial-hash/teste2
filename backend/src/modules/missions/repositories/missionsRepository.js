@@ -231,7 +231,7 @@ async function addActiveTime(executor, { userId }) {
 async function getUserMissionById(userId, userMissionId, executor = db) {
   const { rows } = await executor.query(
     `SELECT um.id, um.status, um.progress_count,
-            m.target_quiz_count, m.xp_reward, m.points_reward, m.money_reward_mzn, m.title
+            m.target_quiz_count, m.xp_reward, m.points_reward, m.money_reward_mzn, m.title, m.activity_type
      FROM user_missions um
      JOIN missions m ON m.id = um.mission_id
      WHERE um.id = $1 AND um.user_id = $2

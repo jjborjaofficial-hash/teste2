@@ -111,12 +111,16 @@ async function claimReward(userId, userMissionId) {
       });
     }
 
+    // Dinheiro nunca é pago por "completar rodada" (conta mesmo sem acertos). Já é recusado na API e
+    // no banco; esta guarda protege o pagamento mesmo que alguma missão assim exista por outra via.
+    const moneyRewardMzn = userMission.activity_type === 'round_complete' ? 0 : Number(userMission.money_reward_mzn);
+
     let moneyCreditedMzn = 0;
-    if (Number(userMission.money_reward_mzn) > 0) {
+    if (moneyRewardMzn > 0) {
       const credit = await walletService.creditReward(
         {
           userId,
-          amountMzn: Number(userMission.money_reward_mzn),
+          amountMzn: moneyRewardMzn,
           source: 'mission_reward',
           referenceId: userMissionId,
         },
@@ -137,7 +141,7 @@ async function claimReward(userId, userMissionId) {
         xp: xpResult ? xpResult.xpCredited : 0,
         points: xpResult ? xpResult.pointsCredited : 0,
         moneyMzn: moneyCreditedMzn,
-        moneyNominalMzn: Number(userMission.money_reward_mzn),
+        moneyNominalMzn: moneyRewardMzn,
         pointsBoostApplied: xpResult ? xpResult.pointsBoostApplied : false,
       },
     };
