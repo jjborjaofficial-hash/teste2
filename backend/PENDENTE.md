@@ -120,8 +120,16 @@ validador feito e do dono rever o relatório.
   **Correção posterior a um lote:** o teste `quiz-alternatives-lotes` exige que o banco tenha o texto exato de cada lote, então
   uma correção que mude uma alternativa já escrita por um lote deve ir numa migration chamada `NNN_ajuste_alternativas_*.sql`
   (mesmas linhas `(fonte, pergunta, posição, antigo, novo)` e `esperado: N`); o teste de lotes passa a esperar o texto da correção
-  e `tests/quiz-ajuste-alternativas.test.js` confere certa, explicação e validador. Finanças fica com 3 perguntas assinaladas
-  (só as espelho aceitas).
+  e `tests/quiz-ajuste-alternativas.test.js` confere certa, explicação e validador. Finanças fica com 0 assinaladas (as 3
+  espelho deixaram de ser assinaladas pela regra de espelho, abaixo).
+- **Validador: mais 2 falsos alarmes corrigidos, medidos com as 659 perguntas já aprovadas pelo dono em lotes** (o portão das
+  perguntas novas recusava 4 delas, 0,6%; agora recusa 0). (1) Uma **sigla entre parênteses** (só maiúsculas/números, ex.:
+  "Processador (CPU)") não é explicação embutida; "(taxa cobrada)" continua a ser. (2) Uma alternativa **espelho** (os dois lados
+  da ideia trocados, ex.: "Necessidade é essencial; desejo é opcional" × "Necessidade é opcional; desejo é essencial") não é "quase
+  igual": é uma troca pura de lugares, com exatamente as mesmas palavras em ordem diferente e 5+ palavras. Uma palavra a mais ou a
+  menos, ou o mesmo texto com outra pontuação, continuam a ser apanhados. **Como repetir esta verificação** quando mexerem nas
+  regras: avaliar com `evaluateNewQuestion` as perguntas que aparecem nas migrations `*_alternativas_*`/`*_ajuste_alternativas_*`
+  (as aprovadas); qualquer bloqueio sobre elas é suspeito de falso alarme.
 - Passo 2 (corrigir alternativas em lotes de 25, só `question_alternatives.label`): **EM ANDAMENTO**. Finanças fácil lote 1 (perguntas 1 a 25 do seed 045; 56 alternativas erradas ajustadas) aprovado pelo dono em 2026-10-07 e gravado na migration 141 (`tests/quiz-alternatives-financas-facil-lote01.test.js`). Rascunhos dos lotes: `docs/quiz-lotes-alternativas/`.
   **Lotes feitos:** Finanças fácil lote 1 (migration 141), lote 2 (142), lote 3 (143, perguntas 18 a 42 do seed 064) e lote 4 (144, as 25 últimas: seed 064#43 a 59, seed 068, 094 e 099), que **FECHA Finanças fácil**: a certa estava mais longa em 39% das fáceis e passou a 18%, e as reprovadas de 26 para 1 (a que sobra é "alternativas duplicadas ou quase iguais", da lista de duplicadas para o dono decidir). No lote 4, 22 explicações que citavam as erradas antigas foram reescritas na mesma migration (regra 9; teste genérico `tests/quiz-explanations-lotes.test.js`, que cobre todos os lotes que reescrevem explicações). **Finanças médio lote 1 FEITO** (migration 145, as 25 primeiras do seed 046): 69 alternativas erradas ajustadas (as das contas que já vinham de erros reais ficaram) e 14 explicações reescritas; Finanças médio: correta mais longa de 90% para 72% e reprovadas de 91 para 76 (no grupo inteiro, de 100 perguntas). **6 perguntas do lote continuam reprovando por `explicacao_embutida_na_correta`** (a correta começa por "Porque…", resposta natural a "Por que…?", e as 4 opções já começam por "Porque"): são as perguntas 4, 7, 10, 12, 20 e 25 do seed 046. Mexer na correta exige aviso ao dono (regra de ouro). **Decisão do dono pendente:** aceitar "Porque" quando as 4 opções o usam (ajustar o validador) ou reescrever essas 6 certas sem "Porque". **AUTORIZAÇÃO DO DONO (2026-10-07):
   gravar cada lote direto, sem esperar aprovação** (ele já validou a regra); avisá-lo depois e deixar o rascunho em

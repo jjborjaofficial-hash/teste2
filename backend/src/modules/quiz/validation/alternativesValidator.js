@@ -32,6 +32,19 @@ const normalize = (s) =>
 
 const wordCount = (s) => (String(s || '').trim() ? String(s).trim().split(/\s+/).length : 0);
 
+// Distrator "espelho" legítimo: os dois lados da ideia trocados ("A é X; B é Y" × "A é Y; B é X"). É uma TROCA PURA de
+// lugares: exatamente as mesmas palavras, em ordem diferente, e opções longas o bastante para haver dois lados. Uma palavra
+// a mais ou a menos já não é espelho (continua a contar como quase igual); texto igual com outra pontuação também não.
+const MIRROR_MIN_WORDS = 5;
+const sortedWords = (t) => normalize(t).split(' ').filter(Boolean).sort().join(' ');
+function isMirror(a, b) {
+  return (
+    Math.min(wordCount(a), wordCount(b)) >= MIRROR_MIN_WORDS &&
+    normalize(a) !== normalize(b) &&
+    sortedWords(a) === sortedWords(b)
+  );
+}
+
 // Semelhança 0..1 por palavras (Jaccard); suficiente para apanhar duplicadas e quase iguais.
 function similarity(a, b) {
   const A = new Set(normalize(a).split(' ').filter(Boolean));
@@ -47,7 +60,11 @@ function hasEmbeddedExplanation(label) {
   // Um "Porque" no INÍCIO da alternativa é a resposta natural a uma pergunta "Por que…?" e não conta como
   // explicação embutida; só conta quando aparece no meio ("X, porque Y"). Corrigido após a auditoria de Finanças
   // (9 falsos alarmes em perguntas "Por que…?"): o portão de perguntas novas recusaria qualquer "Por que…?" bem escrita.
-  const text = String(label || '').replace(/^\s*porque\s+/i, '');
+  // Também não conta uma SIGLA entre parênteses (só maiúsculas/números, ex.: "Processador (CPU)"): é só o nome curto
+  // do conceito e costuma vir em todas as alternativas. "(taxa cobrada)" continua a contar.
+  const text = String(label || '')
+    .replace(/^\s*porque\s+/i, '')
+    .replace(/\(\s*[A-ZÀ-Ú0-9][A-ZÀ-Ú0-9.\-/&+ ]{0,11}\s*\)/g, '');
   return /\(|\s[—–-]\s|:|\b(porque|pois|ou seja|isto e|isto é)\b/i.test(text);
 }
 
@@ -80,7 +97,7 @@ function analyzeQuestion(q, criteria = CRITERIA) {
 
   for (let i = 0; i < alts.length; i += 1) {
     for (let j = i + 1; j < alts.length; j += 1) {
-      if (similarity(alts[i].label, alts[j].label) >= criteria.nearDuplicateSimilarity) {
+      if (similarity(alts[i].label, alts[j].label) >= criteria.nearDuplicateSimilarity && !isMirror(alts[i].label, alts[j].label)) {
         reasons.push('alternativas_duplicadas_ou_quase_iguais');
         i = alts.length;
         break;
@@ -141,4 +158,4 @@ function summarize(questions, criteria = CRITERIA) {
   };
 }
 
-module.exports = { CRITERIA, analyzeQuestion, summarize, similarity, hasEmbeddedExplanation };
+module.exports = { CRITERIA, analyzeQuestion, summarize, similarity, isMirror, hasEmbeddedExplanation };
