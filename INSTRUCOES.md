@@ -118,6 +118,18 @@ Se uma tarefa nova não encaixar em nenhuma área, crie um `PENDENTE.md` na past
   para token recém-rodado (`authRepository.findValidRefreshToken`, `REFRESH_GRACE_SECONDS`;
   logout grava data antiga e nunca renova). Teste: `backend/tests/auth-refresh-race.test.js`.
   **Exige deploy manual do backend E do frontend no Render.**
+- 3.ª e 4.ª causas achadas (2026-10-08, o dono reportou que o bug continuava): (3) o backend trocava o
+  cookie em TODO F5; com o servidor lento (consultas ao banco de ~1 s) o navegador abandonava a resposta, ficava
+  com o cookie antigo já revogado e, passados os 15 s de tolerância, a sessão caía. Agora o cookie só é trocado
+  quando tem mais de 12 h (`REFRESH_ROTATE_AFTER_HOURS`, `authService.refresh`); um F5 só devolve novo token de
+  acesso. (4) `authController.refresh` apagava o cookie em QUALQUER erro, até num erro passageiro do servidor
+  (banco lento, reinício); agora só apaga em 401. E `AuthContext.restoreSession` tratava qualquer falha (servidor
+  a acordar no plano gratuito, rede fraca, 5xx) como "sem sessão"; agora repete 4 vezes (0, 3, 6 e 10 s) e só um
+  401/403 encerra. Testes em `auth-refresh-race.test.js`. **Exige deploy manual dos dois serviços.**
+- Causa de fundo ainda aberta: frontend e backend estão em `teste2-frontend.onrender.com` e
+  `teste2-backend.onrender.com`; `onrender.com` é um sufixo público, logo o cookie é de terceiros. Safari/iPhone,
+  Firefox, Brave e o modo anónimo do Chrome bloqueiam-no mesmo com `SameSite=None`. Só um domínio próprio com os
+  dois no mesmo site (ou o site a encaminhar `/api` para o backend) resolve de vez. Decisão do dono.
 - Falta: o dono (e o amigo) confirmarem no ar (depois do deploy dos dois): sair, entrar de novo
   (obrigatório, cookie antigo), atualizar a página várias vezes seguidas, em várias telas, e
   continuar logado.
