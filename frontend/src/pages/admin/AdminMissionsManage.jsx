@@ -37,6 +37,9 @@ function MissionForm({ categories, onCreated, onCancel }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // Só missões de quizzes (que contam respostas certas) podem pagar dinheiro.
+  const pays = activityType === 'quiz_count';
+
   async function handleSubmit(e) {
     e.preventDefault();
     setError(null);
@@ -55,7 +58,8 @@ function MissionForm({ categories, onCreated, onCancel }) {
         targetQuizCount: Number(targetQuizCount),
         xpReward: Number(xpReward),
         pointsReward: Number(pointsReward),
-        moneyRewardMzn: Number(moneyRewardMzn),
+        // Rodada conta mesmo sem acertos: nunca paga dinheiro (o servidor também recusa).
+        moneyRewardMzn: pays ? Number(moneyRewardMzn) : 0,
       });
       showToast('Missão criada.', 'success');
       onCreated?.();
@@ -103,7 +107,10 @@ function MissionForm({ categories, onCreated, onCancel }) {
           O que a missão conta
           <select
             value={activityType}
-            onChange={(e) => setActivityType(e.target.value)}
+            onChange={(e) => {
+              setActivityType(e.target.value);
+              if (e.target.value !== 'quiz_count') setMoneyRewardMzn(0);
+            }}
             className="w-full rounded-button border border-border bg-background px-3 py-2 text-body text-text mt-1"
           >
             {Object.entries(CREATABLE_ACTIVITY_TYPES).map(([v, a]) => <option key={v} value={v}>{a.label}</option>)}
@@ -127,15 +134,16 @@ function MissionForm({ categories, onCreated, onCancel }) {
           </label>
           <label className="text-caption text-text-secondary">
             MZN de recompensa
-            <input type="number" step="0.01" value={moneyRewardMzn} onChange={(e) => setMoneyRewardMzn(e.target.value)}
-              className="w-full rounded-button border border-border bg-background px-3 py-2 text-body text-text mt-1" />
+            <input type="number" step="0.01" value={pays ? moneyRewardMzn : 0} disabled={!pays}
+              onChange={(e) => setMoneyRewardMzn(e.target.value)}
+              className="w-full rounded-button border border-border bg-background px-3 py-2 text-body text-text mt-1 disabled:opacity-50" />
           </label>
         </div>
 
-        {activityType === 'round_complete' && Number(moneyRewardMzn) > 0 && (
-          <p className="text-caption text-warning">
-            ⚠️ Esta missão conta rodadas concluídas mesmo com poucos acertos (responder ao acaso também a completa).
-            Antes de pagar dinheiro real, decida se exige um mínimo de acertos por rodada.
+        {!pays && (
+          <p className="text-caption text-text-secondary">
+            Missões de rodadas não pagam dinheiro: a rodada conta mesmo sem acertos. Dão só XP e Pontos.
+            Para pagar dinheiro, use uma missão de quizzes (que só conta respostas certas).
           </p>
         )}
 
