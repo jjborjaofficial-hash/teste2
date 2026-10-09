@@ -26,6 +26,13 @@ const CORRECT = {
   'O que é inflação esperada?': 'Previsão de aumento dos preços no futuro',
   'O que pode acontecer com o poder de compra quando os preços aumentam significativamente?': 'Pode diminuir',
   'Como uma taxa de juros alta pode afetar empréstimos?': 'Pode tornar o crédito mais caro',
+  'O que é um conjunto de validação em Machine Learning?': 'Dados utilizados para avaliar e ajustar escolhas do modelo durante o desenvolvimento',
+  'Em criptografia assimétrica, qual característica é correta?': 'Utiliza um par de chaves relacionadas, normalmente uma pública e uma privada',
+  'Qual técnica pode ajudar a reduzir overfitting em modelos de Machine Learning?': 'Regularização',
+  'O que é computação em nuvem híbrida?': 'Modelo que combina infraestrutura local com serviços de nuvem',
+  'O que é consistência eventual?': 'Modelo em que réplicas podem ficar temporariamente diferentes, mas tendem a convergir',
+  'Qual é uma diferença fundamental entre criptografia simétrica e assimétrica?': 'A simétrica utiliza uma chave compartilhada para cifrar e decifrar, enquanto a assimétrica utiliza um par de chaves',
+  'Qual é a principal finalidade de uma arquitetura de microsserviços?': 'Dividir uma aplicação grande em pequenos serviços independentes que comunicam entre si',
 };
 
 afterAll(async () => {
