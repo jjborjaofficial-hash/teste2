@@ -1,4 +1,4 @@
-# Tecnologia fácil — lote 1 (perguntas 1 a 25 do seed v1) — RASCUNHO, aguarda revisão do dono
+# Tecnologia fácil — lote 1 (perguntas 1 a 25 do seed v1) — GRAVADO no main (migrations 300 e 301)
 
 Regra do dono: a resposta CERTA não muda; só se ajustam as erradas. ✔ = correta. Este lote também escreve a explicação ("Por quê?").
 Faixa de migrations 300+ reservada a Tecnologia (Finanças usa 141+ e Produtividade 200+). Migrations deste lote: 300 (alternativas) e 301 (explicações).

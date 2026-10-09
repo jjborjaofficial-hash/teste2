@@ -1,4 +1,4 @@
-# Tecnologia difícil lote 4 —: perguntas 26 a 48 do seed dificil_v2 (migration 056) e 1 e 2 do seed dificil_v3 (migration 066) — RASCUNHO, aguarda revisão do dono
+# Tecnologia difícil lote 4 —: perguntas 26 a 48 do seed dificil_v2 (migration 056) e 1 e 2 do seed dificil_v3 (migration 066) — GRAVADO no main (migrations 324 e 325)
 
 Regra do dono: a resposta CERTA não muda; só se ajustam as erradas. ✔ = correta. Este lote também escreve a explicação ("Por quê?").
 Migrations deste lote: 324 (alternativas) e 325 (explicações). **Fecha Tecnologia** (50 do seed dificil_v1 nos lotes 1 e 2, 25 do dificil_v2 no lote 3 e as 25 deste lote).

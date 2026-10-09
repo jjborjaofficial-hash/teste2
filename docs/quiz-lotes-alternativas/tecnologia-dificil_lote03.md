@@ -1,4 +1,4 @@
-# Tecnologia difícil lote 3 — perguntas 1 a 25 do seed dificil_v2 (migration 056) — RASCUNHO, aguarda revisão do dono
+# Tecnologia difícil lote 3 — perguntas 1 a 25 do seed dificil_v2 (migration 056) — GRAVADO no main (migrations 322 e 323)
 
 Regra do dono: a resposta CERTA não muda; só se ajustam as erradas. ✔ = correta. Este lote também escreve a explicação ("Por quê?").
 Migrations deste lote: 322 (alternativas) e 323 (explicações).

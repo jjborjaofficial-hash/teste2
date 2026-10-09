@@ -1,4 +1,4 @@
-# Tecnologia difícil lote 2 — perguntas 26 a 50 do seed dificil_v1 (migration 036) — RASCUNHO, aguarda revisão do dono
+# Tecnologia difícil lote 2 — perguntas 26 a 50 do seed dificil_v1 (migration 036) — GRAVADO no main (migrations 320 e 321)
 
 Regra do dono: a resposta CERTA não muda; só se ajustam as erradas. ✔ = correta. Este lote também escreve a explicação ("Por quê?").
 Migrations deste lote: 320 (alternativas) e 321 (explicações).

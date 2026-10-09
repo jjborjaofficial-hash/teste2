@@ -1,4 +1,4 @@
-# Tecnologia médio lote 5 — perguntas 22 a 41 do seed medio_v3 (migration 060) — RASCUNHO, aguarda revisão do dono
+# Tecnologia médio lote 5 — perguntas 22 a 41 do seed medio_v3 (migration 060) — GRAVADO no main (migrations 316 e 317)
 
 Regra do dono: a resposta CERTA não muda; só se ajustam as erradas. ✔ = correta. Este lote também escreve a explicação ("Por quê?").
 Migrations deste lote: 316 (alternativas) e 317 (explicações).
