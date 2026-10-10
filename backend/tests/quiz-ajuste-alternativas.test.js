@@ -72,7 +72,9 @@ describe.each(adjustments)('ajuste $f', ({ expected, rows }) => {
       );
       expect(alts).toHaveLength(4);
       expect(alts.filter((a) => a.is_correct)).toHaveLength(1);
-      expect(alts.find((a) => a.is_correct).label).toBe(CORRECT[statement]);
+      // Só confere o texto da certa quando ele está listado acima; nos demais (ex.: Produtividade, migration 290) o teste de
+      // posição já garante que só mudaram alternativas ERRADAS (is_correct = false) e que continua a existir 1 só correta.
+      if (CORRECT[statement]) expect(alts.find((a) => a.is_correct).label).toBe(CORRECT[statement]);
       expect(alts[0].explanation).toBeTruthy();
     }
   });
