@@ -15,6 +15,8 @@ por fazer fica escrito aqui e nos ficheiros `PENDENTE.md` de cada área.
 >
 > Os pontos da secção **"Ideias ainda NÃO aprovadas"** (fim do ficheiro) **não** são para
 > implementar: só se o dono aprovar.
+- **Vulnerabilidades de dependências (npm audit, 2026-10-09):** o `npm audit fix` seguro já foi aplicado (saiu a crítica `proxy-addr` e a alta `compression`; backend 19 → 12). **Sobram, e pedem trocar versão grande (só se o dono aprovar):** `bcrypt` 5 → 6 (resolve `tar` crítica e `node-pre-gyp`; afeta o hash de senhas, testar login e cadastro) e `firebase-admin` → 14 (resolve `node-forge`). No frontend sobram 13 (todas vindas do pacote `firebase`, sem correção segura). Nenhuma foi explorada pelo que o projeto usa, mas convém decidir antes de lançar para mais utilizadores.
+
 >
 > **Atenção — branch paralela do quiz.** Existe no GitHub a branch `feat/quiz-aprendizagem` com
 > OUTRA implementação das rodadas do quiz (feita antes de se seguir a linha do `main`). Os números
