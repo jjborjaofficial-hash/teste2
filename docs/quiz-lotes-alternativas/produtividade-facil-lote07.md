@@ -1,0 +1,29 @@
+# Produtividade fácil — lote 7 (as 23 perguntas ativas que faltam do seed v7 (v7#26 a v7#48, migration 096), que fecha o fácil) — GRAVADO (migrations 212 e 213)
+
+Regra do dono: a resposta CERTA não muda; só se ajustam as erradas. **negrito ✔** = correta. Este lote também escreve a explicação ("Por quê?").
+
+| # | Origem | Pergunta | 0 | 1 | 2 | 3 |
+|---|---|---|---|---|---|---|
+| 1 | v7#26 | Por que é importante fazer uma lista de tarefas? | Para aumentar a desorganização do dia | Para evitar ter de definir as prioridades do dia | Para substituir o descanso e o lazer | **Para visualizar o que precisa ser realizado ✔** |
+| 2 | v7#27 | O que é uma prioridade? | Uma tarefa que pode ser deixada para depois | **Algo que merece atenção antes de outras atividades ✔** | Um período de pausa entre as atividades | Uma distração que atrapalha o trabalho |
+| 3 | v7#28 | Qual hábito pode ajudar na pontualidade? | **Considerar o tempo necessário para deslocamento ✔** | Sair de casa pouco antes da hora marcada | Ignorar os horários dos compromissos | Deixar de usar o relógio no dia a dia |
+| 4 | v7#29 | Qual destas atitudes demonstra boa gestão do tempo? | Adiar as atividades para o dia seguinte | Evitar planejar o dia de trabalho | **Reservar tempo para tarefas importantes ✔** | Aceitar as interrupções que surgirem |
+| 5 | v7#30 | O que significa organizar uma tarefa? | Eliminá-la da lista quando parecer difícil | **Definir como e quando ela será realizada ✔** | Torná-la mais difícil de executar no dia | Esquecê-la até alguém lembrar que existe |
+| 6 | v7#31 | Qual é uma consequência possível de não organizar compromissos? | Mais tempo livre durante o dia | **Esquecimento de atividades importantes ✔** | Maior clareza sobre as tarefas | Menos responsabilidades no trabalho e em casa |
+| 7 | v7#32 | O que pode ajudar a controlar o tempo gasto numa atividade? | Câmara | **Cronómetro ✔** | Microfone | Calculadora |
+| 8 | v7#33 | O que significa manter consistência? | Evitar criar hábitos de trabalho | Fazer uma ação uma única vez por mês | **Realizar uma ação de forma regular ✔** | Mudar de objetivo quando surgir dúvida |
+| 9 | v7#34 | Qual atitude pode melhorar a utilização do tempo? | Trabalhar sem definir quais são as prioridades | Aceitar as distrações que aparecem durante o dia | Adiar as tarefas simples para o fim do dia | **Estabelecer limites para atividades pouco importantes ✔** |
+| 10 | v7#35 | Por que o descanso é importante? | Pode substituir o planejamento do dia de trabalho | **Pode ajudar na recuperação e manutenção da energia ✔** | Pode eliminar a necessidade de trabalhar no dia seguinte | Pode tornar as tarefas mais automáticas e fáceis |
+| 11 | v7#36 | Qual destas opções ajuda a lembrar tarefas futuras? | Câmara de vídeo | Galeria de fotos | **Lista de lembretes ✔** | Aplicativo de música |
+| 12 | v7#37 | O que significa preparar uma tarefa? | Ignorar os materiais e começar a executá-la sem preparação | **Reunir informações e recursos necessários antes de executá-la ✔** | Evitar a tarefa até alguém explicar como se faz | Cancelar o objetivo e passar para outra tarefa mais fácil |
+| 13 | v7#38 | Qual é uma vantagem de definir uma hora para começar uma tarefa? | **Cria um ponto claro de início ✔** | Tira a responsabilidade da tarefa | Evita as dificuldades da tarefa | Torna a tarefa desnecessária |
+| 14 | v7#39 | O que é uma meta diária? | Uma tarefa sem prazo, que se faz quando houver tempo | Uma distração que costuma aparecer durante o dia | **Um resultado que se pretende alcançar durante o dia ✔** | Um período de descanso reservado para o fim do dia |
+| 15 | v7#40 | Qual ação ajuda a acompanhar o progresso? | Evitar registrar o trabalho | Ignorar os resultados obtidos | Apagar as tarefas da lista | **Marcar tarefas concluídas ✔** |
+| 16 | v7#41 | O que pode ajudar uma pessoa a manter uma rotina? | Ausência de planejamento diário | Mudanças constantes sem motivo | **Horários relativamente consistentes ✔** | Ignorar os compromissos marcados no calendário |
+| 17 | v7#42 | Qual é uma maneira simples de evitar esquecer compromissos? | Não anotar nada | **Usar lembretes ✔** | Ignorar a agenda | Confiar na memória |
+| 18 | v7#43 | Qual atitude pode facilitar o início do trabalho? | Procurar distrações antes de começar | **Preparar previamente os materiais necessários ✔** | Adiar o início até ao último momento | Evitar saber qual é o objetivo da tarefa do dia |
+| 19 | v7#44 | O que é uma lista de prioridades? | Um calendário de feriados e datas especiais | Uma lista de contatos organizada por ordem alfabética | **Uma relação de atividades organizada pela importância ✔** | Uma lista de distrações organizada por tipo |
+| 20 | v7#45 | Qual comportamento pode aumentar a produtividade durante uma sessão de estudo? | Responder às notificações à medida que chegam | Assistir a vídeos durante o estudo | Alternar entre várias aplicações | **Manter o foco numa tarefa definida ✔** |
+| 21 | v7#46 | Por que é útil definir um prazo para uma atividade? | Evita que ocorram erros durante a atividade | Elimina a necessidade de começar a atividade | Torna a atividade mais difícil de concluir | **Ajuda a orientar quando ela deve ser concluída ✔** |
+| 22 | v7#47 | Qual é uma boa prática ao terminar o dia? | Apagar os registros do dia e começar do zero amanhã | Evitar planejar as tarefas do dia seguinte | **Rever o que foi realizado e preparar as próximas tarefas ✔** | Ignorar as tarefas pendentes e esperar pelo dia seguinte |
+| 23 | v7#48 | Qual atitude contribui para uma melhor gestão das tarefas? | Evitar definir prazos e prioridades para as tarefas | **Definir o que fazer, quando fazer e qual a prioridade ✔** | Começar várias tarefas ao mesmo tempo e depois escolher | Deixar as decisões importantes para o último momento |
