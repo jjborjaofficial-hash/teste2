@@ -108,7 +108,28 @@ jobs:
             backend/quiz-auditoria.txt
           if-no-files-found: ignore
       - name: Testes do backend (bloqueia se falhar)
-        run: npx jest --runInBand --forceExit --testPathIgnorePatterns "auth.test.js"
+        run: |
+          set +e
+          npx jest --runInBand --forceExit --testPathIgnorePatterns "auth.test.js" --json --outputFile=jest-resultado.json
+          code=$?
+          # Mostra no relatório do GitHub (anotações) quais testes falharam e porquê, já que o log não é descarregável.
+          node -e "
+            const fs=require('fs');
+            if(!fs.existsSync('jest-resultado.json')) process.exit(0);
+            const r=JSON.parse(fs.readFileSync('jest-resultado.json','utf8'));
+            for(const f of r.testResults){
+              for(const t of f.assertionResults){
+                if(t.status==='failed'){
+                  const msg=(t.failureMessages||[]).join(' ').replace(/\u001b\[[0-9;]*m/g,'').replace(/\s+/g,' ').slice(0,600);
+                  console.log('::error title=Teste falhou::'+f.name.split('/backend/')[1]+' > '+t.fullName+' :: '+msg);
+                }
+              }
+              if(f.status==='failed' && !f.assertionResults.some(t=>t.status==='failed')){
+                console.log('::error title=Suite falhou::'+f.name.split('/backend/')[1]+' :: '+String(f.message).replace(/\u001b\[[0-9;]*m/g,'').replace(/\s+/g,' ').slice(0,600));
+              }
+            }
+          "
+          exit $code
       # auth.test.js tinha 3 falhas que já existiam antes do trabalho do quiz. Roda à parte e
       # nunca derruba o resultado, só aparece no relatório. Se for corrigido, remova o
       # "continue-on-error" e o "--testPathIgnorePatterns" acima.
