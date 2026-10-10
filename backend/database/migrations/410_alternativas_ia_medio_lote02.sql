@@ -1,5 +1,5 @@
 -- Alternativas (BE-003, regularização) — IA médio lote 2: as 25 perguntas seguintes de IA médio sem explicação (as 4 últimas do seed_ia_medio_v1, as 5 do v2 e as 16 primeiras do v3, na ordem dos ficheiros)
--- (seed v3 48 a 56, v4 inteiro, v5, v6 e v7). Segue docs/quiz-v2-alternativas-padrao.md e a regra do dono (2026-10-07): a resposta
+-- Segue docs/quiz-v2-alternativas-padrao.md e a regra do dono (2026-10-07): a resposta
 -- CERTA NÃO muda; só o texto das alternativas ERRADAS é ajustado (tamanho e forma parecidos com os da certa, distratores plausíveis,
 -- sem absolutos só nas erradas).
 -- Segurança: só altera question_alternatives.label, só de alternativas erradas (is_correct = FALSE), e só se o texto atual
