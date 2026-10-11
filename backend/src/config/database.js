@@ -1,4 +1,4 @@
-const { Pool } = require('pg');
+const { Pool, Client } = require('pg');
 const logger = require('../common/logger');
 
 // Segurança de Credenciais (docs/seguranca-credenciais-banco-de-dados.md, Seção 2):
@@ -44,9 +44,53 @@ pool.on('error', (err) => {
   }
 });
 
+// Diagnóstico de latência (11/10): quantas ligações novas o pool abriu desde o arranque. Se este número
+// sobe a cada pedido, a lentidão vem de abrir ligações (TCP + TLS + autenticação) e não das queries.
+let newConnections = 0;
+
 pool.on('connect', () => {
   consecutiveConnectionErrors = 0;
+  newConnections += 1;
 });
+
+/** Estado do pool, para os logs de diagnóstico. */
+function poolStats() {
+  return {
+    poolTotal: pool.totalCount,
+    poolIdle: pool.idleCount,
+    poolWaiting: pool.waitingCount,
+    novasLigacoes: newConnections,
+  };
+}
+
+/**
+ * Sonda de latência: abre UMA ligação nova (mede o custo de ligar) e faz algumas queries `SELECT 1`
+ * em sequência nela (mede o custo de cada ida e volta ao banco). Num banco local dá poucos ms;
+ * entre regiões diferentes (ex.: Render Oregon -> Neon Londres) mostra a distância real.
+ * Só lê, não altera nada. Usa uma ligação própria (não mexe no pool).
+ */
+async function probeLatency(samples = 5) {
+  const client = new Client({
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: false } : undefined,
+    connectionTimeoutMillis: 15000,
+  });
+  const t0 = Date.now();
+  await client.connect();
+  const connectMs = Date.now() - t0;
+  const queryMs = [];
+  try {
+    for (let i = 0; i < samples; i += 1) {
+      const t = Date.now();
+      await client.query('SELECT 1');
+      queryMs.push(Date.now() - t);
+    }
+  } finally {
+    await client.end().catch(() => {});
+  }
+  const sorted = [...queryMs].sort((a, b) => a - b);
+  return { connectMs, queryMs, medianMs: sorted[Math.floor(sorted.length / 2)] };
+}
 
 /**
  * Testa a conectividade uma única vez, para uso no boot do servidor
@@ -59,6 +103,11 @@ async function verifyConnection() {
     await pool.query('SELECT 1');
     consecutiveConnectionErrors = 0;
     logger.info('DATABASE_CONNECTION_SUCCESS', { database: maskConnectionString() });
+    if (process.env.NODE_ENV !== 'test' && process.env.DB_LATENCY_PROBE !== 'off') {
+      probeLatency()
+        .then((r) => logger.info('DB_LATENCY_PROBE', r))
+        .catch((err) => logger.warn('DB_LATENCY_PROBE_FAILED', { error: err.message }));
+    }
     return true;
   } catch (err) {
     logger.error('DATABASE_CONNECTION_FAILED', {
@@ -88,7 +137,7 @@ async function query(text, params) {
   const result = await pool.query(text, params);
   const duration = Date.now() - start;
   if (duration > 200) {
-    logger.warn('Query lenta detectada', { text, duration });
+    logger.warn('Query lenta detectada', { text, duration, ...poolStats() });
   }
   return result;
 }
@@ -102,4 +151,4 @@ async function getClient() {
   return client;
 }
 
-module.exports = { pool, query, getClient, verifyConnection };
+module.exports = { pool, query, getClient, verifyConnection, probeLatency, poolStats };
