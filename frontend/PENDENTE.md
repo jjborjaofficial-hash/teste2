@@ -11,4 +11,4 @@ Já feito: contador n/10 vindo do servidor, recuperar a rodada ao recarregar, re
 e só daquela rodada, com exatamente 3 botões (Painel inicial, Escolher novamente uma categoria,
 Ver missões em andamento), nenhum iniciando rodada sozinho. Feito (junto com BE-004): o ecrã de resultado mostra o feedback vindo do servidor — acerto:
 "Você identificou a resposta certa." + "Para complementar"; erro: "Resposta correta" + "Por quê?";
-sem explicação escrita, só a resposta correta. **DESCARTADO pelo dono (11/10):** "Aprenda"/"O que aprender" e dica como campos próprios. Falta só, se o dono quiser, apresentar a profundidade por dificuldade (já há explicações dos 3 níveis, menos Marketing médio e difícil).
+sem explicação escrita, só a resposta correta. **DESCARTADO pelo dono (11/10):** "Aprenda"/"O que aprender" e dica como campos próprios, e mudar o ecrã conforme o nível (a profundidade fica só no texto de cada explicação). FE-003 não tem mais nada pendente.
