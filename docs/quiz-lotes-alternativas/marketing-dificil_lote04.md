@@ -1,4 +1,4 @@
-# Marketing Digital difícil lote 4 — as perguntas ativas v3#27 a v3#44 do seed dificil_v3 (migration 059) e as 12 do dificil_v4 (migration 063) — RASCUNHO, aguarda revisão do dono
+# Marketing Digital difícil lote 4 — as perguntas ativas v3#27 a v3#44 do seed dificil_v3 (migration 059) e as 12 do dificil_v4 (migration 063) — GRAVADO no main (migrations 526 e 527)
 
 Regra do dono: a resposta CERTA não muda; só se ajustam as erradas. ✔ = correta. Este lote também escreve a explicação ("Por quê?").
 Migrations deste lote: 526 (alternativas) e 527 (explicações).
