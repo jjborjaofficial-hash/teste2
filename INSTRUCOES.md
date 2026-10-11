@@ -98,6 +98,12 @@ Se uma tarefa nova não encaixar em nenhuma área, crie um `PENDENTE.md` na past
 - **Deploys no Render são manuais**: o auto-deploy está ligado, mas na prática nenhum push
   dispara deploy sozinho (todos os deploys recentes foram manuais). Depois de dar push, é preciso
   fazer o deploy de `teste2-backend` e `teste2-frontend`.
+- **Deploy de 11/10/2026 (feito por um chat com o conector do Render, a pedido e com aprovação do dono):** backend
+  `srv-da6pe0h42hec73dskbs0` e frontend `srv-da6u5461egvs73er3m20` (workspace "My Workspace"), commit `1fd29c7`, os dois
+  "live". O backend aplicou as migrations 268, 269, 522 a 525 e 600 sem erros. Quando há o conector, um chat pode fazer deploy
+  (`trigger_deploy`, backend primeiro, conferir os logs, depois o frontend); sem ele, continua a ser o dono. Achados da
+  configuração real: o serviço do backend tem `healthCheckPath` vazio (o `render.yaml` diz `/health`) e o Redis avisa nos
+  logs "Eviction policy is allkeys-lru. It should be noeviction" (convém `noeviction` por causa das filas).
 - **Migrations rodam sozinhas no deploy do backend**: o comando de início do `teste2-backend` é
   `npm run migrate:up && npm start`. Não é preciso rodar migrations à mão (ver `docs/deploy-render.md`).
 - Dinheiro creditado passa sempre por `walletService.creditReward` (promoções únicas usam
