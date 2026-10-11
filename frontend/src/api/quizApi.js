@@ -5,6 +5,8 @@ export const quizApi = {
   // Rodadas (quiz v2): o servidor escolhe as 10 perguntas e guarda o progresso.
   startRound: (categoryId) => api.post('/quiz/rounds', { categoryId }),
   roundQuestion: (roundId) => api.get(`/quiz/rounds/${roundId}/question`),
+  // Resumo de uma rodada já terminada (para reabrir o resultado depois de recarregar a página).
+  roundSummary: (roundId) => api.get(`/quiz/rounds/${roundId}/summary`),
   submitAnswer: (data) => api.post('/quiz/answers', data),
   // Conceitos que o utilizador errou e ainda não acertou (BE-005 c). categoryId é opcional.
   reviewRecommendations: ({ categoryId, limit } = {}) => {

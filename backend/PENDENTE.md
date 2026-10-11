@@ -22,8 +22,7 @@ rodadas cuja resposta mais recente continua errada, com `timesMissed`, mais rece
 aparecer, e perguntas desativadas não entram. Só dados do próprio utilizador e nunca devolve a alternativa certa nem a
 escolhida. **Frontend FEITO (parcial):** a página `/revisao` (`Revisao.jsx`, entrada pelo Hub de Estudos e pelo link do resumo da
 rodada) consome `GET /quiz/review/recommendations`, e o resumo da rodada mostra agora os erros com o "Por quê?" (`mistakes`).
-`GET /quiz/rounds/:roundId/summary` continua sem uso no frontend: só serve para reabrir um resumo depois de recarregar, e
-hoje o ecrã de resultado recebe o resumo pelo estado da navegação.
+**FEITO (11/10):** `GET /quiz/rounds/:roundId/summary` é usado no frontend: ao terminar a rodada o URL do resultado leva `?rodada=<id>`; se a página for recarregada (ou aberta noutro separador) o resumo é reaberto a partir do servidor; se a rodada ainda não terminou, volta ao quiz, que a retoma.
 
 **(b) FEITO — missão "completar uma rodada"** (`activity_type = 'round_complete'`, migration 391,
 `tests/missions-round-complete.test.js`). Conta +1 quando uma rodada termina por completo (a 10.ª resposta), dentro da

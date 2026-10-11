@@ -5,6 +5,7 @@ import { RewardBadge } from '../components/RewardBadge';
 import { CheckIcon, CloseDrawIcon, FireIcon, XpIcon, WalletIcon, PointsIcon, AchievementIcon } from '../icons';
 import { InterstitialAds } from '../ads';
 import { buildResultMessage } from '../lib/resultMessage';
+import { quizApi } from '../api/quizApi';
 
 /**
  * Tela de Resultados (Doc. Mestre Seção 19.5). "Momento de maior pico de dopamina."
@@ -15,28 +16,75 @@ import { buildResultMessage } from '../lib/resultMessage';
  */
 const DIFFICULTY_LABEL = { easy: 'fácil', medium: 'médio', hard: 'difícil' };
 
-export function QuizResult() {
-  const { categoryId } = useParams();
-  const location = useLocation();
+function RoundSummaryCard({ summary, mistakesToReview, categoryId }) {
+  return (
+      <div className="bg-surface border border-border rounded-card p-5 space-y-3">
+        <p className="font-display font-semibold text-text text-center">Rodada concluída</p>
+        <div className="grid grid-cols-3 gap-2 text-center">
+          <div>
+            <p className="font-display font-semibold text-text">{summary.total}</p>
+            <p className="text-caption text-text-secondary">perguntas</p>
+          </div>
+          <div>
+            <p className="font-display font-semibold text-success">{summary.correct}</p>
+            <p className="text-caption text-text-secondary">acertos</p>
+          </div>
+          <div>
+            <p className="font-display font-semibold text-danger">{summary.wrong}</p>
+            <p className="text-caption text-text-secondary">erros</p>
+          </div>
+        </div>
+        <p className="text-body text-text-secondary text-center">
+          {summary.accuracyPercent}% de aproveitamento
+          {summary.xpTotal > 0 ? ` · +${summary.xpTotal} XP` : ''}
+        </p>
+        {summary.bestDifficulty && (
+          <p className="text-caption text-text-secondary text-center">
+            Melhor desempenho: perguntas de nível {DIFFICULTY_LABEL[summary.bestDifficulty]}.
+          </p>
+        )}
+        {mistakesToReview.length > 0 && (
+          <div className="border-t border-border pt-3 space-y-3">
+            <p className="text-caption font-semibold text-text">Vale a pena rever</p>
+            <ul className="space-y-3">
+              {mistakesToReview.slice(0, 5).map((m) => (
+                <li key={m.key} className="space-y-1">
+                  <p className="text-caption font-semibold text-text">{m.statement}</p>
+                  {m.explanation && <p className="text-caption text-text-secondary">{m.explanation}</p>}
+                </li>
+              ))}
+            </ul>
+            <Link to={`/revisao?categoryId=${categoryId}`} className="block text-caption font-semibold text-primary">
+              Ver tudo o que preciso rever
+            </Link>
+          </div>
+        )}
+      </div>
+  );
+}
+
+function toMistakes(summary) {
+  return summary?.mistakes?.length
+    ? summary.mistakes.map((m) => ({ key: m.questionId, statement: m.statement, explanation: m.explanation }))
+    : (summary?.reviewStatements || []).map((statement) => ({ key: statement, statement, explanation: null }));
+}
+
+function QuizResultView({ result, categoryId }) {
   const navigate = useNavigate();
-  const { result } = location.state || {};
   // O progresso da rodada e o resumo final vêm do servidor (resposta de /quiz/answers).
   const round = result?.round;
   const summary = result?.roundSummary;
   const roundFinished = Boolean(round?.finished && summary);
   // Erros da rodada: usa `mistakes` (com o "Por quê?"); servidores antigos só mandam `reviewStatements`.
-  const mistakesToReview = summary?.mistakes?.length
-    ? summary.mistakes.map((m) => ({ key: m.questionId, statement: m.statement, explanation: m.explanation }))
-    : (summary?.reviewStatements || []).map((statement) => ({ key: statement, statement, explanation: null }));
+  const mistakesToReview = toMistakes(summary);
 
   // Calculada uma única vez por resultado (useState evita mudar de frase a cada re-render).
-  const [heading] = useState(() => (result ? buildResultMessage(result) : { title: '', detail: '' }));
+  const [heading] = useState(() => buildResultMessage(result));
   const [showAd, setShowAd] = useState(true);
   const headingRef = useRef(null);
   const [adSecondsLeft, setAdSecondsLeft] = useState(5);
 
   useEffect(() => {
-    if (!result) return undefined;
     const interval = setInterval(() => {
       setAdSecondsLeft((s) => {
         if (s <= 1) {
@@ -50,19 +98,9 @@ export function QuizResult() {
     return () => clearInterval(interval);
   }, [result]);
 
-  useEffect(() => {
-    if (!result) {
-      navigate('/hub-estudos', { replace: true });
-    }
-  }, [result, navigate]);
-
-  if (!result) {
-    return null;
-  }
-
   // Depois do anúncio, o foco vai para o resultado, para o leitor de ecrã o ler.
   useEffect(() => {
-    if (!showAd && result) headingRef.current?.focus({ preventScroll: true });
+    if (!showAd) headingRef.current?.focus({ preventScroll: true });
   }, [showAd, result]);
 
   if (showAd) {
@@ -222,50 +260,7 @@ export function QuizResult() {
         </div>
       )}
 
-      {roundFinished && (
-        <div className="bg-surface border border-border rounded-card p-5 space-y-3">
-          <p className="font-display font-semibold text-text text-center">Rodada concluída</p>
-          <div className="grid grid-cols-3 gap-2 text-center">
-            <div>
-              <p className="font-display font-semibold text-text">{summary.total}</p>
-              <p className="text-caption text-text-secondary">perguntas</p>
-            </div>
-            <div>
-              <p className="font-display font-semibold text-success">{summary.correct}</p>
-              <p className="text-caption text-text-secondary">acertos</p>
-            </div>
-            <div>
-              <p className="font-display font-semibold text-danger">{summary.wrong}</p>
-              <p className="text-caption text-text-secondary">erros</p>
-            </div>
-          </div>
-          <p className="text-body text-text-secondary text-center">
-            {summary.accuracyPercent}% de aproveitamento
-            {summary.xpTotal > 0 ? ` · +${summary.xpTotal} XP` : ''}
-          </p>
-          {summary.bestDifficulty && (
-            <p className="text-caption text-text-secondary text-center">
-              Melhor desempenho: perguntas de nível {DIFFICULTY_LABEL[summary.bestDifficulty]}.
-            </p>
-          )}
-          {mistakesToReview.length > 0 && (
-            <div className="border-t border-border pt-3 space-y-3">
-              <p className="text-caption font-semibold text-text">Vale a pena rever</p>
-              <ul className="space-y-3">
-                {mistakesToReview.slice(0, 5).map((m) => (
-                  <li key={m.key} className="space-y-1">
-                    <p className="text-caption font-semibold text-text">{m.statement}</p>
-                    {m.explanation && <p className="text-caption text-text-secondary">{m.explanation}</p>}
-                  </li>
-                ))}
-              </ul>
-              <Link to={`/revisao?categoryId=${categoryId}`} className="block text-caption font-semibold text-primary">
-                Ver tudo o que preciso rever
-              </Link>
-            </div>
-          )}
-        </div>
-      )}
+      {roundFinished && <RoundSummaryCard summary={summary} mistakesToReview={mistakesToReview} categoryId={categoryId} />}
 
       {!roundFinished && round && (
         <p className="text-caption text-text-secondary text-center">
@@ -298,4 +293,62 @@ export function QuizResult() {
       )}
     </div>
   );
+}
+
+/**
+ * Reabre o resumo de uma rodada terminada (URL com ?rodada=<id>) quando o estado da navegação
+ * se perdeu (recarregar a página, abrir noutro separador). Se a rodada ainda não terminou,
+ * volta ao quiz, que retoma a rodada no ponto onde ficou.
+ */
+function ReloadedRoundSummary({ roundId, categoryId }) {
+  const navigate = useNavigate();
+  const [summary, setSummary] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    quizApi
+      .roundSummary(roundId)
+      .then((res) => {
+        if (!cancelled) setSummary(res.data);
+      })
+      .catch(() => {
+        if (!cancelled) navigate(`/quiz/${categoryId}`, { replace: true });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [roundId, categoryId, navigate]);
+
+  if (!summary) {
+    return <p className="text-body text-text-secondary text-center pt-10">A carregar o resumo...</p>;
+  }
+
+  return (
+    <div className="space-y-5 pt-6 pb-4">
+      <RoundSummaryCard summary={summary} mistakesToReview={toMistakes(summary)} categoryId={categoryId} />
+      <div className="flex flex-col gap-3 pt-2">
+        <PrimaryButton onClick={() => navigate('/dashboard')}>Painel inicial</PrimaryButton>
+        <SecondaryButton onClick={() => navigate('/hub-estudos', { replace: true })}>
+          Escolher novamente uma categoria
+        </SecondaryButton>
+        <SecondaryButton onClick={() => navigate('/missoes')}>Ver missões em andamento</SecondaryButton>
+      </div>
+    </div>
+  );
+}
+
+export function QuizResult() {
+  const { categoryId } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { result } = location.state || {};
+  const roundId = new URLSearchParams(location.search).get('rodada');
+
+  useEffect(() => {
+    if (!result && !roundId) navigate('/hub-estudos', { replace: true });
+  }, [result, roundId, navigate]);
+
+  if (result) return <QuizResultView result={result} categoryId={categoryId} />;
+  if (roundId) return <ReloadedRoundSummary roundId={roundId} categoryId={categoryId} />;
+  return null;
 }

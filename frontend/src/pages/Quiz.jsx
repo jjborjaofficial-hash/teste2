@@ -112,7 +112,9 @@ export function Quiz() {
       });
       // replace: o botão voltar não reabre uma pergunta já respondida. O progresso da rodada
       // (n/10) e o resumo final vêm do servidor dentro de `result.data`.
-      navigate(`/quiz/${categoryId}/resultado`, {
+      // ?rodada=<id> permite reabrir o resumo da rodada terminada depois de recarregar a página.
+      const finishedRoundId = result.data?.round?.finished ? result.data.round.id : null;
+      navigate(`/quiz/${categoryId}/resultado${finishedRoundId ? `?rodada=${finishedRoundId}` : ''}`, {
         replace: true,
         state: { result: result.data, message: result.message },
       });
