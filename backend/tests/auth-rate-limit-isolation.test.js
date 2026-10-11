@@ -32,4 +32,26 @@ describe('rate limit do login', () => {
     expect(last.status).toBe(429);
     expect((await send('203.0.113.99')).status).not.toBe(429);
   });
+  it('várias pessoas a atualizar a página ao mesmo tempo não são bloqueadas umas pelas outras', async () => {
+    const pessoas = Array.from({ length: 20 }, (_, i) => `198.51.100.${i + 1}`);
+    // cada pessoa dá 5 F5 seguidos (refresh + chamada à API), todas em simultâneo
+    const respostas = await Promise.all(
+      pessoas.flatMap((ip) =>
+        Array.from({ length: 5 }, async () => {
+          const r = await request(app).post('/api/v1/auth/refresh').set('X-Forwarded-For', ip);
+          const a = await request(app).get('/api/v1/quiz/categories').set('X-Forwarded-For', ip);
+          return [r.status, a.status];
+        })
+      )
+    );
+    expect(respostas.flat()).not.toContain(429);
+
+    // e depois todas conseguem tentar o login (cota própria de cada IP)
+    const logins = await Promise.all(
+      pessoas.map((ip) =>
+        request(app).post('/api/v1/auth/login').set('X-Forwarded-For', ip).send({ phone: '841234567', password: 'x' })
+      )
+    );
+    expect(logins.map((l) => l.status)).not.toContain(429);
+  });
 });
