@@ -188,5 +188,4 @@ correctAlternativeLabel, explanation }) depois de responder, só se a pergunta f
 utilizador (senão `null`, para ninguém colher respostas por id), e a tela de resultado mostra-o.
 `explanation` é `null` nas perguntas ainda sem texto: aí a tela mostra só a resposta correta.
 Decisão do dono: um único texto de explicação serve para acerto ("Para complementar") e erro
-("Por quê?"). Falta, só se o dono quiser: "O que aprender" e "Dica" como campos próprios (exigiria
-colunas novas e reescrever as explicações já feitas).
+("Por quê?"). **DESCARTADO pelo dono (11/10):** "Aprenda"/"O que aprender" e "Dica" como campos próprios não serão feitos; fica o texto único de explicação.
