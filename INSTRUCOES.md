@@ -102,8 +102,11 @@ Se uma tarefa nova não encaixar em nenhuma área, crie um `PENDENTE.md` na past
   `srv-da6pe0h42hec73dskbs0` e frontend `srv-da6u5461egvs73er3m20` (workspace "My Workspace"), commit `1fd29c7`, os dois
   "live". O backend aplicou as migrations 268, 269, 522 a 525 e 600 sem erros. Quando há o conector, um chat pode fazer deploy
   (`trigger_deploy`, backend primeiro, conferir os logs, depois o frontend); sem ele, continua a ser o dono. Achados da
-  configuração real: o serviço do backend tem `healthCheckPath` vazio (o `render.yaml` diz `/health`) e o Redis avisa nos
-  logs "Eviction policy is allkeys-lru. It should be noeviction" (convém `noeviction` por causa das filas).
+  configuração real, **ambos RESOLVIDOS pelo dono no painel em 11/10**: `healthCheckPath` do backend agora `/health`; Redis
+  (`teste2-redis`, Valkey 8, plano gratuito de 25 MB, ~3,3 MB em uso) passou de `allkeys-lru` para `noeviction` (o BullMQ exige). O reinício do
+  Redis causou ~30 s de erros de ligação e recuperou sozinho. **Achado novo (por tratar):** o banco é um Neon em Londres (`eu-west-2`) e o
+  backend corre no Render em Oregon; os logs mostram queries simples a levar ~0,9 s (`Query lenta detectada`), provavelmente ligações novas
+  através do Atlântico (o pool fecha ligações paradas após 30 s). Ver a opção rápida (pool) e a de mover a região.
 - **Migrations rodam sozinhas no deploy do backend**: o comando de início do `teste2-backend` é
   `npm run migrate:up && npm start`. Não é preciso rodar migrations à mão (ver `docs/deploy-render.md`).
 - Dinheiro creditado passa sempre por `walletService.creditReward` (promoções únicas usam
