@@ -18,11 +18,13 @@ const { RateLimitError } = require('../common/errors/AppError');
  * plataforma nunca fica fora do ar por causa do rate limiter (mesmo princípio já
  * aplicado ao Ranking).
  */
-function buildStore() {
+function buildStore(name) {
   try {
     return new RedisStore({
       sendCommand: (...args) => redis.call(...args),
-      prefix: 'rl:',
+      // Prefixo próprio por limitador: com o mesmo prefixo, todos somavam no mesmo
+      // contador por IP e as chamadas normais da API gastavam a cota do login.
+      prefix: `rl:${name}:`,
     });
   } catch (err) {
     logger.warn('Não foi possível inicializar o RedisStore do rate limiter, usando memória local', {
@@ -32,13 +34,16 @@ function buildStore() {
   }
 }
 
-function createRateLimiter({ windowMs, max, message }) {
+let limiterSeq = 0;
+
+function createRateLimiter({ windowMs, max, message, name }) {
+  const storeName = name || `l${limiterSeq++}`;
   return rateLimit({
     windowMs: windowMs || Number(process.env.RATE_LIMIT_WINDOW_MS) || 60000,
     max: max || Number(process.env.RATE_LIMIT_MAX_REQUESTS) || 60,
     standardHeaders: true,
     legacyHeaders: false,
-    store: buildStore(),
+    store: buildStore(storeName),
     handler: (req, res, next) => {
       next(new RateLimitError(message || 'Muitas tentativas. Tente novamente em instantes.'));
     },
@@ -47,12 +52,21 @@ function createRateLimiter({ windowMs, max, message }) {
 
 // Limite mais rígido para login/registro (proteção contra força bruta e criação em massa de contas)
 const authRateLimiter = createRateLimiter({
+  name: 'auth',
   windowMs: 60 * 1000,
   max: 8,
   message: 'Muitas tentativas de autenticação. Aguarde um minuto antes de tentar novamente.',
 });
 
-// Limite padrão para o restante da API
-const defaultRateLimiter = createRateLimiter({});
+// Renovar a sessão acontece em segundo plano a cada visita: não pode gastar a cota do login
+const refreshRateLimiter = createRateLimiter({
+  name: 'refresh',
+  windowMs: 60 * 1000,
+  max: 30,
+  message: 'Muitas renovações de sessão. Aguarde um minuto.',
+});
 
-module.exports = { createRateLimiter, authRateLimiter, defaultRateLimiter };
+// Limite padrão para o restante da API
+const defaultRateLimiter = createRateLimiter({ name: 'default' });
+
+module.exports = { createRateLimiter, authRateLimiter, refreshRateLimiter, defaultRateLimiter };

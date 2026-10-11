@@ -31,6 +31,10 @@ const adminMissionsRoutes = require('./modules/missions/routes/adminMissionsRout
 
 const app = express();
 
+// Atrás do proxy do Render: sem isto req.ip é o IP do proxy e TODOS os utilizadores
+// partilham o mesmo contador do rate limiter (bloqueio ao fim de poucas tentativas).
+app.set('trust proxy', Number(process.env.TRUST_PROXY_HOPS) || 1);
+
 // Segurança por padrão (Manual Parte 3: Security by Design)
 app.use(helmet());
 // CORS restrito às origens oficiais (CORS_ALLOWED_ORIGINS) — nunca "*" em
