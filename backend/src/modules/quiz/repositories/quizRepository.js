@@ -10,35 +10,8 @@ async function listActiveCategories(executor = db) {
 }
 
 /**
- * Retorna uma pergunta aleatória da categoria, SEM revelar qual alternativa é correta
- * (a validação da resposta acontece inteiramente no backend — Manual Parte 5).
- */
-async function getRandomQuestion(categoryId, executor = db) {
-  const { rows } = await executor.query(
-    `SELECT id, category_id, difficulty, statement, time_limit_seconds
-     FROM questions
-     WHERE category_id = $1 AND is_active = TRUE
-     ORDER BY random()
-     LIMIT 1`,
-    [categoryId]
-  );
-  if (!rows[0]) return null;
-
-  const question = rows[0];
-  const altResult = await executor.query(
-    `SELECT id, label
-     FROM question_alternatives
-     WHERE question_id = $1
-     ORDER BY random()`, // opções em ordem aleatória a cada apresentação (BE-003); a validação usa o id, não a posição
-    [question.id]
-  );
-
-  return { ...question, alternatives: altResult.rows };
-}
-
-/**
  * Busca uma pergunta específica pelo id, com as mesmas colunas e formato de
- * getRandomQuestion (sem revelar a alternativa correta). Usada para repetir
+ * as perguntas de uma rodada (sem revelar a alternativa correta). Usada para repetir
  * ao usuário a pergunta que o servidor já tinha emitido (ver F5 em
  * quizTimerService.getActiveIssuedQuestion), em vez de sortear uma nova.
  * Retorna `null` se a pergunta não existir mais ou tiver sido desativada —
@@ -247,7 +220,6 @@ async function listReviewCandidates(userId, { categoryId = null, limit = 10 } = 
 
 module.exports = {
   listActiveCategories,
-  getRandomQuestion,
   getQuestionById,
   getQuestionWithCorrectAlternative,
   recordAttempt,

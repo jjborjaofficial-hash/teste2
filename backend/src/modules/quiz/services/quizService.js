@@ -40,36 +40,6 @@ async function listCategories() {
   return repository.listActiveCategories();
 }
 
-async function getNextQuestion(categoryId, userId) {
-  // CORREÇÃO (F5 reinicia o relógio visual): antes de sortear uma pergunta
-  // nova, verifica se o usuário já tem uma pergunta ativa e ainda dentro do
-  // prazo real medido pelo servidor. Se tiver, repete a MESMA pergunta e
-  // devolve o tempo restante real — em vez de sortear outra com o relógio
-  // visual cheio de novo, o que permitiria "resetar" a contagem visualmente
-  // só recarregando a tela. O tempo real sempre foi medido pelo servidor
-  // (ver quizTimerService); esta correção só alinha o que o frontend mostra
-  // a esse tempo real.
-  const active = await quizTimerService.getActiveIssuedQuestion(userId);
-  if (active) {
-    const activeQuestion = await repository.getQuestionById(active.questionId, categoryId);
-    if (activeQuestion) {
-      return { ...activeQuestion, time_remaining_seconds: active.remainingSeconds };
-    }
-    // Pergunta ativa não existe mais nesta categoria (ex.: foi desativada) —
-    // segue o caminho normal de sortear uma pergunta nova abaixo.
-  }
-
-  const question = await repository.getRandomQuestion(categoryId);
-  if (!question) throw new NotFoundError('Nenhuma pergunta disponível para esta categoria.');
-
-  // Antifraude (Seção 19.4): o relógio começa a contar AGORA, no servidor —
-  // o frontend continua mostrando a contagem regressiva normalmente, mas ela
-  // é só visual; quem decide o tempo real é este timestamp.
-  await quizTimerService.markQuestionIssued(userId, question.id, question.time_limit_seconds);
-
-  return { ...question, time_remaining_seconds: question.time_limit_seconds };
-}
-
 // ---------------------------------------------------------------------------
 // Rodadas (quiz v2) — ver migration 107 e docs/quiz-v2-rodadas-e-feedback.md
 // ---------------------------------------------------------------------------
@@ -256,7 +226,9 @@ async function getReviewRecommendations({ userId, categoryId = null, limit = 10 
  * 4. Se correta: credita XP, atualiza streak diário e progresso de missões da categoria.
  * 5. Ajusta o Trust Score se o tempo de resposta for suspeito (Seção 7).
  */
-async function submitAnswer({ userId, questionId, alternativeId, roundId = null }) {
+async function submitAnswer({ userId, questionId, alternativeId, roundId }) {
+  // Só se joga por rodadas (a rota antiga sem rodada foi cortada em 11/10, a pedido do dono).
+  if (!roundId) throw new BusinessRuleError('Indique a rodada (roundId). Comece uma rodada para responder.');
   const question = await repository.getQuestionWithCorrectAlternative(questionId);
   if (!question) throw new NotFoundError('Pergunta não encontrada.');
 
@@ -281,7 +253,7 @@ async function submitAnswer({ userId, questionId, alternativeId, roundId = null 
   // que é a pergunta atual dele; fora da rodada, exige o registro do cronómetro. Sem isto, bastaria
   // enviar ids de perguntas nunca entregues para colher as respostas certas.
   const correctAlternative = question.alternatives.find((a) => a.is_correct);
-  const feedbackAllowed = roundId ? true : elapsedMs !== null;
+  const feedbackAllowed = true; // a validação da rodada abaixo garante que é a pergunta atual do utilizador
   const feedback =
     feedbackAllowed && correctAlternative
       ? {
@@ -409,7 +381,6 @@ async function submitAnswer({ userId, questionId, alternativeId, roundId = null 
 
 module.exports = {
   listCategories,
-  getNextQuestion,
   submitAnswer,
   startRound,
   getActiveRoundState,

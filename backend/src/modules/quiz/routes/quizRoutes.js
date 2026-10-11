@@ -7,7 +7,6 @@ const { submitAnswerSchema, startRoundSchema } = require('../validators/quizVali
 const router = Router();
 
 router.get('/categories', authenticate, controller.listCategories);
-router.get('/categories/:categoryId/next-question', authenticate, controller.getNextQuestion);
 // Rodadas (quiz v2): o servidor escolhe as 10 perguntas e guarda o progresso.
 router.post('/rounds', authenticate, validate(startRoundSchema), controller.startRound);
 router.get('/rounds/active', authenticate, controller.getActiveRound);

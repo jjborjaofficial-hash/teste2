@@ -11,15 +11,6 @@ async function listCategories(req, res, next) {
   }
 }
 
-async function getNextQuestion(req, res, next) {
-  try {
-    const question = await quizService.getNextQuestion(req.params.categoryId, req.user.id);
-    return res.status(200).json({ status: 'success', message: null, data: question });
-  } catch (err) {
-    return next(err);
-  }
-}
-
 async function submitAnswer(req, res, next) {
   try {
     const { questionId, alternativeId, roundId } = req.validatedBody;
@@ -108,7 +99,6 @@ async function getReviewRecommendations(req, res, next) {
 
 module.exports = {
   listCategories,
-  getNextQuestion,
   submitAnswer,
   startRound,
   getActiveRound,

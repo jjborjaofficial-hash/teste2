@@ -7,10 +7,10 @@ mesmo commit** que a implementa.
 ## BE-005 — Sobras das rodadas do quiz v2
 
 BE-002 (rodadas no servidor: migration 107, `quiz_rounds`, seleção das 10, retomar ao recarregar,
-resumo só da rodada) já foi feito e testado. Sobram: (a) a rota antiga
-`GET /quiz/categories/:id/next-question` + `POST /quiz/answers` sem `roundId` continua a servir
-perguntas fora de rodada; o frontend já não os usa (usa só `/quiz/rounds`); decidir se o servidor passa a
-exigir `roundId` (**`nextQuestion` já foi removido do frontend em 2026-10-07**; falta só decidir o servidor: o dono tem de dizer se pode cortar a rota antiga, por causa de versões antigas da app instaladas; o teste `quiz-wallet-ranking` teria de ser reescrito).
+resumo só da rodada) já foi feito e testado. **(a) FEITO (11/10, decisão do dono: projeto ainda não lançado, sem versões antigas
+instaladas):** a rota antiga `GET /quiz/categories/:id/next-question` foi removida e `POST /quiz/answers` passou a exigir
+`roundId` (o serviço recusa resposta sem rodada); `getNextQuestion` e `getRandomQuestion` foram apagados. Testes em
+`tests/quiz-wallet-ranking.test.js` e `tests/quiz-feedback.test.js` atualizados.
 
 **(c) FEITO — conceitos errados por rodada** (`tests/quiz-round-review.test.js`, sem migration). Não foi preciso tabela nova:
 cada resposta já fica em `quiz_attempts` com `round_id`, `question_id` e `is_correct`, ou seja, os conceitos errados de cada

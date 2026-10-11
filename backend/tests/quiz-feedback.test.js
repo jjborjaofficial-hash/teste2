@@ -94,31 +94,32 @@ describe('Feedback pedagógico depois de responder (BE-004)', () => {
   });
 
   it('devolve o texto da explicação quando a pergunta já tem uma escrita', async () => {
-    const { rows } = await db.query(
-      'SELECT id, time_limit_seconds FROM questions WHERE explanation IS NOT NULL AND is_active LIMIT 1'
-    );
-    if (rows.length === 0) return; // banco sem explicações escritas: nada a verificar aqui
-    const [q] = rows;
-    // fora da rodada, o feedback exige que a pergunta tenha sido entregue (registro do cronómetro)
-    await quizTimerService.markQuestionIssued(userId, q.id, q.time_limit_seconds);
+    const round = await quizService.startRound({ userId, categoryId: categories[0].id });
+    const question = await quizService.getRoundQuestion({ userId, roundId: round.id });
+    const { rows } = await db.query('SELECT explanation FROM questions WHERE id = $1', [question.id]);
+    if (!rows[0].explanation) return; // pergunta sem explicação escrita: nada a verificar aqui
     const result = await quizService.submitAnswer({
       userId,
-      questionId: q.id,
-      alternativeId: await wrongAlternativeId(q.id),
+      questionId: question.id,
+      alternativeId: await wrongAlternativeId(question.id),
+      roundId: round.id,
     });
     expect(typeof result.feedback.explanation).toBe('string');
     expect(result.feedback.explanation.length).toBeGreaterThan(20);
   });
 
-  it('pergunta nunca entregue ao utilizador não revela a resposta correta', async () => {
-    const { rows } = await db.query('SELECT id FROM questions WHERE is_active ORDER BY random() LIMIT 1');
-    const questionId = rows[0].id;
-    const result = await quizService.submitAnswer({
-      userId,
-      questionId,
-      alternativeId: await wrongAlternativeId(questionId),
-    });
-    expect(result.timeExpired).toBe(true);
-    expect(result.feedback).toBeNull();
+  it('pergunta que não é a atual da rodada não revela a resposta correta', async () => {
+    const round = await quizService.getActiveRoundState(userId)
+      || (await quizService.startRound({ userId, categoryId: categories[0].id }));
+    const current = await quizService.getRoundQuestion({ userId, roundId: round.id });
+    const { rows } = await db.query('SELECT id FROM questions WHERE is_active AND id <> $1 ORDER BY random() LIMIT 1', [current.id]);
+    await expect(
+      quizService.submitAnswer({
+        userId,
+        questionId: rows[0].id,
+        alternativeId: await wrongAlternativeId(rows[0].id),
+        roundId: round.id,
+      })
+    ).rejects.toMatchObject({ statusCode: 422 });
   });
 });
