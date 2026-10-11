@@ -7,6 +7,8 @@ const compression = require('compression');
 const corsOptions = require('./config/cors');
 const { defaultRateLimiter } = require('./middleware/rateLimiter');
 const errorHandler = require('./middleware/errorHandler');
+const cronRoutes = require('./cron/scheduler/cronRoutes');
+const { tickOnAccess } = require('./cron/scheduler/tickOnAccess');
 const { NotFoundError } = require('./common/errors/AppError');
 
 const platformStatsRoutes = require('./modules/platformStats/routes/platformStatsRoutes');
@@ -44,6 +46,9 @@ app.use(cors(corsOptions));
 app.use(compression());
 app.use(express.json({ limit: '1mb' }));
 app.use(cookieParser());
+// Agendador sem worker (docs/agendador-sem-worker.md): rotas internas protegidas por segredo e gatilho por acesso.
+app.use('/internal/cron', cronRoutes);
+app.use(tickOnAccess);
 app.use(defaultRateLimiter);
 
 // Healthcheck (usado por Render e por monitoramento externo)

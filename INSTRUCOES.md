@@ -32,6 +32,11 @@ por fazer fica escrito aqui e nos ficheiros `PENDENTE.md` de cada área.
 >
 > **Decisão do dono (2026-10-04):** o anúncio intersticial continua com a mesma lógica de antes
 > (`InterstitialAds`, 5 segundos, mesma frequência); não alterar.
+>
+> **Tarefas automáticas SEM worker pago (2026-10-11, pedido do dono: sem dinheiro para o worker).** As 11 tarefas de
+> `backend/src/cron/jobs/` correm agora dentro do backend: um agendador externo gratuito chama `POST /internal/cron/tick`
+> a cada 5 minutos, e qualquer acesso real é rede de segurança. Como ligar, conferir e desligar (se um dia houver
+> worker): `docs/agendador-sem-worker.md`. **Não criar o worker pago e o agendador ao mesmo tempo.**
 
 ## Como funciona (protocolo)
 

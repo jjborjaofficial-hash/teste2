@@ -3,6 +3,8 @@ const app = require('./app');
 const logger = require('./common/logger');
 const { pool, verifyConnection } = require('./config/database');
 const { findJwtSecretProblems } = require('./config/validateSecrets');
+const { isEnabled: inProcessJobsEnabled } = require('./cron/scheduler/tickOnAccess');
+const { startInProcessDelivery } = require('./queue/inProcessDelivery');
 
 const PORT = process.env.PORT || 3000;
 
@@ -36,10 +38,15 @@ async function start() {
     });
   });
 
+  // Sem o serviço "worker" (pago), o próprio backend esvazia a fila de push/SMS; as tarefas agendadas correm por
+  // /internal/cron/tick e por acesso (ver docs/agendador-sem-worker.md). CRON_ON_ACCESS=false desliga tudo isto.
+  const deliveryWorker = inProcessJobsEnabled() ? startInProcessDelivery() : null;
+
   // Encerramento gracioso: essencial para deploys sem downtime (Render/Docker)
   async function shutdown(signal) {
     logger.info(`Recebido ${signal}. Encerrando servidor graciosamente...`);
     server.close(async () => {
+      if (deliveryWorker) await deliveryWorker.close();
       await pool.end();
       logger.info('Conexões encerradas. Até logo.');
       process.exit(0);

@@ -6,9 +6,7 @@ const { QUEUE_NAME: DELIVERY_QUEUE_NAME } = require('./deliveryQueue');
 const { JOB_DEFINITIONS } = require('./definitions');
 const { pool, verifyConnection } = require('../config/database');
 const logger = require('../common/logger');
-const pushService = require('../common/notifications/pushService');
-const smsService = require('../common/notifications/smsService');
-const pushTokensRepository = require('../modules/notifications/repositories/pushTokensRepository');
+const { processDeliveryJob } = require('./deliveryHandler');
 
 /**
  * Processo separado do servidor web (`npm run worker`, em produção: um
@@ -62,23 +60,7 @@ async function main() {
   // mesmo `npm run worker`, sem exigir um terceiro serviço no provedor.
   const deliveryWorker = new Worker(
     DELIVERY_QUEUE_NAME,
-    async (job) => {
-      if (job.name === 'push') {
-        const { userId, payload } = job.data;
-        const result = await pushService.sendToUser(userId, payload, pushTokensRepository);
-        if (!result.skipped) {
-          logger.info('WORKER: push processado', { userId, sent: result.sent });
-        }
-      } else if (job.name === 'sms') {
-        const { phone, message } = job.data;
-        const result = await smsService.sendSms(phone, message);
-        if (!result.skipped) {
-          logger.info('WORKER: sms processado', { sent: result.sent });
-        }
-      } else {
-        throw new Error(`Job de entrega desconhecido: "${job.name}"`);
-      }
-    },
+    (job) => processDeliveryJob(job),
     { connection, concurrency: 5 }
   );
 
