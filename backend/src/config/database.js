@@ -16,7 +16,14 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: false } : false,
   max: 20,
-  idleTimeoutMillis: 30000,
+  // Diagnóstico de 11/10: abrir uma ligação nova do Render (Oregon) ao Neon (Londres) custa ~0,8 a 1,6 s, e uma query
+  // numa ligação já aberta custa ~0,13 s. Com 30 s de espera o pool fechava as ligações entre pedidos e quase todos os
+  // pedidos pagavam a ligação. 5 min mantém as ligações abertas durante uma sessão de jogo. NÃO usar pings periódicos
+  // para as manter acordadas: gastariam a quota de horas de computação do plano gratuito da Neon, que suspende o banco
+  // sozinha quando não há atividade (e o pool descarta as ligações mortas sem erro para quem pede a query).
+  idleTimeoutMillis: 300000,
+  keepAlive: true,
+  keepAliveInitialDelayMillis: 10000,
   connectionTimeoutMillis: 5000,
 });
 

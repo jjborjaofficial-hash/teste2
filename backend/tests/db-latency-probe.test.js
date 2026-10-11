@@ -16,6 +16,11 @@ describe('diagnóstico de latência do banco', () => {
     expect(poolStats().poolTotal).toBe(antes); // ligação própria: o pool não cresce
   });
 
+  test('o pool mantém as ligações abertas durante uma sessão (ligar pelo Atlântico custa ~1 s)', () => {
+    expect(pool.options.idleTimeoutMillis).toBeGreaterThanOrEqual(120000);
+    expect(pool.options.keepAlive).toBe(true);
+  });
+
   test('poolStats devolve o estado do pool e conta as ligações novas', async () => {
     const antes = poolStats().novasLigacoes;
     const res = await query('SELECT 1 AS ok');
