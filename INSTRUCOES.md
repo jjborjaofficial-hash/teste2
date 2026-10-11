@@ -120,7 +120,7 @@ Se uma tarefa nova não encaixar em nenhuma área, crie um `PENDENTE.md` na past
 
 ## Pendente — geral (GER-)
 
-## GER-001 — Confirmar em produção que a sessão não se perde ao atualizar a página (F5)
+## GER-001 — Sessão não se perde ao atualizar a página (F5) — CONFIRMADO em produção pelo dono em 2026-10-11
 - Pedido: o bug mais importante apontado pelo dono e por um amigo testador: depois do login,
   ao atualizar a página (F5), o app voltava para "Iniciar sessão".
 - Já feito (não repetir): causa = cookie do refresh token com `SameSite=strict` enquanto
@@ -146,9 +146,7 @@ Se uma tarefa nova não encaixar em nenhuma área, crie um `PENDENTE.md` na past
   `teste2-backend.onrender.com`; `onrender.com` é um sufixo público, logo o cookie é de terceiros. Safari/iPhone,
   Firefox, Brave e o modo anónimo do Chrome bloqueiam-no mesmo com `SameSite=None`. Só um domínio próprio com os
   dois no mesmo site (ou o site a encaminhar `/api` para o backend) resolve de vez. Decisão do dono.
-- Falta: o dono (e o amigo) confirmarem no ar (depois do deploy dos dois): sair, entrar de novo
-  (obrigatório, cookie antigo), atualizar a página várias vezes seguidas, em várias telas, e
-  continuar logado.
+- **CONFIRMADO em produção pelo dono (2026-10-11):** depois dos deploys, o F5 já não derruba a sessão. As correções do cookie, da renovação em paralelo, do rodízio do cookie, dos erros passageiros e do limitador de pedidos (`cff7855`) resolveram o caso testado. Não investigar de novo; reabrir só se alguém voltar a reportar. Por confirmar (não foi dito se foi testado): Safari/iPhone e o amigo testador — se cair só aí, ver a causa de fundo abaixo (domínio próprio).
 - Se ainda cair no login só no Safari/iPhone: navegadores bloqueiam cookies entre sites mesmo
   com `none`. Solução definitiva = domínio próprio com frontend e API no mesmo site (ex.:
   `app.dominio.com` e `api.dominio.com`) e `COOKIE_SAMESITE=lax`/`strict`. Explicar o passo a
