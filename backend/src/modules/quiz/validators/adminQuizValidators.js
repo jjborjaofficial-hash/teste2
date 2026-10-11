@@ -22,7 +22,7 @@ const createQuestionSchema = z.object({
   categoryId: z.string().uuid(),
   difficulty: z.enum(['easy', 'medium', 'hard']).default('medium'),
   statement: z.string().trim().min(5).max(500),
-  timeLimitSeconds: z.number().int().positive().max(120).default(15),
+  timeLimitSeconds: z.number().int().positive().max(120).default(50),
   xpReward: z.number().int().min(0).default(10),
   alternatives: z.array(alternativeSchema).min(2).max(6),
 });

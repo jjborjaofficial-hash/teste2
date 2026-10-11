@@ -88,7 +88,7 @@ Se uma tarefa nova não encaixar em nenhuma área, crie um `PENDENTE.md` na past
 - **Teto de ganho diário: 7,20 MZN, só das missões** (o utilizador só chega a 7,20 se completar as 6 missões; o valor não é garantido). Prémios de streak em dinheiro e conversão de Pontos em MZN ficam **fora** do teto. Chave `daily_earning_cap_mzn` em `system_config`. Lógica do dono: quem acumula muitos Pontos passou muito tempo na plataforma e viu muitos anúncios, então a receita de anúncios cobre a conversão; por isso ela não tem teto em MZN (o limite é o teto diário de Pontos, `daily_points_cap` = 5000).
 - **Missões diárias:** 6 por dia, 1,20 MZN cada (login, 12 minutos ativos e 4 desafios de quiz).
   O tempo ativo é medido só pelo servidor (heartbeat); o cliente nunca envia tempo.
-- **Quiz:** 30 segundos por pergunta, barra fina horizontal.
+- **Quiz:** 50 segundos por pergunta (era 30; decisão do dono em 11/10, migration 600), barra fina horizontal.
 - **Streak:** quebra de verdade quando o utilizador falta um dia. O item de proteção (marco de 15 dias) perdoa **um único dia perdido, uma só vez**; faltando 2 dias ou mais, o streak quebra e o item continua guardado. Os prémios de streak são um mecanismo de **retenção**: pagam **sempre** que o marco (7, 15, 30, 60, 100 dias) é atingido de novo, sem limite de uma vez por utilizador.
 - **Bónus de boas-vindas:** calendário de 7 dias, dia 1 = 2,00 MZN, cada dia só é coletado no
   próprio dia, dia perdido fica bloqueado. Valores em `system_config` (`welcome_rewards_mzn`).
