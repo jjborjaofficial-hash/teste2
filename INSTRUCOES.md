@@ -13,8 +13,9 @@ por fazer fica escrito aqui e nos ficheiros `PENDENTE.md` de cada área.
 >    ordem das opções já aleatória; padrão e modelos em `docs/quiz-v2-alternativas-padrao.md`; **próximo:** o dono ver o relatório e aprovar o 1.º lote de 25 correções.
 > 3. Sobras das rodadas (`BE-005`).
 >
-> Os pontos da secção **"Ideias ainda NÃO aprovadas"** (fim do ficheiro) **não** são para
-> implementar: só se o dono aprovar.
+> **Regra obrigatória:** o que mexe em dinheiro, regra de negócio, segurança ou dados existentes **só se faz depois de
+> perguntar e o dono aprovar** (secção **"Aprovação do dono"**, logo abaixo). Os pontos da secção
+> **"Propostas à espera de aprovação"** (fim do ficheiro) **não** são para implementar nem fundir: só se o dono aprovar.
 - **Vulnerabilidades de dependências (npm audit, 2026-10-09):** o `npm audit fix` seguro já foi aplicado (saiu a crítica `proxy-addr` e a alta `compression`; backend 19 → 12). **Sobram, e pedem trocar versão grande (só se o dono aprovar):** `bcrypt` 5 → 6 (resolve `tar` crítica e `node-pre-gyp`; afeta o hash de senhas, testar login e cadastro) e `firebase-admin` → 14 (resolve `node-forge`). No frontend sobram 13 (todas vindas do pacote `firebase`, sem correção segura). Nenhuma foi explorada pelo que o projeto usa, mas convém decidir antes de lançar para mais utilizadores.
 
 >
@@ -38,6 +39,34 @@ por fazer fica escrito aqui e nos ficheiros `PENDENTE.md` de cada área.
 > a cada 5 minutos, e qualquer acesso real é rede de segurança. Como ligar, conferir e desligar (se um dia houver
 > worker): `docs/agendador-sem-worker.md`. **Não criar o worker pago e o agendador ao mesmo tempo.**
 
+## Aprovação do dono — PERGUNTAR ANTES de fazer (regra obrigatória)
+
+**Proposta → aprovação explícita do dono → registo → execução.** Sem um "sim" ou "aprovado" do dono, **não se faz**
+o que está na lista abaixo. Uma proposta que o dono ainda não respondeu **não é uma instrução**: fica escrita na
+secção "Propostas à espera de aprovação" (fim deste ficheiro) e **não se funde no `main`**.
+
+**Exige aprovação (perguntar antes):**
+1. **Dinheiro e economia:** valores de recompensas, tetos, conversões, quem pode ganhar (missões pagas, convites,
+   bónus, saque).
+2. **Regras de negócio e limites:** quantidades, mínimos, percentagens, prazos, limites por dia ou por pessoa.
+3. **Segurança, antifraude e contas:** qualquer coisa que bloqueie, atrase ou exija algo a um utilizador real.
+4. **Dados existentes:** apagar, desativar ou reescrever (perguntas, respostas, contas, missões) e migrations que
+   alteram dados já em produção. No quiz, **a resposta certa e a explicação nunca mudam sem o dono pedir**.
+5. **Funcionalidades ou telas novas** que o dono não pediu, e mudar o comportamento de uma que já existe.
+6. **Infraestrutura e publicação:** CI e workflows, deploy, variáveis, tokens, versões grandes de dependências.
+7. **Trabalho reservado a outra sessão** (ver as reservas nos `PENDENTE.md`).
+
+**Pode fazer sem perguntar (e relatar depois):** corrigir um erro claro que não envolve escolha de negócio (ex.: um
+código que não chega ao backend), escrever testes, documentação, e análises só de leitura.
+
+**Como pedir (curto, uma pergunta objetiva):** *O quê* · *Porquê* · *Valores propostos* · *Risco* · *Alternativa* ·
+*Custo/esforço*. Depois **espere a resposta**. Sem resposta, não faça: deixe como proposta.
+
+**Depois de aprovado:** escreva a aprovação na instrução (`Aprovado pelo dono em AAAA-MM-DD: o que e com que
+valores`), dê-lhe um ID (`BE-`, `FE-`, `ADS-`, `GER-`) e só então implemente. Se for preciso escolher um valor para
+poder testar, marque-o como **PROPOSTA, não aprovada** no código, no `PENDENTE.md` e no commit; ele só vale em
+produção depois de o dono aprovar e fundir.
+
 ## Como funciona (protocolo)
 
 1. **Clonar e ler.** Ao receber o link: clone o repositório e leia este ficheiro e todos os
@@ -46,7 +75,8 @@ por fazer fica escrito aqui e nos ficheiros `PENDENTE.md` de cada área.
    uma secção própria com a ordem de execução: **"Quiz v2 — estado e próximos passos"** (abaixo).
 3. **Executar só o que o dono pedir.** Tudo o que está nos `PENDENTE.md` é real e foi
    decidido pelo dono, mas a ordem e o momento são dele. Se ele disser "faz tudo", faça por
-   ordem de ID. Dúvida em regra de negócio, dinheiro, segurança ou apagar dados: **pergunte antes**.
+   ordem de ID. Dúvida em regra de negócio, dinheiro, segurança ou apagar dados: **pergunte antes** e espere a
+   aprovação (ver **"Aprovação do dono"** acima).
 4. **Testar de verdade.** Rode os testes (`backend`: `npm test`, precisa de PostgreSQL e Redis;
    `frontend`: `npm run build`) e, quando mexer em regra de dinheiro, teste com dados reais.
 5. **Apagar a instrução concluída.** Quando uma tarefa estiver feita e testada, **remova-a do
@@ -86,6 +116,8 @@ Se uma tarefa nova não encaixar em nenhuma área, crie um `PENDENTE.md` na past
 - Onde mexer: caminhos prováveis.
 - Pronto quando: como saber que está certo (critérios que dá para testar).
 - Cuidados: dinheiro, segurança, migrations, o que NÃO misturar.
+- Aprovado pelo dono em AAAA-MM-DD: o que ele aprovou e com que valores (obrigatório se mexe em dinheiro, regra de
+  negócio, segurança ou dados; sem esta linha a instrução ainda é só uma proposta).
 ```
 
 ## Regras fixas do projeto (não quebrar sem o dono pedir)
@@ -243,11 +275,23 @@ critério `correta_muito_mais_curta`), 13 (duplicadas) e 14 (posição da corret
 - O saque só aceita o método do operador do número registado.
 - Saque mínimo: sempre vindo de `GET /wallet` (`withdrawalMinMzn`); o texto fixo "100 MZN" saiu de `Legal.jsx`. O texto jurídico guardado na base (migration 017) ainda cita 100 MZN: mudar só com o dono, porque exige novo aceite.
 
-## Ideias ainda NÃO aprovadas (NÃO implementar até o dono pedir)
+## Propostas à espera de aprovação (NÃO implementar nem fundir até o dono aprovar)
 
-Isto NÃO é o próximo passo e não são instruções: são pontos já conversados que o dono ainda não aprovou, na
-ordem de prioridade sugerida. Quando ele aprovar um, passa a ser uma instrução na área certa
-(`BE-`, `FE-`, `ADS-` ou `GER-`) e sai desta lista.
+Isto NÃO é o próximo passo e não são instruções: são pontos já conversados, ou trabalho feito em branch **sem
+aprovação prévia**, que o dono ainda não aprovou, na ordem de prioridade sugerida. Quando ele aprovar um, passa a ser
+uma instrução na área certa (`BE-`, `FE-`, `ADS-` ou `GER-`, com a linha `Aprovado pelo dono em ...`) e sai desta lista.
+
+**Já feito em branch, a aguardar a aprovação do dono antes de fundir no `main`** (feito sem perguntar, ver a regra acima):
+- **Convites antifraude (BE-006, branch `fix/convites-google-e-antifraude`):** as defesas contra contas falsas (1 rodada
+  concluída, Trust Score 60, 5 convites por dia) são **proposta**: o dono decide se concorda e com que números. (O desvio
+  do Google, que é um erro claro, já foi corrigido no `main`, commit `a09d444`.)
+- **Tela "Rever o que errei" (branch `feat/quiz-revisao-erros`):** funcionalidade nova, não pedida.
+- **Auditoria do quiz bloqueante no CI (branch `feat/ci-quiz-audit`):** muda o que deixa o CI vermelho.
+
+**Ainda por decidir pelo dono:** "Aprenda" e "Dica" como campos próprios no feedback do quiz (colunas novas e textos novos);
+defesas extra dos convites (SMS, limite total por convidador, aparelho ou IP, respostas de dias diferentes).
+
+Lista anterior de ideias:
 
 1. Teto diário das missões: bloquear a linha do utilizador antes de somar os ganhos do dia, para dois pedidos simultâneos não furarem o teto (dinheiro).
 2. Cadastro: verificar o telefone por SMS (Twilio já está nas dependências) para evitar contas falsas.
