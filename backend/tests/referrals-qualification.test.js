@@ -1,5 +1,5 @@
 /**
- * Qualificação de convites com defesas contra contas falsas (migration 604).
+ * Qualificação de convites com defesas contra contas falsas (migration 605).
  * Integração com PostgreSQL real. Cria utilizadores próprios (audit_logs é append-only, então ficam no banco).
  */
 const db = require('../src/config/database');
@@ -53,7 +53,7 @@ run('convites: qualificação e antifraude', () => {
   afterEach(async () => { for (const [k, v] of Object.entries(original)) if (v !== undefined) await setConfig(k, v); });
   afterAll(async () => { await db.pool.end(); });
 
-  it('a migration 604 criou a configuração com valores prudentes', () => {
+  it('a migration 605 criou a configuração com valores prudentes', () => {
     expect(String(original.referral_min_completed_rounds)).toBe('1');
     expect(String(original.referral_min_trust_score)).toBe('60');
     expect(String(original.referral_max_rewards_per_referrer_per_day)).toBe('5');

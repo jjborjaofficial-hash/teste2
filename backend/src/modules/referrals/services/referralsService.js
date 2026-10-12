@@ -66,7 +66,7 @@ async function checkAndRewardQualification(executor, referredUserId) {
   const activityCount = await repository.countQualifyingActivity(referredUserId, executor);
   if (activityCount < requiredCount) return null;
 
-  // Defesas contra contas falsas (migration 604). Se alguma impede, o convite fica PENDENTE e é
+  // Defesas contra contas falsas (migration 605). Se alguma impede, o convite fica PENDENTE e é
   // reavaliado na próxima resposta certa ou rodada concluída; nada é perdido nem marcado como recusado.
   const minRounds = Number((await configRepository.getConfigValue('referral_min_completed_rounds', executor)) ?? 1);
   if (minRounds > 0 && (await repository.countCompletedRounds(referredUserId, executor)) < minRounds) return null;
