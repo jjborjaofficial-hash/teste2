@@ -330,6 +330,7 @@ async function submitAnswer({ userId, questionId, alternativeId, roundId }) {
 
     let roundState;
     let roundSummary;
+    let roundStreak = null;
     if (round) {
       const updated = await repository.advanceRound(client, {
         roundId: round.id,
@@ -338,6 +339,11 @@ async function submitAnswer({ userId, questionId, alternativeId, roundId }) {
         pointsAwarded: xpResult ? xpResult.pointsCredited : 0,
       });
       roundState = serializeRound(updated);
+      // Missão "acertar N perguntas seguidas numa rodada": sequência atual (um erro volta a 0).
+      roundStreak = await missionsService.updateRoundStreak(client, {
+        userId,
+        streak: await repository.getRoundCorrectStreak(round.id, client),
+      });
       if (updated.status === 'completed') {
         roundSummary = await buildRoundSummary(updated, client);
         // BE-005 b: missões "completar uma rodada" (mesma transação; advanceRound fecha a rodada uma só vez).
@@ -350,6 +356,8 @@ async function submitAnswer({ userId, questionId, alternativeId, roundId }) {
     return {
       round: roundState,
       roundSummary,
+      // null quando o utilizador não tem a missão de sequência; senão { current, target, completed }
+      roundStreak,
       isCorrect,
       timeExpired,
       // Tempo gasto (medido pelo servidor) e limite da pergunta: o front usa para dizer

@@ -145,6 +145,39 @@ async function completeReferralMissions(executor, { userId }) {
 }
 
 /**
+ * Missões activity_type='round_streak' ("acertar N perguntas seguidas numa rodada"). `streak` é a sequência
+ * ATUAL de acertos seguidos na rodada (calculada pelo Quiz). progress_count guarda a melhor sequência do dia,
+ * para a lista de missões mostrar "4/6"; completa quando a sequência chega ao alvo. Atribui a missão do dia
+ * se ainda não existir (o utilizador pode não ter aberto a lista de missões).
+ */
+async function updateRoundStreakMissions(executor, { userId, streak }) {
+  await executor.query(
+    `INSERT INTO user_missions (user_id, mission_id, target_snapshot, period_date)
+     SELECT $1, m.id, m.target_quiz_count, ${dateInPlatformTz('now()')}
+     FROM missions m
+     WHERE m.is_active = TRUE AND m.type = 'daily' AND m.activity_type = 'round_streak'
+       AND (m.starts_at IS NULL OR m.starts_at <= now()) AND (m.ends_at IS NULL OR m.ends_at >= now())
+     ON CONFLICT DO NOTHING`,
+    [userId]
+  );
+  const { rows } = await executor.query(
+    `UPDATE user_missions um
+     SET progress_count = LEAST(GREATEST(um.progress_count, $2::int), um.target_snapshot),
+         status = CASE WHEN $2::int >= um.target_snapshot THEN 'completed' ELSE um.status END,
+         completed_at = CASE WHEN $2::int >= um.target_snapshot THEN now() ELSE um.completed_at END
+     FROM missions m
+     WHERE um.mission_id = m.id
+       AND um.user_id = $1
+       AND um.status = 'in_progress'
+       AND um.period_date = ${dateInPlatformTz('now()')}
+       AND m.activity_type = 'round_streak'
+     RETURNING um.id, um.mission_id, um.status, um.target_snapshot, m.title`,
+    [userId, streak]
+  );
+  return rows;
+}
+
+/**
  * Progresso de missões activity_type='round_complete' (BE-005 b): +1 por rodada concluída. Mesmo molde do
  * quiz_count: só missões em andamento do dia, e se a missão tiver categoria só conta rodadas dessa categoria.
  * Chamado pelo Quiz DENTRO da transação que fecha a rodada (por isso nunca conta a mesma rodada duas vezes).
@@ -292,6 +325,7 @@ async function markRewardClaimed(executor, userMissionId) {
 }
 
 module.exports = {
+  updateRoundStreakMissions,
   completeReferralMissions,
   listActiveMissions,
   getUserMissionProgress,

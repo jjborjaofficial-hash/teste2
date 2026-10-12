@@ -55,6 +55,20 @@ async function listMyMissions(userId) {
 }
 
 /**
+ * Chamado pelo Quiz depois de cada resposta numa rodada, com a sequência atual de acertos seguidos.
+ * Devolve { current, target, completed } da missão "acertar N seguidas" do dia, ou null se não existir.
+ */
+async function updateRoundStreak(executor, { userId, streak }) {
+  const updated = await repository.updateRoundStreakMissions(executor, { userId, streak });
+  if (updated.length === 0) return null;
+  const mission = updated[0];
+  if (mission.status === 'completed') {
+    await notificationsService.notifyMissionCompleted(executor, userId, mission.title);
+  }
+  return { current: Math.min(streak, mission.target_snapshot), target: mission.target_snapshot, completed: mission.status === 'completed' };
+}
+
+/**
  * Chamado pelo módulo Referrals quando um convite do utilizador qualifica: completa a missão
  * "convidar 1 utilizador novo" do dia (mesma transação do Quiz).
  */
@@ -217,6 +231,7 @@ module.exports = {
   incrementProgressForCategory,
   incrementRoundCompletion,
   completeReferralMissions,
+  updateRoundStreak,
   claimReward,
   registerHeartbeat,
   registerPresence,

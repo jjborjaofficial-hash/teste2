@@ -67,6 +67,23 @@ async function recordAttempt(
   return rows[0];
 }
 
+/**
+ * Sequência ATUAL de respostas certas seguidas numa rodada (as últimas respostas, da mais recente para trás,
+ * até ao primeiro erro). Usada pela missão "acertar N seguidas".
+ */
+async function getRoundCorrectStreak(roundId, executor = db) {
+  const { rows } = await executor.query(
+    'SELECT is_correct FROM quiz_attempts WHERE round_id = $1 ORDER BY created_at DESC, id DESC',
+    [roundId]
+  );
+  let streak = 0;
+  for (const r of rows) {
+    if (!r.is_correct) break;
+    streak += 1;
+  }
+  return streak;
+}
+
 async function countAttemptsToday(userId, executor = db) {
   const { rows } = await executor.query(
     `SELECT COUNT(*)::int AS count
@@ -219,6 +236,7 @@ async function listReviewCandidates(userId, { categoryId = null, limit = 10 } = 
 }
 
 module.exports = {
+  getRoundCorrectStreak,
   listActiveCategories,
   getQuestionById,
   getQuestionWithCorrectAlternative,

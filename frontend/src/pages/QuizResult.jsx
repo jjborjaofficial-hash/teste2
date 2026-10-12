@@ -177,6 +177,27 @@ function QuizResultView({ result, categoryId }) {
         </section>
       )}
 
+      {/* Missão "Sequência de N": diz sempre onde o jogador está e o que falta, para a regra ser clara. */}
+      {result.roundStreak && (
+        <div className="bg-surface border border-border rounded-card p-4 text-center space-y-1" role="status">
+          {result.roundStreak.completed ? (
+            <p className="text-body font-semibold text-success">
+              Missão concluída: {result.roundStreak.target} certas seguidas!
+            </p>
+          ) : result.roundStreak.current > 0 ? (
+            <p className="text-body text-text">
+              <span className="font-semibold">{result.roundStreak.current} de {result.roundStreak.target}</span> certas
+              seguidas. Faltam {result.roundStreak.target - result.roundStreak.current} para completar a missão.
+            </p>
+          ) : (
+            <p className="text-body text-text-secondary">
+              Errou, por isso a sequência recomeça. Acerte {result.roundStreak.target} seguidas na mesma rodada para
+              completar a missão.
+            </p>
+          )}
+        </div>
+      )}
+
       {result.isCorrect && (
         <div className="bg-surface border border-border rounded-card p-5 space-y-3">
           <div className="flex items-center justify-between">
