@@ -22,7 +22,7 @@ async function getWalletBalance(userId, executor = db) {
  */
 async function getUserStatusAndTrustScore(userId, executor = db) {
   const { rows } = await executor.query(
-    'SELECT status, trust_score FROM users WHERE id = $1 AND deleted_at IS NULL',
+    'SELECT status, trust_score, phone_provider FROM users WHERE id = $1 AND deleted_at IS NULL',
     [userId]
   );
   return rows[0] || null;

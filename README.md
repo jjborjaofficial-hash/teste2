@@ -177,11 +177,11 @@ e documentado antes de avançar para o próximo. Pendentes:
   tipo de missão criada ainda; dias 4–7 também não têm valores de exemplo definidos
   em nenhum documento oficial, então dependem de decisão do proprietário do projeto
   antes de qualquer implementação
-- SOP formal de exclusão/portabilidade de dados (LGPD, Seção 16.4) — hoje só existe
-  como categoria genérica na Central de Reclamações, sem prazo/processo documentado
+- Prazo formal de resposta a pedidos de dados (LGPD, Seção 16.4): o utilizador já
+  descarrega os dados e elimina a conta sozinho em Configurações (anonimização)
 - Endpoint público genérico de `system_config` — hoje cada valor exposto ao frontend
-  (ex.: taxa de conversão de Pontos) precisou de uma rota dedicada; `WITHDRAWAL_MIN_MZN`
-  em `Wallet.jsx` continua fixo no frontend, não vindo da API
+  (ex.: taxa de conversão de Pontos) precisou de uma rota dedicada; o saque mínimo já
+  vem de `GET /wallet`
 
 ## Requisitos
 

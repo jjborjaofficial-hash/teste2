@@ -1,7 +1,113 @@
 const repository = require('../repositories/userRepository');
 const legalService = require('../../legal/services/legalService');
 const userCache = require('../../../common/cache/userCache');
-const { NotFoundError } = require('../../../common/errors/AppError');
+const bcrypt = require('bcrypt');
+const db = require('../../../config/database');
+const auditLogRepository = require('../../../common/repositories/auditLogRepository');
+const {
+  NotFoundError, UnauthorizedError, ConflictError, BusinessRuleError,
+} = require('../../../common/errors/AppError');
+
+const PHONE_CHANGE_COOLDOWN_DAYS = Number(process.env.PHONE_CHANGE_COOLDOWN_DAYS) || 30;
+
+function providerOf(phone) {
+  return ['84', '85'].includes(phone.slice(0, 2)) ? 'mpesa' : 'emola';
+}
+
+// Operações sensíveis pedem a senha. Contas só-Google não têm senha: a sessão
+// ativa vale como prova (não há outra forma de confirmar).
+async function assertPassword(sec, password) {
+  if (!sec.password_hash) return;
+  if (!password || !(await bcrypt.compare(password, sec.password_hash))) {
+    throw new UnauthorizedError('Senha incorreta.');
+  }
+}
+
+async function updateProfile(userId, { name, avatarUrl }, context = {}) {
+  await repository.updateNameAvatar(userId, { name, avatarUrl });
+  await userCache.invalidateProfile(userId);
+  await auditLogRepository.insertAuditLog(db, {
+    userId, action: 'user.profile_updated', entity: 'users', entityId: userId,
+    metadata: { name: name !== undefined, avatar: avatarUrl !== undefined }, ipAddress: context.ipAddress,
+  });
+  return getProfile(userId);
+}
+
+// O número M-Pesa/e-Mola é para onde vai o dinheiro; o operador é sempre
+// deduzido do próprio número, nunca escolhido à mão.
+async function changePaymentPhone(userId, { phone, password }, context = {}) {
+  const sec = await repository.findSecurityById(userId);
+  if (!sec) throw new NotFoundError('Perfil não encontrado.');
+  await assertPassword(sec, password);
+  if (sec.phone === phone) throw new BusinessRuleError('Este já é o seu número de pagamento.');
+  if (await repository.hasActiveWithdrawal(userId)) {
+    throw new BusinessRuleError('Tem um saque em andamento. Só pode mudar o número depois de ele terminar.');
+  }
+  const last = await repository.lastPaymentPhoneChange(userId);
+  if (last && Date.now() - new Date(last).getTime() < PHONE_CHANGE_COOLDOWN_DAYS * 86400000) {
+    throw new BusinessRuleError(`O número só pode ser mudado uma vez a cada ${PHONE_CHANGE_COOLDOWN_DAYS} dias.`);
+  }
+  if (await repository.phoneInUse(phone, userId)) {
+    throw new ConflictError('Já existe uma conta com este número de telefone.');
+  }
+  const provider = providerOf(phone);
+  try {
+    await repository.updatePhone(userId, phone, provider);
+  } catch (err) {
+    if (err.code === '23505') throw new ConflictError('Já existe uma conta com este número de telefone.');
+    throw err;
+  }
+  await userCache.invalidateProfile(userId);
+  await auditLogRepository.insertAuditLog(db, {
+    userId, action: 'user.payment_phone_changed', entity: 'users', entityId: userId,
+    metadata: { oldProvider: sec.phone_provider, newProvider: provider, oldPhoneEnd: (sec.phone || '').slice(-3), newPhoneEnd: phone.slice(-3) },
+    ipAddress: context.ipAddress,
+  });
+  return getProfile(userId);
+}
+
+async function exportMyData(userId, context = {}) {
+  const data = await repository.exportData(userId);
+  await auditLogRepository.insertAuditLog(db, {
+    userId, action: 'user.data_exported', entity: 'users', entityId: userId, metadata: {}, ipAddress: context.ipAddress,
+  });
+  return { exportedAt: new Date().toISOString(), ...data };
+}
+
+async function deleteAccount(userId, { password, acceptLoseBalance }, context = {}) {
+  const client = await db.getClient();
+  try {
+    await client.query('BEGIN');
+    const sec = await repository.findSecurityById(userId, client);
+    if (!sec) throw new NotFoundError('Perfil não encontrado.');
+    if (sec.role !== 'user') {
+      throw new BusinessRuleError('Contas de administração não podem ser eliminadas aqui.');
+    }
+    await assertPassword(sec, password);
+    if (await repository.hasActiveWithdrawal(userId, client)) {
+      throw new BusinessRuleError('Tem um saque em andamento. Espere ele terminar para eliminar a conta.');
+    }
+    const balance = Number(sec.wallet_balance_mzn);
+    if (balance > 0 && !acceptLoseBalance) {
+      throw new BusinessRuleError(
+        `Ainda tem ${balance.toFixed(2)} MZN na carteira. Levante o saldo antes, ou confirme que aceita perdê-lo.`
+      );
+    }
+    await auditLogRepository.insertAuditLog(client, {
+      userId, action: 'user.account_deleted', entity: 'users', entityId: userId,
+      metadata: { forfeitedBalanceMzn: balance }, ipAddress: context.ipAddress,
+    });
+    await repository.anonymize(userId, client);
+    await client.query('COMMIT');
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+  await userCache.invalidateProfile(userId);
+  return { deleted: true };
+}
 
 async function getProfile(userId) {
   // Cache-aside (docx "REDIS CACHE E CRON JOBS", Seção 2 — Perfil básico do
@@ -22,6 +128,7 @@ async function getProfile(userId) {
     id: profile.id,
     name: profile.name,
     phone: profile.phone,
+    phoneProvider: profile.phone_provider,
     avatarUrl: profile.avatar_url,
     country: profile.country,
     locale: profile.locale,
@@ -50,4 +157,4 @@ async function getProfile(userId) {
   };
 }
 
-module.exports = { getProfile };
+module.exports = { getProfile, updateProfile, changePaymentPhone, exportMyData, deleteAccount };

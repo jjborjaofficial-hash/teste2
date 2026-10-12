@@ -4,6 +4,7 @@ import { gamificationApi } from '../api/profileApi';
 import { Card } from '../components/Card';
 import { PrimaryButton, SecondaryButton } from '../components/Button';
 import { useToast } from '../components/Toast';
+import { useAuth } from '../context/AuthContext';
 import { ApiError } from '../api/client';
 import { DisplayAds } from '../ads';
 import { transactionInfo } from '../lib/walletLabels';
@@ -25,9 +26,12 @@ export const DEFAULT_WITHDRAWAL_MIN_MZN = 100;
  */
 export function Wallet() {
   const { showToast } = useToast();
+  const { user } = useAuth();
   const [balance, setBalance] = useState(null);
   const [history, setHistory] = useState([]);
-  const [method, setMethod] = useState('mpesa');
+  // O dinheiro vai para o número registado: o método é sempre o do operador desse número.
+  const [method, setMethod] = useState(user?.phoneProvider || 'mpesa');
+  const lockedMethod = user?.phoneProvider || null;
   const [withdrawalMin, setWithdrawalMin] = useState(DEFAULT_WITHDRAWAL_MIN_MZN);
   const [amount, setAmount] = useState(DEFAULT_WITHDRAWAL_MIN_MZN.toFixed(2));
   const [submitting, setSubmitting] = useState(false);
@@ -190,8 +194,9 @@ export function Wallet() {
               <button
                 type="button"
                 key={m}
-                onClick={() => setMethod(m)}
-                className={`flex-1 rounded-button border py-2 text-button transition-colors duration-micro ${
+                onClick={() => !lockedMethod && setMethod(m)}
+                disabled={Boolean(lockedMethod) && lockedMethod !== m}
+                className={`flex-1 rounded-button border py-2 text-button transition-colors duration-micro disabled:opacity-40 ${
                   method === m ? 'border-primary bg-primary/10 text-primary' : 'border-border text-text-secondary'
                 }`}
               >

@@ -144,6 +144,13 @@ async function requestWithdrawal({ userId, amountMzn, method }) {
     );
   }
 
+  // O dinheiro vai para o número registado: o método tem de ser o do operador desse número.
+  if (accountInfo.phone_provider && accountInfo.phone_provider !== method) {
+    throw new BusinessRuleError(
+      `O seu número de pagamento é ${accountInfo.phone_provider === 'mpesa' ? 'M-Pesa' : 'e-Mola'}. Escolha esse método ou altere o número no seu perfil.`
+    );
+  }
+
   const minTrustScore = Number(
     (await configRepository.getConfigValue('min_trust_score_for_withdrawal')) ?? 60
   );

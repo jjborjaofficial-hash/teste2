@@ -242,7 +242,7 @@ export function HowItWorksPage() {
         crescentes (7, 15, 30, 60 e 100 dias).</p>
       </Section>
       <Section number={5} title="Saque quando quiser">
-        <p>Ao atingir 100 MZN acumulados, solicite seu saque a qualquer momento.
+        <p>Ao atingir o valor mínimo de saque (mostrado na sua Carteira), solicite seu saque a qualquer momento.
         Sem depósito, sem cobrança — só o que você já ganhou.</p>
       </Section>
     </LegalShell>
@@ -305,7 +305,7 @@ const FAQ_GROUPS = [
     items: [
       {
         q: 'Qual o valor mínimo para sacar?',
-        a: '100 MZN acumulados. Esse valor é sempre dinheiro que você já ganhou — nunca um depósito seu.',
+        a: 'É um valor mínimo acumulado, definido pela plataforma e sempre visível na sua Carteira. Esse valor é sempre dinheiro que você já ganhou — nunca um depósito seu.',
       },
       {
         q: 'Existe um limite de quanto posso sacar por dia?',

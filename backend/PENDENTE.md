@@ -192,3 +192,6 @@ utilizador (senão `null`, para ninguém colher respostas por id), e a tela de r
 `explanation` é `null` nas perguntas ainda sem texto: aí a tela mostra só a resposta correta.
 Decisão do dono: um único texto de explicação serve para acerto ("Para complementar") e erro
 ("Por quê?"). **DESCARTADO pelo dono (11/10):** "Aprenda"/"O que aprender" e "Dica" como campos próprios não serão feitos; fica o texto único de explicação.
+
+## BE-006 — Conta do utilizador (feito)
+Editar perfil, mudar número de pagamento, exportar dados e eliminar conta (anonimização). Regras e rotas em `INSTRUCOES.md` ("Conta do utilizador"). Migration não necessária. Em aberto: o texto jurídico na base (migration 017) ainda cita "100 MZN" — mudar só com decisão do dono (exige novo aceite). Um token de acesso já emitido continua válido até 15 min após eliminar a conta.

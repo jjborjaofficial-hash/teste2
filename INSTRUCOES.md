@@ -237,6 +237,12 @@ validador (`backend/tests/quiz-alternatives-validator`, `quiz-bias-detector`, `q
 `quiz-position-analysis`, `quiz-new-question-gate`): 11 (correta muito maior), 12 (correta muito menor,
 critério `correta_muito_mais_curta`), 13 (duplicadas) e 14 (posição da correta).
 
+## Conta do utilizador (feito)
+
+- `PATCH /users/me` (nome, foto https), `PUT /users/me/payment-phone` (pede senha; operador deduzido do número; 1 mudança a cada 30 dias; bloqueado com saque em andamento; registado em `audit_logs`), `GET /users/me/export` (cópia dos dados), `DELETE /users/me` (pede senha + escrever ELIMINAR; anonimiza, nunca apaga; bloqueado com saque em andamento; saldo restante só se o utilizador aceitar perdê-lo).
+- O saque só aceita o método do operador do número registado.
+- Saque mínimo: sempre vindo de `GET /wallet` (`withdrawalMinMzn`); o texto fixo "100 MZN" saiu de `Legal.jsx`. O texto jurídico guardado na base (migration 017) ainda cita 100 MZN: mudar só com o dono, porque exige novo aceite.
+
 ## Ideias ainda NÃO aprovadas (NÃO implementar até o dono pedir)
 
 Isto NÃO é o próximo passo e não são instruções: são pontos já conversados que o dono ainda não aprovou, na
@@ -244,9 +250,6 @@ ordem de prioridade sugerida. Quando ele aprovar um, passa a ser uma instrução
 (`BE-`, `FE-`, `ADS-` ou `GER-`) e sai desta lista.
 
 1. Teto diário das missões: bloquear a linha do utilizador antes de somar os ganhos do dia, para dois pedidos simultâneos não furarem o teto (dinheiro).
-2. Carteira/Legal: ler o saque mínimo da API (`withdrawal_min_mzn`) em vez de fixar 100 MZN no código.
-3. Cadastro: verificar o telefone por SMS (Twilio já está nas dependências) para evitar contas falsas.
-4. Economia: conferir se o bónus de boas-vindas (12,00 MZN por utilizador) e a conversão de Pontos (até ~50 MZN/dia por utilizador no teto de 5.000 Pontos) cabem na receita real de anúncios (Adcash).
-5. Testes para boas-vindas e carteira; fazer o push disparar o deploy sozinho (hoje é manual) e pôr um `healthCheckPath` no backend.
-6. Editar nome, foto e provedor de pagamento (M-Pesa / e-Mola) no perfil — precisa de endpoint novo e regras de segurança, porque o provedor define para onde o dinheiro vai.
-7. Eliminar a conta do utilizador.
+2. Cadastro: verificar o telefone por SMS (Twilio já está nas dependências) para evitar contas falsas.
+3. Economia: conferir se o bónus de boas-vindas (12,00 MZN por utilizador) e a conversão de Pontos (até ~50 MZN/dia por utilizador no teto de 5.000 Pontos) cabem na receita real de anúncios (Adcash).
+4. Testes para boas-vindas e carteira; fazer o push disparar o deploy sozinho (hoje é manual) e pôr um `healthCheckPath` no backend.
