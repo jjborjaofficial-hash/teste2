@@ -21,6 +21,8 @@ const UNIT_BY_ACTIVITY = {
   time_active_minutes: 'min',
   category_exploration: 'categorias',
   round_complete: 'rodadas',
+  round_streak: 'certas seguidas',
+  referral: 'convite',
   login: '',
 };
 
@@ -59,6 +61,8 @@ function RewardChips({ rewards }) {
 function actionFor(mission) {
   if (mission.activityType === 'login') return null;
   if (mission.activityType === 'time_active_minutes') return { label: 'Estudar agora' };
+  // Convidar não se faz nas categorias: leva à secção de convites do Perfil (código e link para partilhar).
+  if (mission.activityType === 'referral') return { label: 'Convidar um amigo', to: '/perfil#convites' };
   return { label: mission.progress > 0 ? 'Continuar' : 'Começar missão' };
 }
 
@@ -129,7 +133,7 @@ function MissionCard({ mission, onClaimed }) {
       )}
 
       {inProgress && action && (
-        <PrimaryButton onClick={() => navigate('/hub-estudos')} className="w-full mt-3">
+        <PrimaryButton onClick={() => navigate(action.to || '/hub-estudos')} className="w-full mt-3">
           {action.label}
         </PrimaryButton>
       )}

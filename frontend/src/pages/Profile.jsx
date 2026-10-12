@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { trustScoreApi, gamificationApi } from '../api/profileApi';
 import { referralsApi } from '../api/referralsApi';
@@ -38,6 +38,14 @@ function ReferralsSection() {
   const [referrals, setReferrals] = useState(null);
   const [error, setError] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const location = useLocation();
+
+  // A missão "Convide um amigo" abre /perfil#convites: leva o jogador direto a esta secção.
+  useEffect(() => {
+    if (location.hash === '#convites') {
+      document.getElementById('convites')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [location.hash, code]);
 
   useEffect(() => {
     referralsApi.getMyCode()
@@ -76,7 +84,7 @@ function ReferralsSection() {
   if (error) return null;
 
   return (
-    <div className="space-y-2">
+    <div id="convites" className="space-y-2 scroll-mt-4">
       <h2 className="font-display text-h2 text-text">Convites</h2>
       <Card className="space-y-3">
         <div className="flex items-center gap-3">
