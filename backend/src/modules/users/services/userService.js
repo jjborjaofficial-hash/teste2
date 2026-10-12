@@ -1,6 +1,7 @@
 const repository = require('../repositories/userRepository');
 const legalService = require('../../legal/services/legalService');
 const userCache = require('../../../common/cache/userCache');
+const { computeTrial } = require('../../shop/themeTrial');
 const bcrypt = require('bcrypt');
 const db = require('../../../config/database');
 const auditLogRepository = require('../../../common/repositories/auditLogRepository');
@@ -154,6 +155,14 @@ async function getProfile(userId) {
     // renderizar a moldura de perfil e aplicar o tema de cor globalmente.
     equippedAvatarFrame: profile.equipped_avatar_frame,
     equippedTheme: profile.equipped_theme,
+    // Tema Noite emprestado por 10 minutos (GER-002). Calculado na hora (o perfil em cache só guarda as datas),
+    // para o tempo restante nunca ficar desatualizado.
+    themeTrial: computeTrial({
+      eligible: profile.theme_trial_eligible,
+      startedAt: profile.theme_trial_started_at,
+      introSeenAt: profile.theme_trial_intro_seen_at,
+      equippedTheme: profile.equipped_theme,
+    }, new Date()),
   };
 }
 

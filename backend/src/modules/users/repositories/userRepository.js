@@ -5,7 +5,8 @@ async function findProfileById(id) {
     `SELECT id, name, phone, phone_provider, avatar_url, country, locale, currency,
             xp_total, points_balance, wallet_balance_mzn, trust_score,
             status, role, terms_version, terms_accepted_at, created_at,
-            equipped_avatar_frame, equipped_theme
+            equipped_avatar_frame, equipped_theme,
+            theme_trial_eligible, theme_trial_started_at, theme_trial_intro_seen_at
      FROM users
      WHERE id = $1 AND deleted_at IS NULL`,
     [id]

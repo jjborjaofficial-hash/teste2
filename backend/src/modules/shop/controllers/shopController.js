@@ -1,4 +1,5 @@
 const shopService = require('../services/shopService');
+const themeTrialService = require('../services/themeTrialService');
 
 async function listItems(req, res, next) {
   try {
@@ -56,4 +57,34 @@ async function getMyPointsLedger(req, res, next) {
   }
 }
 
-module.exports = { listItems, purchase, equip, unequip, getMyInventory, getMyPointsLedger };
+async function getThemeTrial(req, res, next) {
+  try {
+    const data = await themeTrialService.getState(req.user.id);
+    return res.status(200).json({ status: 'success', message: null, data });
+  } catch (err) {
+    return next(err);
+  }
+}
+
+async function startThemeTrial(req, res, next) {
+  try {
+    const data = await themeTrialService.start(req.user.id);
+    return res.status(200).json({ status: 'success', message: 'Tema Noite emprestado por 10 minutos.', data });
+  } catch (err) {
+    return next(err);
+  }
+}
+
+async function dismissThemeTrialIntro(req, res, next) {
+  try {
+    const data = await themeTrialService.dismissIntro(req.user.id);
+    return res.status(200).json({ status: 'success', message: null, data });
+  } catch (err) {
+    return next(err);
+  }
+}
+
+module.exports = {
+  listItems, purchase, equip, unequip, getMyInventory, getMyPointsLedger,
+  getThemeTrial, startThemeTrial, dismissThemeTrialIntro,
+};

@@ -56,8 +56,8 @@ async function findUserByEmail(email) {
 async function createUserFromGoogle({ name, email, googleId, avatarUrl }) {
   const { rows } = await db.query(
     `INSERT INTO users (
-        name, email, google_id, avatar_url, status, is_adult_declared
-     ) VALUES ($1, $2, $3, $4, 'pending_verification', FALSE)
+        name, email, google_id, avatar_url, status, is_adult_declared, theme_trial_eligible
+     ) VALUES ($1, $2, $3, $4, 'pending_verification', FALSE, TRUE)
      RETURNING id, name, phone, email, google_id, avatar_url, trust_score, status,
                xp_total, points_balance, wallet_balance_mzn`,
     [name, email, googleId, avatarUrl]
@@ -93,8 +93,8 @@ async function createUser({ name, phone, phoneProvider, passwordHash, isAdultDec
   const { rows } = await db.query(
     `INSERT INTO users (
         name, phone, phone_provider, password_hash,
-        is_adult_declared, terms_accepted_at, terms_version, status
-     ) VALUES ($1, $2, $3, $4, $5, now(), $6, 'pending_verification')
+        is_adult_declared, terms_accepted_at, terms_version, status, theme_trial_eligible
+     ) VALUES ($1, $2, $3, $4, $5, now(), $6, 'pending_verification', TRUE)
      RETURNING id, name, phone, trust_score, status, xp_total, points_balance, wallet_balance_mzn`,
     [name, phone, phoneProvider, passwordHash, isAdultDeclared, termsVersion]
   );

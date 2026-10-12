@@ -15,4 +15,9 @@ router.post('/unequip', validate(unequipSchema), controller.unequip);
 router.get('/inventory', controller.getMyInventory);
 router.get('/points-ledger', controller.getMyPointsLedger);
 
+// Tema Noite emprestado por 10 minutos (GER-002)
+router.get('/theme-trial', controller.getThemeTrial);
+router.post('/theme-trial/start', controller.startThemeTrial);
+router.post('/theme-trial/dismiss', controller.dismissThemeTrialIntro);
+
 module.exports = router;
