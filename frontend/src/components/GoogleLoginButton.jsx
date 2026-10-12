@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { ApiError } from '../api/client';
+import { clearReferralCode, getRememberedReferralCode } from '../lib/referralCode';
 
 const GSI_SCRIPT_SRC = 'https://accounts.google.com/gsi/client';
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
@@ -57,7 +58,9 @@ export function GoogleLoginButton() {
     async function handleCredentialResponse(response) {
       setError(null);
       try {
-        const user = await loginWithGoogle(response.credential);
+        // Convite: o código guardado ao abrir o link de convite viaja junto (só conta em conta nova).
+        const user = await loginWithGoogle(response.credential, getRememberedReferralCode());
+        clearReferralCode();
         const redirectTo = user.needsPhone
           ? '/completar-perfil'
           : location.state?.from?.pathname || '/dashboard';

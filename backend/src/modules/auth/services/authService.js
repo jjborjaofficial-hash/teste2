@@ -198,7 +198,7 @@ async function login({ phone, password }, context) {
  * controller sinaliza isso ao frontend via needsPhone para redirecionar à
  * tela de completar perfil antes de liberar o resto do app.
  */
-async function loginWithGoogle({ idToken }, context) {
+async function loginWithGoogle({ idToken, referralCode }, context) {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   if (!clientId) {
     logger.warn('Login com Google chamado sem GOOGLE_CLIENT_ID configurado no servidor.');
@@ -235,6 +235,17 @@ async function loginWithGoogle({ idToken }, context) {
     } else {
       user = await repository.createUserFromGoogle({ name, email, googleId, avatarUrl });
       await repository.createStreakRow(user.id);
+
+      // Convite: só quando a conta NASCE agora (igual ao cadastro por telefone). Numa conta que já
+      // existia, o código é ignorado: senão um utilizador antigo, que já tem respostas certas, podia
+      // ligar-se a um convidador e render a recompensa de imediato.
+      if (referralCode) {
+        try {
+          await referralsService.linkReferral(undefined, { referralCode, referredUserId: user.id });
+        } catch (err) {
+          // Indicação é um bônus, nunca impede o cadastro.
+        }
+      }
     }
 
     await repository.insertAuditLog({

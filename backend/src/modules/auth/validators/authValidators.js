@@ -40,6 +40,8 @@ const googleLoginSchema = z.object({
   // nunca a senha nem o access token, só esse token assinado que o backend
   // verifica diretamente junto ao Google antes de confiar em qualquer dado.
   idToken: z.string().min(10, 'Token do Google ausente ou inválido.'),
+  // Código de convite de quem a pessoa seguiu (link ?ref=...). Só conta se a conta for criada agora.
+  referralCode: z.string().trim().max(12).optional(),
 });
 
 // Tela "completar perfil": pedida logo após o primeiro login via Google,

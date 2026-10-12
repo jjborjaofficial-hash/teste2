@@ -65,8 +65,8 @@ async function login(req, res, next) {
 
 async function googleLogin(req, res, next) {
   try {
-    const { idToken } = req.validatedBody;
-    const result = await authService.loginWithGoogle({ idToken }, buildContext(req));
+    const { idToken, referralCode } = req.validatedBody;
+    const result = await authService.loginWithGoogle({ idToken, referralCode }, buildContext(req));
 
     setRefreshTokenCookie(res, result.refreshToken);
 

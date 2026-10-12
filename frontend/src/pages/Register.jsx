@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { PrimaryButton } from '../components/Button';
 import { GoogleLoginButton } from '../components/GoogleLoginButton';
+import { clearReferralCode, rememberReferralCode } from '../lib/referralCode';
 import { ApiError } from '../api/client';
 
 /**
@@ -26,6 +27,7 @@ export function Register() {
   useEffect(() => {
     const ref = searchParams.get('ref');
     if (ref) {
+      rememberReferralCode(ref); // também vale para o botão Google desta página
       setForm((f) => ({ ...f, referralCode: ref.toUpperCase() }));
       setReferralFromLink(true);
     }
@@ -54,6 +56,7 @@ export function Register() {
         termsAccepted: true,
         referralCode: form.referralCode || undefined,
       });
+      clearReferralCode();
       navigate('/dashboard', { replace: true });
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Não foi possível criar sua conta.');
