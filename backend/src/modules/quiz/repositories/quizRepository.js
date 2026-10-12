@@ -39,18 +39,21 @@ async function getQuestionById(questionId, categoryId, executor = db) {
 }
 
 async function getQuestionWithCorrectAlternative(questionId, executor = db) {
+  // Uma só ida ao banco (antes eram duas: pergunta e depois alternativas). Cada ida custa ~0,13 s entre regiões.
   const { rows } = await executor.query(
-    `SELECT id, category_id, time_limit_seconds, xp_reward, difficulty, explanation FROM questions WHERE id = $1 AND is_active = TRUE`,
+    `SELECT q.id, q.category_id, q.time_limit_seconds, q.xp_reward, q.difficulty, q.explanation,
+            COALESCE(
+              json_agg(json_build_object('id', a.id, 'label', a.label, 'is_correct', a.is_correct))
+                FILTER (WHERE a.id IS NOT NULL),
+              '[]'::json
+            ) AS alternatives
+       FROM questions q
+       LEFT JOIN question_alternatives a ON a.question_id = q.id
+      WHERE q.id = $1 AND q.is_active = TRUE
+      GROUP BY q.id`,
     [questionId]
   );
-  if (!rows[0]) return null;
-
-  const altResult = await executor.query(
-    `SELECT id, label, is_correct FROM question_alternatives WHERE question_id = $1`,
-    [questionId]
-  );
-
-  return { ...rows[0], alternatives: altResult.rows };
+  return rows[0] || null;
 }
 
 async function recordAttempt(

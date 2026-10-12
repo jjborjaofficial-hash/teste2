@@ -32,7 +32,7 @@ const DEFAULT_POINTS_BY_DIFFICULTY = { easy: 10, medium: 25, hard: 50 };
  * recalibrado sem deploy.
  */
 async function getPointsRewardForDifficulty(difficulty) {
-  const value = await configRepository.getConfigValue(`quiz_points_reward_${difficulty}`);
+  const value = await configRepository.getConfigValueCached(`quiz_points_reward_${difficulty}`);
   return value !== null ? Number(value) : (DEFAULT_POINTS_BY_DIFFICULTY[difficulty] ?? 0);
 }
 

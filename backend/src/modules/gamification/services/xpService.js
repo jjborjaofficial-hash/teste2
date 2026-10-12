@@ -41,7 +41,7 @@ async function addXpAndPoints(executor = db, { userId, xpDelta = 0, pointsDelta 
       boostApplied = true;
     }
 
-    const dailyCap = Number((await configRepository.getConfigValue('daily_points_cap', executor)) ?? 5000);
+    const dailyCap = Number((await configRepository.getConfigValueCached('daily_points_cap', executor)) ?? 5000);
     const earnedToday = await pointsLedgerRepository.sumCreditsToday(userId, executor);
     const remainingAllowance = Math.max(0, dailyCap - earnedToday);
     cappedPointsDelta = Math.min(effectivePointsDelta, remainingAllowance);

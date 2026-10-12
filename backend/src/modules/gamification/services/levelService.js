@@ -9,7 +9,7 @@ const configRepository = require('../../../common/repositories/systemConfigRepos
  * para que o produto funcione fim-a-fim enquanto a formalização oficial não ocorre.
  */
 async function calculateLevel(xpTotal) {
-  const step = Number((await configRepository.getConfigValue('level_xp_step')) ?? 500);
+  const step = Number((await configRepository.getConfigValueCached('level_xp_step')) ?? 500);
   const level = Math.floor(xpTotal / step) + 1;
   const xpIntoCurrentLevel = xpTotal % step;
   const xpToNextLevel = step - xpIntoCurrentLevel;
