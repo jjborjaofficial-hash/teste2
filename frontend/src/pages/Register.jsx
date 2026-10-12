@@ -161,7 +161,7 @@ export function Register() {
           </PrimaryButton>
         </form>
 
-        <GoogleLoginButton />
+        <GoogleLoginButton referralCode={form.referralCode} />
 
         <p className="text-caption text-text-secondary text-center mt-6">
           Já tem conta? <Link to="/entrar" className="text-primary font-semibold">Entrar</Link>

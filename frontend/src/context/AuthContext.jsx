@@ -73,8 +73,8 @@ export function AuthProvider({ children }) {
     return result.data.user;
   }, []);
 
-  const loginWithGoogle = useCallback(async (idToken) => {
-    const result = await authApi.loginWithGoogle(idToken);
+  const loginWithGoogle = useCallback(async (idToken, referralCode) => {
+    const result = await authApi.loginWithGoogle(idToken, referralCode);
     setTokens(result.data);
     setUser(result.data.user);
     return result.data.user;

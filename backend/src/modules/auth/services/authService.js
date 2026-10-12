@@ -198,7 +198,7 @@ async function login({ phone, password }, context) {
  * controller sinaliza isso ao frontend via needsPhone para redirecionar à
  * tela de completar perfil antes de liberar o resto do app.
  */
-async function loginWithGoogle({ idToken }, context) {
+async function loginWithGoogle({ idToken, referralCode }, context) {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   if (!clientId) {
     logger.warn('Login com Google chamado sem GOOGLE_CLIENT_ID configurado no servidor.');
@@ -235,6 +235,19 @@ async function loginWithGoogle({ idToken }, context) {
     } else {
       user = await repository.createUserFromGoogle({ name, email, googleId, avatarUrl });
       await repository.createStreakRow(user.id);
+
+      // Vínculo de indicação, como no cadastro por telefone: só para contas NOVAS (quem já tinha conta não pode ser
+      // "convidado" depois, senão dava para ganhar bónus com contas antigas). Falhar aqui nunca impede o login.
+      if (referralCode) {
+        try {
+          await referralsService.linkReferral(undefined, {
+            referralCode: String(referralCode).trim().toUpperCase(),
+            referredUserId: user.id,
+          });
+        } catch (err) {
+          // Não propaga: indicação é um bónus, não um requisito de entrada.
+        }
+      }
     }
 
     await repository.insertAuditLog({

@@ -36,11 +36,15 @@ function loadGsiScript() {
   });
 }
 
-export function GoogleLoginButton() {
+export function GoogleLoginButton({ referralCode }) {
   const { loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const containerRef = useRef(null);
+  // O Google inicializa o botão uma só vez: o callback guardaria o código antigo. A ref tem sempre o valor atual
+  // (o código vem do link ?ref= ou do campo da página de cadastro, que o utilizador ainda pode editar).
+  const referralCodeRef = useRef(referralCode);
+  referralCodeRef.current = referralCode;
   const [error, setError] = useState(null);
   const [unavailable, setUnavailable] = useState(false);
 
@@ -57,7 +61,7 @@ export function GoogleLoginButton() {
     async function handleCredentialResponse(response) {
       setError(null);
       try {
-        const user = await loginWithGoogle(response.credential);
+        const user = await loginWithGoogle(response.credential, referralCodeRef.current);
         const redirectTo = user.needsPhone
           ? '/completar-perfil'
           : location.state?.from?.pathname || '/dashboard';
