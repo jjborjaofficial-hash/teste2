@@ -2,7 +2,7 @@ const { Router } = require('express');
 const controller = require('../controllers/authController');
 const validate = require('../../../middleware/validate');
 const authenticate = require('../../../middleware/authenticate');
-const { authRateLimiter, refreshRateLimiter } = require('../../../middleware/rateLimiter');
+const { authRateLimiter, refreshRateLimiter, registerRateLimiter } = require('../../../middleware/rateLimiter');
 const {
   registerSchema,
   loginSchema,
@@ -13,7 +13,7 @@ const {
 const router = Router();
 
 // Todas as rotas de autenticação usam rate limiting rígido (Manual Parte 5: Middleware)
-router.post('/register', authRateLimiter, validate(registerSchema), controller.register);
+router.post('/register', registerRateLimiter, validate(registerSchema), controller.register);
 router.post('/login', authRateLimiter, validate(loginSchema), controller.login);
 router.post('/google', authRateLimiter, validate(googleLoginSchema), controller.googleLogin);
 // Pedida logo após o primeiro login via Google (conta nasce sem telefone).

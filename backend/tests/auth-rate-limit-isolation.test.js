@@ -24,11 +24,11 @@ describe('rate limit do login', () => {
     expect(res.status).not.toBe(429);
   });
 
-  it('bloqueia o login só depois de 8 tentativas por minuto e por IP', async () => {
+  it('bloqueia o login só depois de 30 tentativas por minuto e por IP', async () => {
     const send = (ip) =>
       request(app).post('/api/v1/auth/login').set('X-Forwarded-For', ip).send({ phone: '841234567', password: 'x' });
     let last;
-    for (let i = 0; i < 9; i++) last = await send('203.0.113.88');
+    for (let i = 0; i < 31; i++) last = await send('203.0.113.88');
     expect(last.status).toBe(429);
     expect((await send('203.0.113.99')).status).not.toBe(429);
   });
