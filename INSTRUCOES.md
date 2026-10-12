@@ -153,6 +153,50 @@ Se uma tarefa nova não encaixar em nenhuma área, crie um `PENDENTE.md` na past
   `teste2-backend` e `teste2-frontend` (diferentes dos do `render.yaml`); confira
   `CORS_ALLOWED_ORIGINS` no painel antes de supor algo.
 
+## GER-002 — Tema Noite emprestado por 10 minutos, logo depois de criar a conta (ideia do dono, 2026-10-12; APROVADA, ainda NÃO implementada)
+- Pedido (palavras do dono, resumidas): ao criar a conta, o utilizador recebe o Tema Noite **emprestado por 10 minutos**, só para
+  ter a noção e a experiência do modo escuro. Tem de aparecer uma informação a dizer que o tema escuro foi **emprestado por
+  10 minutos**; logo a seguir aparecem **duas opções: modo escuro e modo claro**. Quando os 10 minutos acabam, volta ao **modo
+  claro normal**. O modo escuro continua à venda na **Loja** (item `theme_night`, "Tema Noite").
+- Lógica decidida (o dono deixou a organização ao critério de quem implementar; estes pontos são a decisão por defeito e podem ser
+  mudados por ele):
+  1. **Quando aparece:** uma única vez, no primeiro acesso logo depois de a conta ser criada (depois do cadastro e do preenchimento
+     do perfil, antes do Painel). Contas que já existem **não** recebem a oferta (a frase do dono é "logo depois da criação da conta").
+  2. **Ecrã 1 — informação:** "Emprestámos-lhe o Tema Noite por 10 minutos para experimentar. Depois volta ao tema claro. Se gostar,
+     pode ficar com ele na Loja." Botão "Continuar". O relógio **ainda não** começa aqui.
+  3. **Ecrã 2 — escolha:** dois botões, "Modo escuro" e "Modo claro".
+     - "Modo escuro": o servidor regista o início do empréstimo, o tema escuro aplica-se já e aparece um aviso pequeno e discreto com a
+       contagem decrescente ("Tema Noite emprestado: 8:42") e atalho para a Loja.
+     - "Modo claro": nada é gasto. A oferta **continua disponível uma vez** num cartão em Configurações/Loja ("Experimentar o Tema
+       Noite por 10 minutos"); assim quem escolheu claro à pressa não perde a experiência. (Se o dono preferir que a escolha de "claro"
+       gaste a oferta, é só tirar esse cartão.)
+  4. **Quem manda no tempo é o servidor** (nunca o relógio do telemóvel, como já se faz no heartbeat das missões). Fim = início + 10 minutos.
+     Recarregar a página, fechar o navegador ou abrir noutro aparelho **não reinicia nem prolonga**: o tempo que resta vem do servidor.
+  5. **Fim do empréstimo:** o ecrã volta ao tema claro sozinho, sem precisar de recarregar, e aparece um aviso (não bloqueante): "O
+     empréstimo do Tema Noite terminou e voltou ao tema claro. Pode ficar com ele na Loja." com botão "Ir à Loja". Se o utilizador estiver
+     no meio de uma pergunta do quiz, a troca de cores não interrompe nem reinicia a pergunta nem o cronómetro de 50 s.
+  6. **Loja:** continua igual (comprar `theme_night`). Se comprar durante o empréstimo, o tema fica permanente, o aviso de contagem some e
+     o fim dos 10 minutos já não volta ao claro. O empréstimo **não** é uma compra: não entra no inventário nem em `equipped_theme`.
+  7. **Uma vez por conta.** Não mexe em dinheiro, Pontos, missões, ranking nem no teto diário.
+- Como fazer (sugestão técnica):
+  - **Base de dados** (nova migration, próximo número livre da faixa 600+): em `users`, `theme_trial_eligible BOOLEAN NOT NULL DEFAULT FALSE`
+    e `theme_trial_started_at TIMESTAMPTZ NULL`. O cadastro grava `theme_trial_eligible = TRUE` nas contas novas; as antigas ficam FALSE.
+  - **Backend:** `POST /shop/theme-trial/start` (idempotente): só se `theme_trial_eligible` e `theme_trial_started_at IS NULL`; grava `now()`;
+    devolve `{ endsAt, secondsLeft }`. Chamar de novo durante o empréstimo devolve o estado atual (não reinicia); depois de usado, devolve 409.
+    O perfil (`GET /users/me`) passa a incluir `themeTrial: { status: 'available' | 'active' | 'expired' | 'unavailable', endsAt, secondsLeft }`,
+    calculado na hora (sem tarefa agendada: "expirado" é `endsAt <= now()`). **Cuidado com a cache do perfil** (`userCache`): não guardar
+    `secondsLeft` em cache; guardar só `endsAt` e deixar o cliente contar a partir da hora do servidor devolvida na resposta.
+  - **Frontend:** em `AuthContext`, o tema efetivo é `night` se `equippedTheme === 'theme_night'` **ou** o empréstimo estiver ativo; um
+    temporizador chama a troca para claro em `endsAt` e volta a conferir ao regressar ao separador (`visibilitychange`). Dois ecrãs novos
+    (informação e escolha) mostrados uma vez após o cadastro, mais o aviso com a contagem e o aviso de fim. Nada de `localStorage` como fonte da verdade.
+  - **Acessibilidade:** avisos com `aria-live="polite"`, botões com área de toque de 44 px, contagem sem animação em `prefers-reduced-motion`.
+- Pronto quando: (a) conta nova vê o ecrã de informação e depois a escolha; (b) "Modo escuro" aplica o escuro e mostra a contagem; (c) F5 e
+  outro aparelho mantêm o tempo certo; (d) aos 10 minutos volta ao claro sozinho e mostra o aviso com ligação à Loja; (e) "Modo claro" não gasta
+  a oferta; (f) comprar o tema durante o empréstimo torna-o permanente; (g) conta antiga não vê nada; (h) testes do backend (iniciar uma vez,
+  idempotência, conta não elegível, fim por tempo com relógio simulado, compra durante o empréstimo) e `npm run build` do frontend passam.
+- Cuidados: não alterar a lógica do anúncio intersticial; não misturar com o Tema Noite comprado; migration idempotente; deploy manual do
+  backend e do frontend no Render (backend primeiro).
+
 ## Quiz v2 — estado e próximos passos (ordem de execução) — ESTES SÃO OS PRÓXIMOS PASSOS
 
 Especificação do dono: `docs/quiz-v2-rodadas-e-feedback.md` (ler primeiro). Detalhes de cada
