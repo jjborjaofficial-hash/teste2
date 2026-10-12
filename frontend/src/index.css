@@ -35,6 +35,8 @@
   --color-text: 237 238 240;
   --color-text-secondary: 156 163 175;
   --color-border: 45 49 58;
+  /* Controlos nativos (barras de rolagem, selects, campos de data) também escuros. */
+  color-scheme: dark;
 }
 
 /* Seção 13.7 do Doc. Mestre: prefers-reduced-motion — toda animação com fallback estático */

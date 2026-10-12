@@ -277,7 +277,7 @@ export function AdminWithdrawals() {
       </div>
 
       {actionModal && (
-        <div className="fixed inset-0 bg-text/40 z-50 flex items-end sm:items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-4">
           <div className="bg-surface rounded-card p-5 w-full max-w-sm space-y-3">
             <h2 className="font-display text-h2 text-text">{reasonModalConfig[actionModal.action].title}</h2>
             <textarea

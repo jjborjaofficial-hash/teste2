@@ -197,7 +197,7 @@ function DetailModal({ entry, onClose }) {
   if (!entry) return null;
   const CategoryIcon = CATEGORY_ICONS[entry.displayCategory.key];
   return (
-    <div className="fixed inset-0 bg-text/40 z-50 flex items-end sm:items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-4" onClick={onClose}>
       <div className="bg-surface rounded-card p-5 w-full max-w-sm space-y-3" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between">
           <h2 className="font-display text-h2 text-text">{entry.name}</h2>
