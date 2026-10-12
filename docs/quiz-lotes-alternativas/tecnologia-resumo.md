@@ -21,4 +21,4 @@ Medição final (validador do projeto, só Tecnologia ativa): **0 reprovadas, 0 
 | médio 5 | 20 | 316 e 317 | 100% → 20% | [tecnologia-medio_lote05.md](tecnologia-medio_lote05.md) |
 | ajuste residual | 7 (14 alternativas) | 326 | 7 perguntas do lote 4 sem pistas | [tecnologia-ajuste-residual.md](tecnologia-ajuste-residual.md) |
 
-Cada rascunho traz a tabela das 4 opções por pergunta (a certa em negrito, com ✔) e as explicações, para conferência visual. As mudanças só chegam ao app no próximo deploy do backend (as migrations correm no deploy).
+Cada rascunho traz a tabela das 4 opções por pergunta (a certa em negrito, com ✔) e as explicações, para conferência visual. As mudanças só chegam ao site no próximo deploy do backend (as migrations correm no deploy).

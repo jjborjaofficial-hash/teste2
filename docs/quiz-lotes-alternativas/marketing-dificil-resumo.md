@@ -11,4 +11,4 @@ Medição final (validador do projeto, só Marketing difícil ativo): **0 reprov
 | difícil 3 | 25 | 524 e 525 | 92% → 20% | [marketing-dificil_lote03.md](marketing-dificil_lote03.md) |
 | difícil 4 | 30 | 526 e 527 | 100% → 26% | [marketing-dificil_lote04.md](marketing-dificil_lote04.md) |
 
-Cada rascunho traz a tabela das 4 opções por pergunta (a certa em negrito, com ✔) e as explicações, para conferência visual. As mudanças só chegam ao app no próximo deploy do backend (as migrations correm no deploy).
+Cada rascunho traz a tabela das 4 opções por pergunta (a certa em negrito, com ✔) e as explicações, para conferência visual. As mudanças só chegam ao site no próximo deploy do backend (as migrations correm no deploy).
