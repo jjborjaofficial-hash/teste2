@@ -77,15 +77,28 @@ async function assignMissionIfNotPresent(executor, { userId, missionId, targetSn
  * internas de Missões).
  */
 async function incrementProgressForCategory(executor, { userId, categoryId }) {
+  // visited_categories guarda as categorias distintas das respostas certas do dia. Missões com
+  // min_distinct_categories > 1 (ex.: "30 certas em 3 categorias") só completam quando o alvo de
+  // acertos E o mínimo de categorias distintas estão ambos cumpridos.
   const { rows } = await executor.query(
     `UPDATE user_missions um
      SET progress_count = um.progress_count + 1,
+         visited_categories = CASE
+             WHEN $2::uuid = ANY(um.visited_categories) THEN um.visited_categories
+             ELSE array_append(um.visited_categories, $2::uuid)
+         END,
          status = CASE
-             WHEN um.progress_count + 1 >= m.target_quiz_count THEN 'completed'
+             WHEN um.progress_count + 1 >= m.target_quiz_count
+                  AND cardinality(CASE WHEN $2::uuid = ANY(um.visited_categories) THEN um.visited_categories
+                                       ELSE array_append(um.visited_categories, $2::uuid) END) >= m.min_distinct_categories
+             THEN 'completed'
              ELSE um.status
          END,
          completed_at = CASE
-             WHEN um.progress_count + 1 >= m.target_quiz_count THEN now()
+             WHEN um.progress_count + 1 >= m.target_quiz_count
+                  AND cardinality(CASE WHEN $2::uuid = ANY(um.visited_categories) THEN um.visited_categories
+                                       ELSE array_append(um.visited_categories, $2::uuid) END) >= m.min_distinct_categories
+             THEN now()
              ELSE um.completed_at
          END
      FROM missions m
@@ -99,6 +112,36 @@ async function incrementProgressForCategory(executor, { userId, categoryId }) {
     [userId, categoryId]
   );
   return rows; // missões que acabaram de ser concluídas ou tiveram progresso
+}
+
+/**
+ * Missões activity_type='referral' ("convidar 1 utilizador novo"): completa quando um convite do
+ * utilizador QUALIFICA (o convidado cumpriu os primeiros quizzes certos; ver referralsService).
+ * Se a missão de hoje ainda não foi atribuída, atribui-a primeiro, para o convite não se perder.
+ */
+async function completeReferralMissions(executor, { userId }) {
+  await executor.query(
+    `INSERT INTO user_missions (user_id, mission_id, target_snapshot, period_date)
+     SELECT $1, m.id, m.target_quiz_count, ${dateInPlatformTz('now()')}
+     FROM missions m
+     WHERE m.is_active = TRUE AND m.type = 'daily' AND m.activity_type = 'referral'
+       AND (m.starts_at IS NULL OR m.starts_at <= now()) AND (m.ends_at IS NULL OR m.ends_at >= now())
+     ON CONFLICT DO NOTHING`,
+    [userId]
+  );
+  const { rows } = await executor.query(
+    `UPDATE user_missions um
+     SET progress_count = um.target_snapshot, status = 'completed', completed_at = now()
+     FROM missions m
+     WHERE um.mission_id = m.id
+       AND um.user_id = $1
+       AND um.status = 'in_progress'
+       AND um.period_date = ${dateInPlatformTz('now()')}
+       AND m.activity_type = 'referral'
+     RETURNING um.id, um.mission_id, um.status, m.title`,
+    [userId]
+  );
+  return rows;
 }
 
 /**
@@ -249,6 +292,7 @@ async function markRewardClaimed(executor, userMissionId) {
 }
 
 module.exports = {
+  completeReferralMissions,
   listActiveMissions,
   getUserMissionProgress,
   assignMissionIfNotPresent,

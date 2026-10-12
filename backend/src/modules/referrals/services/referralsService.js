@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const db = require('../../../config/database');
 const repository = require('../repositories/referralsRepository');
 const xpService = require('../../gamification/services/xpService');
+const missionsService = require('../../missions/services/missionsService');
 const configRepository = require('../../../common/repositories/systemConfigRepository');
 
 /**
@@ -74,6 +75,8 @@ async function checkAndRewardQualification(executor, referredUserId) {
     pointsReferenceId: referral.id,
   });
   await repository.markQualifiedAndRewarded(executor, referral.id);
+  // Missão diária "convidar 1 utilizador novo" (mesma transação).
+  await missionsService.completeReferralMissions(executor, { userId: referral.referrer_user_id });
 
   return { referralId: referral.id, referrerUserId: referral.referrer_user_id, rewardPoints };
 }

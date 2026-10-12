@@ -6,6 +6,8 @@ mesmo commit** que a implementa.
 
 ## BE-005 — Sobras das rodadas do quiz v2
 
+**Catálogo diário novo FEITO (12/10, pedido do dono; migration 601, `tests/missions-catalogo-novo.test.js`).** 6 missões ativas: Fazer login; 20 minutos de estudo; Acerte 50 perguntas (qualquer categoria); Acerte 30 em 3 categorias (30 certas do dia vindas de pelo menos 3 categorias distintas; coluna nova `missions.min_distinct_categories`); Convide um amigo (tipo novo `referral`, completa quando o convite qualifica, isto é, quando o convidado cumpre os quizzes certos da regra atual); Explorador (3 categorias). As outras diárias ficaram desativadas (lógica intacta). Todas pagam 1,20 MZN (total 6,00, teto 7,20) **exceto "Convide um amigo", que paga 0 MZN** (só XP 30 e pontos 15): um convite pago em dinheiro todos os dias podia ser explorado com contas falsas; o dono pode mudar no admin. Missões "completar rodada" continuam sem nenhuma criada (a decisão do mínimo de acertos fica sem efeito enquanto não houver missão de rodada com dinheiro).
+
 BE-002 (rodadas no servidor: migration 107, `quiz_rounds`, seleção das 10, retomar ao recarregar,
 resumo só da rodada) já foi feito e testado. **(a) FEITO (11/10, decisão do dono: projeto ainda não lançado, sem versões antigas
 instaladas):** a rota antiga `GET /quiz/categories/:id/next-question` foi removida e `POST /quiz/answers` passou a exigir

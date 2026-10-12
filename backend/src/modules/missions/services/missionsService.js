@@ -55,6 +55,19 @@ async function listMyMissions(userId) {
 }
 
 /**
+ * Chamado pelo módulo Referrals quando um convite do utilizador qualifica: completa a missão
+ * "convidar 1 utilizador novo" do dia (mesma transação do Quiz).
+ */
+async function completeReferralMissions(executor, { userId }) {
+  const updated = await repository.completeReferralMissions(executor, { userId });
+  for (const mission of updated) {
+    // eslint-disable-next-line no-await-in-loop
+    await notificationsService.notifyMissionCompleted(executor, userId, mission.title);
+  }
+  return updated;
+}
+
+/**
  * Chamado pelo módulo Quiz após uma resposta correta, dentro da mesma transação.
  */
 async function incrementProgressForCategory(executor, { userId, categoryId }) {
@@ -203,6 +216,7 @@ module.exports = {
   listMyMissions,
   incrementProgressForCategory,
   incrementRoundCompletion,
+  completeReferralMissions,
   claimReward,
   registerHeartbeat,
   registerPresence,
