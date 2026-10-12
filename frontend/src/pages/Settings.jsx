@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Card } from '../components/Card';
+import { ThemeTrialCard } from '../components/ThemeTrialCard';
 import { PrimaryButton, SecondaryButton } from '../components/Button';
 import { useToast } from '../components/Toast';
 import { usersApi } from '../api/profileApi';
@@ -107,6 +108,8 @@ export function Settings() {
         </button>
         <h1 className="font-display text-h1 text-text">Configurações</h1>
       </header>
+
+      <ThemeTrialCard />
 
       <section className="space-y-2">
         <h2 className="font-display text-h2 text-text">Conta</h2>

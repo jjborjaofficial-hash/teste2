@@ -1,25 +1,86 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { authApi } from '../api/authApi';
 import { setTokens, clearTokens, ApiError } from '../api/client';
 import { usersApi } from '../api/profileApi';
+import { shopApi } from '../api/shopApi';
 
 const AuthContext = createContext(null);
+
+// Estado "sem oferta" usado quando o perfil não consegue dizer nada sobre o empréstimo do Tema Noite
+// (nunca prender o utilizador à espera disso).
+const TRIAL_UNAVAILABLE = { status: 'unavailable', endsAt: null, secondsLeft: 0, serverNow: null, introSeen: true, durationSeconds: 600 };
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Aplica o Tema Noite (item cosmético da Loja) globalmente sempre que o
-  // perfil carregado/atualizado indicar que ele está equipado — troca só as
-  // variáveis CSS (ver index.css), nenhum componente precisa saber disso.
+  // Tema Noite emprestado por 10 minutos (GER-002). Quem manda no tempo é o servidor: o perfil traz `endsAt` e
+  // `serverNow`; aqui só se converte o fim para o relógio deste aparelho (endsAt - diferença entre os relógios).
+  const trialEndsAtLocal = useMemo(() => {
+    const t = user?.themeTrial;
+    if (!t || t.status !== 'active' || !t.endsAt || !t.serverNow) return null;
+    return Date.parse(t.endsAt) - (Date.parse(t.serverNow) - Date.now());
+  }, [user?.themeTrial]);
+  const [, forceTick] = useState(0);
+  const [trialEnded, setTrialEnded] = useState(false);
+  const trialEndedNotified = useRef(null);
+  const trialActive = trialEndsAtLocal !== null && Date.now() < trialEndsAtLocal;
+
+  // Na hora exata do fim volta ao tema claro sozinho (sem recarregar) e avisa uma vez. Os navegadores atrasam
+  // temporizadores de separadores em segundo plano; por isso também se confere ao voltar ao separador.
+  useEffect(() => {
+    if (trialEndsAtLocal === null) return undefined;
+    let timer;
+    const check = () => {
+      clearTimeout(timer);
+      const left = trialEndsAtLocal - Date.now();
+      if (left > 0) {
+        timer = setTimeout(check, Math.min(left + 20, 60000));
+        return;
+      }
+      forceTick((n) => n + 1);
+      if (trialEndedNotified.current !== trialEndsAtLocal) {
+        trialEndedNotified.current = trialEndsAtLocal;
+        setTrialEnded(true);
+      }
+    };
+    check();
+    document.addEventListener('visibilitychange', check);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('visibilitychange', check);
+    };
+  }, [trialEndsAtLocal]);
+
+  // Aplica o Tema Noite globalmente: comprado e equipado na Loja (item cosmético) OU emprestado e ainda dentro
+  // dos 10 minutos. Troca só as variáveis CSS (ver index.css), nenhum componente precisa saber disso.
+  const nightTheme = user?.equippedTheme === 'theme_night' || trialActive;
   useEffect(() => {
     const root = document.documentElement;
-    if (user?.equippedTheme === 'theme_night') {
+    if (nightTheme) {
       root.setAttribute('data-theme', 'night');
     } else {
       root.removeAttribute('data-theme');
     }
-  }, [user?.equippedTheme]);
+  }, [nightTheme]);
+
+  // Quem entrou por cadastro/login recebe do servidor só um resumo do utilizador (sem `themeTrial`):
+  // busca o perfil completo uma vez. Se falhar, segue sem a oferta em vez de prender o utilizador.
+  useEffect(() => {
+    if (!user || user.themeTrial !== undefined) return undefined;
+    let cancelled = false;
+    usersApi.me()
+      .then((profile) => {
+        if (cancelled) return;
+        setUser((u) => (u && u.id === profile.data.id ? { ...u, ...profile.data, themeTrial: profile.data.themeTrial ?? TRIAL_UNAVAILABLE } : u));
+      })
+      .catch(() => {
+        if (!cancelled) setUser((u) => (u ? { ...u, themeTrial: TRIAL_UNAVAILABLE } : u));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   // Ao carregar o app, sempre tenta restaurar a sessão buscando o perfil. Não
   // há mais como checar de antemão se existe um refresh token — ele vive num
@@ -91,6 +152,7 @@ export function AuthProvider({ children }) {
   const logout = useCallback(async () => {
     clearTokens();
     setUser(null);
+    setTrialEnded(false);
     try {
       // O backend lê o refresh token do próprio cookie httpOnly e o revoga;
       // também limpa o cookie na resposta.
@@ -106,9 +168,31 @@ export function AuthProvider({ children }) {
     return profile.data;
   }, []);
 
+  // "Modo escuro" no ecrã de escolha (ou no cartão da Loja/Configurações): o servidor regista o início e o
+  // perfil em memória passa a mostrar o empréstimo ativo.
+  const startThemeTrial = useCallback(async () => {
+    const result = await shopApi.startThemeTrial();
+    setTrialEnded(false);
+    setUser((u) => (u ? { ...u, themeTrial: result.data } : u));
+    return result.data;
+  }, []);
+
+  // "Modo claro": só deixa de mostrar os ecrãs; a oferta continua disponível uma vez.
+  const dismissThemeTrialIntro = useCallback(async () => {
+    const result = await shopApi.dismissThemeTrialIntro();
+    setUser((u) => (u ? { ...u, themeTrial: result.data } : u));
+    return result.data;
+  }, []);
+
+  const dismissTrialEnded = useCallback(() => setTrialEnded(false), []);
+
   return (
     <AuthContext.Provider
-      value={{ user, loading, register, login, loginWithGoogle, completeProfile, logout, refreshProfile }}
+      value={{
+        user, loading, register, login, loginWithGoogle, completeProfile, logout, refreshProfile,
+        themeTrial: { active: trialActive, endsAtLocal: trialEndsAtLocal, ended: trialEnded },
+        startThemeTrial, dismissThemeTrialIntro, dismissTrialEnded,
+      }}
     >
       {children}
     </AuthContext.Provider>

@@ -28,6 +28,7 @@ import { ReacceptTerms } from './pages/ReacceptTerms';
 import { TermsPage, PrivacyPage, RewardsPolicyPage, HowItWorksPage, CentralJuridica, LegalDocumentByRoute, MyLegalAcceptances } from './pages/Legal';
 import { SupportPage } from './pages/CentralAjuda';
 import { CookieBanner } from './components/CookieBanner';
+import { ThemeTrialBar } from './components/ThemeTrialBar';
 import { AdminHome } from './pages/admin/AdminHome';
 import { AdminWithdrawals } from './pages/admin/AdminWithdrawals';
 import { AdminUsers } from './pages/admin/AdminUsers';
@@ -48,6 +49,7 @@ export default function App() {
       <AuthProvider>
         <ToastProvider>
           <CookieBanner />
+          <ThemeTrialBar />
           <Routes>
             {/* Público (Seção 19.1: Onboarding -> Login/Cadastro) */}
             <Route path="/onboarding" element={<Onboarding />} />

@@ -10,4 +10,8 @@ export const shopApi = {
   unequip: (slot) => api.post('/shop/unequip', { slot }),
   getInventory: () => api.get('/shop/inventory'),
   getPointsLedger: () => api.get('/shop/points-ledger'),
+  // Tema Noite emprestado por 10 minutos (GER-002)
+  getThemeTrial: () => api.get('/shop/theme-trial'),
+  startThemeTrial: () => api.post('/shop/theme-trial/start'),
+  dismissThemeTrialIntro: () => api.post('/shop/theme-trial/dismiss'),
 };

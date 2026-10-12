@@ -7,6 +7,7 @@ import { PrimaryButton, SecondaryButton } from '../components/Button';
 import { useToast } from '../components/Toast';
 import { ApiError } from '../api/client';
 import { PointsIcon, ShopIcon, CheckIcon } from '../icons';
+import { ThemeTrialCard } from '../components/ThemeTrialCard';
 
 /**
  * Loja de Pontos (docx "SISTEMA DE ECONOMIA E RECOMPENSAS", Seção 3 — "sink de
@@ -228,6 +229,7 @@ export function Shop() {
 
       {tab === 'loja' && (
         <>
+          <ThemeTrialCard />
           {error && <p className="text-danger text-body">Não foi possível carregar a loja agora.</p>}
           {!error && items === null && <p className="text-caption text-text-secondary">Carregando itens...</p>}
 
