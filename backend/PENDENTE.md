@@ -37,6 +37,28 @@ Completar rodadas), mostra a unidade certa na lista e avisa quando uma missão d
 jogador erre quase tudo, e, ao contrário de `quiz_count`, que só conta respostas certas, isto permite completar missões
 pagas respondendo ao acaso; antes de criar uma missão com dinheiro decidir se exige um mínimo de acertos por rodada.
 
+## BE-006 — Convites: login com Google e defesas contra contas falsas (12/10)
+
+Dois furos encontrados ao rever a missão paga \"Convide um amigo\" (migration 603). **Corrigidos nesta branch:**
+1. **O login com Google perdia o convite.** Só o cadastro por telefone ligava o código; quem entrava pelo botão
+   \"Continuar com Google\" (que está na própria página de cadastro) não passava o código ao backend e o convidador
+   ficava sem nada, sem erro visível. Agora o frontend guarda o `?ref=` (`frontend/src/lib/referralCode.js`) e
+   `POST /auth/google` aceita `referralCode`, que só vale quando a **conta nasce nesse login**: numa conta já existente
+   é ignorado (senão um utilizador antigo, com respostas certas acumuladas, ligava-se a um convidador e rendia logo).
+2. **A regra de qualificação era fraca:** bastavam 5 respostas certas de qualquer tipo, sem limite de convites por
+   pessoa e sem nada contra contas falsas. A migration 604 acrescenta, em `system_config`, três defesas que o dono pode
+   ajustar sem código: `referral_min_completed_rounds` (= 1), `referral_min_trust_score` (= 60, o mesmo mínimo da
+   conversão de Pontos) e `referral_max_rewards_per_referrer_per_day` (= 5; 0 desliga). Se uma impede, o convite fica
+   `pending` e é reavaliado na resposta certa seguinte ou ao concluir uma rodada (a verificação também corre agora
+   ao concluir a rodada, porque a última resposta pode ser errada).
+
+**Decisão do dono por tomar:** os valores 1 / 60 / 5 são prudentes, não aprovados. Para o dono ter noção do custo:
+a missão paga 1,20 MZN por dia e cada convite recompensado dá 100 Pontos (1 MZN pela conversão atual de 1000 Pontos =
+10 MZN), tudo dentro do teto diário de 7,20 MZN. **Ainda sem defesa (não fiz, precisa de decisão):** verificação do
+telefone por SMS, limite total por convidador (não só por dia), bloqueio de várias contas no mesmo aparelho ou IP, e
+exigir que as respostas certas do convidado sejam de dias diferentes. Testes: `auth-google-referral` (6) e
+`referrals-qualification` (8); antes não havia teste nenhum da regra de qualificação.
+
 ## BE-003 — REGULARIZAR o padrão "a correta é a mais longa" e criar o validador (quiz v2)
 
 **Padrão obrigatório para reescrever alternativas (regras, passo a passo e modelos por tipo de pergunta):

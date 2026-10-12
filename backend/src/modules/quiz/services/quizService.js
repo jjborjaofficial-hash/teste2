@@ -348,6 +348,9 @@ async function submitAnswer({ userId, questionId, alternativeId, roundId }) {
         roundSummary = await buildRoundSummary(updated, client);
         // BE-005 b: missões "completar uma rodada" (mesma transação; advanceRound fecha a rodada uma só vez).
         await missionsService.incrementRoundCompletion(client, { userId, categoryId: round.category_id });
+        // Convites: concluir a rodada pode ser o que falta para o convite do utilizador qualificar
+        // (mesmo que a última resposta tenha sido errada, que não passa pela verificação das certas).
+        await referralsService.checkAndRewardQualification(client, userId);
       }
     }
 

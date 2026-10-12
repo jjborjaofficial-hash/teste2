@@ -32,11 +32,18 @@
 
 - `GET /api/v1/referrals/me/code` — retorna (e cria, se necessário) o código único do usuário.
 - `GET /api/v1/referrals/me` — lista indicações feitas e seus status.
-- Fluxo: o novo usuário informa `referralCode` opcionalmente no `POST /auth/register`.
-  O vínculo é criado como `pending`. Quando o indicado completa um número mínimo de
-  quizzes corretos (`system_config.referral_qualification_quiz_count`, placeholder = 5),
-  o indicador recebe pontos automaticamente (`system_config.referral_reward_points`,
-  placeholder = 100) — verificado a cada resposta correta de quiz do indicado.
+- Fluxo: o novo usuário informa `referralCode` opcionalmente no `POST /auth/register` **ou** no `POST /auth/google`
+  (login com Google; o código só vale quando a conta é criada nesse momento, nunca numa conta que já existia).
+  O frontend guarda o código do link `?ref=` para ele chegar até ao botão "Continuar com Google".
+  O vínculo é criado como `pending`. O convite **qualifica** (e o indicador recebe pontos e completa a missão
+  "Convide um amigo") quando o indicado cumpre **tudo** isto, verificado a cada resposta correta e ao concluir uma rodada:
+  - número mínimo de respostas certas (`referral_qualification_quiz_count`, = 5);
+  - pelo menos N rodadas **concluídas** (`referral_min_completed_rounds`, = 1);
+  - Trust Score mínimo (`referral_min_trust_score`, = 60);
+  - e o indicador ainda não atingiu o limite de convites recompensados no dia, calendário de Maputo
+    (`referral_max_rewards_per_referrer_per_day`, = 5).
+  Quando uma condição impede, o convite fica `pending` e é reavaliado mais tarde (nada se perde).
+  Pontos por convite: `referral_reward_points` (= 100).
 - ⚠️ Valores de recompensa e critério de qualificação são **placeholders técnicos**,
   pendentes de aprovação do negócio (mesma ressalva já feita para Streak — Seção 23.1.5).
 

@@ -1,4 +1,5 @@
 const db = require('../../../config/database');
+const { dateInPlatformTz } = require('../../../common/time/platformTimezone');
 
 async function getCodeForUser(userId, executor = db) {
   const { rows } = await executor.query(
@@ -45,6 +46,31 @@ async function countQualifyingActivity(referredUserId, executor = db) {
   return rows[0].count;
 }
 
+/** Rodadas COMPLETAS do utilizador (uma conta falsa tem de fazer mais do que 5 respostas rápidas). */
+async function countCompletedRounds(userId, executor = db) {
+  const { rows } = await executor.query(
+    `SELECT COUNT(*)::int AS count FROM quiz_rounds WHERE user_id = $1 AND status = 'completed'`,
+    [userId]
+  );
+  return rows[0].count;
+}
+
+async function getTrustScore(userId, executor = db) {
+  const { rows } = await executor.query('SELECT trust_score FROM users WHERE id = $1', [userId]);
+  return rows[0] ? Number(rows[0].trust_score) : 0;
+}
+
+/** Convites já recompensados a este convidador HOJE (dia do calendário no fuso da plataforma). */
+async function countRewardedToday(referrerUserId, executor = db) {
+  const { rows } = await executor.query(
+    `SELECT COUNT(*)::int AS count FROM referrals
+     WHERE referrer_user_id = $1 AND status = 'rewarded'
+       AND ${dateInPlatformTz('reward_granted_at')} = ${dateInPlatformTz('now()')}`,
+    [referrerUserId]
+  );
+  return rows[0].count;
+}
+
 async function getPendingReferralsForUser(referredUserId, executor = db) {
   const { rows } = await executor.query(
     `SELECT id, referrer_user_id, status FROM referrals
@@ -80,6 +106,9 @@ module.exports = {
   createReferral,
   countQualifyingActivity,
   getPendingReferralsForUser,
+  countCompletedRounds,
+  getTrustScore,
+  countRewardedToday,
   markQualifiedAndRewarded,
   listMyReferrals,
 };
