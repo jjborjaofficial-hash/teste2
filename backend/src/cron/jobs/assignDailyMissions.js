@@ -28,7 +28,7 @@ require('dotenv').config();
 const logger = require('../../common/logger');
 const db = require('../../config/database');
 const { pool } = require('../../config/database');
-const { dateInPlatformTz } = require('../../common/time/platformTimezone');
+const { dateInPlatformTz, isoWeekdayTodayInPlatformTz } = require('../../common/time/platformTimezone');
 
 async function run() {
   logger.info('CRON: iniciando atribuição diária de missões (lote)');
@@ -52,6 +52,8 @@ async function run() {
       AND m.type = 'daily'
       AND (m.starts_at IS NULL OR m.starts_at <= now())
       AND (m.ends_at IS NULL OR m.ends_at >= now())
+      -- Rotação: weekdays NULL = todos os dias; senão só nos dias ISO listados
+      AND (m.weekdays IS NULL OR ${isoWeekdayTodayInPlatformTz()} = ANY(m.weekdays))
     ON CONFLICT DO NOTHING
   `);
 

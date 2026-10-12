@@ -33,13 +33,13 @@ afterAll(async () => {
   await db.pool.end();
 });
 
-describe('catálogo diário (migration 601)', () => {
-  it('tem exatamente 6 missões diárias ativas, com os alvos pedidos e no máximo 7,20 MZN por dia', async () => {
+describe('catálogo diário (migrations 601 a 604) e rotação semanal', () => {
+  it('tem 7 missões ativas, com os alvos pedidos; as 3 fixas não têm dias e as outras 4 rodam', async () => {
     const { rows } = await db.query(
-      `SELECT activity_type, target_quiz_count, min_distinct_categories, money_reward_mzn FROM missions
+      `SELECT title, activity_type, target_quiz_count, min_distinct_categories, money_reward_mzn, weekdays FROM missions
        WHERE type = 'daily' AND is_active ORDER BY title`
     );
-    expect(rows).toHaveLength(6);
+    expect(rows).toHaveLength(7);
     const by = (t, extra = () => true) => rows.find((r) => r.activity_type === t && extra(r));
     expect(by('login').target_quiz_count).toBe(1);
     expect(by('time_active_minutes').target_quiz_count).toBe(20);
@@ -47,8 +47,37 @@ describe('catálogo diário (migration 601)', () => {
     expect(by('quiz_count', (r) => r.min_distinct_categories === 3).target_quiz_count).toBe(30);
     expect(by('referral').target_quiz_count).toBe(1);
     expect(by('round_streak').target_quiz_count).toBe(6);
-    const totalMzn = rows.reduce((s, r) => s + Number(r.money_reward_mzn), 0);
-    expect(totalMzn).toBeLessThanOrEqual(7.2);
+    expect(by('category_exploration').target_quiz_count).toBe(3);
+    const fixed = rows.filter((r) => r.weekdays === null).map((r) => r.title).sort();
+    expect(fixed).toEqual(['20 minutos de estudo', 'Acerte 50 perguntas', 'Fazer login']);
+  });
+
+  it('todos os dias da semana têm exatamente 6 missões, no máximo 7,20 MZN, com as 3 fixas; Convidar só 3 dias', async () => {
+    const { rows } = await db.query(
+      `SELECT title, money_reward_mzn, weekdays FROM missions WHERE type = 'daily' AND is_active`
+    );
+    let convidarDias = 0;
+    for (let dia = 1; dia <= 7; dia += 1) {
+      const doDia = rows.filter((r) => r.weekdays === null || r.weekdays.includes(dia));
+      expect(doDia).toHaveLength(6);
+      expect(doDia.reduce((s, r) => s + Number(r.money_reward_mzn), 0)).toBeLessThanOrEqual(7.2);
+      for (const t of ['Fazer login', '20 minutos de estudo', 'Acerte 50 perguntas']) {
+        expect(doDia.map((r) => r.title)).toContain(t);
+      }
+      if (doDia.some((r) => r.title === 'Convide um amigo')) convidarDias += 1;
+    }
+    expect(convidarDias).toBe(3);
+  });
+
+  it('listActiveMissions só devolve as missões agendadas para hoje', async () => {
+    const today = (await db.query(`SELECT EXTRACT(ISODOW FROM now() AT TIME ZONE 'Africa/Maputo')::int AS d`)).rows[0].d;
+    const active = await missionsRepository.listActiveMissions();
+    const titles = new Set(active.map((m) => m.title));
+    const { rows } = await db.query(`SELECT title, weekdays FROM missions WHERE type = 'daily' AND is_active`);
+    for (const r of rows) {
+      const expected = r.weekdays === null || r.weekdays.includes(today);
+      expect(titles.has(r.title)).toBe(expected);
+    }
   });
 });
 
@@ -73,15 +102,23 @@ describe('acertar N perguntas em pelo menos 3 categorias', () => {
 });
 
 describe('convidar 1 utilizador novo', () => {
-  it('completa a missão do dia (atribuindo-a se ainda não existir) quando o convite qualifica', async () => {
+  it('completa a missão do dia (atribuindo-a se ainda não existir) só nos dias em que ela está agendada', async () => {
+    const today = (await db.query(`SELECT EXTRACT(ISODOW FROM now() AT TIME ZONE 'Africa/Maputo')::int AS d`)).rows[0].d;
+    const scheduled = [2, 4, 6].includes(today);
     const done = await missionsService.completeReferralMissions(db, { userId });
-    expect(done.map((m) => m.title)).toContain('Convide um amigo');
     const { rows } = await db.query(
       `SELECT um.status FROM user_missions um JOIN missions m ON m.id = um.mission_id
        WHERE um.user_id = $1 AND m.activity_type = 'referral' AND m.type = 'daily'`, [userId]);
-    expect(rows[0].status).toBe('completed');
-    // repetir no mesmo dia não completa outra vez
-    expect(await missionsService.completeReferralMissions(db, { userId })).toHaveLength(0);
+    if (scheduled) {
+      expect(done.map((m) => m.title)).toContain('Convide um amigo');
+      expect(rows[0].status).toBe('completed');
+      // repetir no mesmo dia não completa outra vez
+      expect(await missionsService.completeReferralMissions(db, { userId })).toHaveLength(0);
+    } else {
+      // fora dos dias agendados a missão não existe para o utilizador: nada é atribuído nem completado
+      expect(done).toHaveLength(0);
+      expect(rows).toHaveLength(0);
+    }
   });
 });
 

@@ -1,5 +1,5 @@
 const db = require('../../../config/database');
-const { dateInPlatformTz } = require('../../../common/time/platformTimezone');
+const { dateInPlatformTz, isoWeekdayTodayInPlatformTz } = require('../../../common/time/platformTimezone');
 
 async function listActiveMissions(executor = db) {
   const { rows } = await executor.query(
@@ -8,7 +8,9 @@ async function listActiveMissions(executor = db) {
      FROM missions
      WHERE is_active = TRUE
        AND (starts_at IS NULL OR starts_at <= now())
-       AND (ends_at IS NULL OR ends_at >= now())`
+       AND (ends_at IS NULL OR ends_at >= now())
+       -- Rotação: weekdays NULL = todos os dias; senão só nos dias ISO listados (1 = segunda ... 7 = domingo)
+       AND (weekdays IS NULL OR ${isoWeekdayTodayInPlatformTz()} = ANY(weekdays))`
   );
   return rows;
 }
@@ -126,6 +128,7 @@ async function completeReferralMissions(executor, { userId }) {
      FROM missions m
      WHERE m.is_active = TRUE AND m.type = 'daily' AND m.activity_type = 'referral'
        AND (m.starts_at IS NULL OR m.starts_at <= now()) AND (m.ends_at IS NULL OR m.ends_at >= now())
+       AND (m.weekdays IS NULL OR ${isoWeekdayTodayInPlatformTz()} = ANY(m.weekdays))
      ON CONFLICT DO NOTHING`,
     [userId]
   );
@@ -157,6 +160,7 @@ async function updateRoundStreakMissions(executor, { userId, streak }) {
      FROM missions m
      WHERE m.is_active = TRUE AND m.type = 'daily' AND m.activity_type = 'round_streak'
        AND (m.starts_at IS NULL OR m.starts_at <= now()) AND (m.ends_at IS NULL OR m.ends_at >= now())
+       AND (m.weekdays IS NULL OR ${isoWeekdayTodayInPlatformTz()} = ANY(m.weekdays))
      ON CONFLICT DO NOTHING`,
     [userId]
   );

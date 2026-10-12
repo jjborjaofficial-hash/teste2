@@ -24,6 +24,14 @@
 const PLATFORM_TIMEZONE = process.env.PLATFORM_TIMEZONE || 'Africa/Maputo';
 
 /**
+ * Fragmento SQL: dia da semana de hoje no fuso da plataforma (ISO: 1 = segunda ... 7 = domingo).
+ * Usado na rotação das missões diárias (`missions.weekdays`).
+ */
+function isoWeekdayTodayInPlatformTz() {
+  return `EXTRACT(ISODOW FROM ${dateInPlatformTz('now()')})::int`;
+}
+
+/**
  * Fragmento SQL para converter uma coluna timestamptz (ou now()) para a data
  * corrida no fuso da plataforma, independente do timezone configurado na
  * sessão do Postgres. Uso: `${dateInPlatformTz('created_at')} = ${dateInPlatformTz('now()')}`.
@@ -56,4 +64,4 @@ function diffInCalendarDays(dateStrA, dateStrB) {
   return Math.round((a - b) / 86400000);
 }
 
-module.exports = { PLATFORM_TIMEZONE, dateInPlatformTz, todayInPlatformTz, diffInCalendarDays };
+module.exports = { PLATFORM_TIMEZONE, dateInPlatformTz, isoWeekdayTodayInPlatformTz, todayInPlatformTz, diffInCalendarDays };
