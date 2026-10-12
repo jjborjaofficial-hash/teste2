@@ -105,7 +105,7 @@ function QuizResultView({ result, categoryId }) {
 
   if (showAd) {
     return (
-      <div className="min-h-screen bg-text flex flex-col items-center justify-center text-white px-6">
+      <div className="min-h-screen bg-[#1C1E21] flex flex-col items-center justify-center text-white px-6">
         {/* InterstitialAds controla a própria UI de tela cheia do Adcash por
             cima disto quando um anúncio real está configurado e disponível.
             A tela abaixo (com o próprio cronômetro de segurança) é a rede de
