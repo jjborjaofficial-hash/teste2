@@ -1,4 +1,5 @@
 const db = require('../../../config/database');
+const identityRepository = require('../../../common/repositories/identityRepository');
 
 async function findProfileById(id) {
   const { rows } = await db.query(
@@ -105,9 +106,15 @@ async function exportData(userId) {
 
 /** Anonimiza (não apaga): histórico financeiro e auditoria têm de ficar. */
 async function anonymize(userId, executor) {
+  // Antes de apagar, guarda o HASH do telefone, e-mail e Google, para reconhecer quem volta com a mesma identidade
+  // (migration 606). Sem isto, dava para repetir o bónus de boas-vindas criando e eliminando contas.
+  const { rows } = await executor.query('SELECT phone, email, google_id FROM users WHERE id = $1', [userId]);
+  if (rows[0]) {
+    await identityRepository.releaseIdentities(executor, { phone: rows[0].phone, email: rows[0].email, googleId: rows[0].google_id });
+  }
   await executor.query(
     `UPDATE users SET name = 'Utilizador removido', phone = NULL, phone_provider = NULL,
-            email = NULL, google_id = NULL, avatar_url = NULL, password_hash = NULL,
+            email = NULL, email_normalized = NULL, google_id = NULL, avatar_url = NULL, password_hash = NULL,
             wallet_balance_mzn = 0, equipped_avatar_frame = NULL, equipped_theme = NULL,
             deleted_at = now(), updated_at = now()
      WHERE id = $1`,

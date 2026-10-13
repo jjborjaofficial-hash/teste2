@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const { OAuth2Client } = require('google-auth-library');
 const repository = require('../repositories/authRepository');
 const referralsService = require('../../referrals/services/referralsService');
+const identityRepository = require('../../../common/repositories/identityRepository');
 const legalService = require('../../legal/services/legalService');
 const missionsService = require('../../missions/services/missionsService');
 const logger = require('../../../common/logger');
@@ -99,6 +100,9 @@ async function register({ name, phone, password, isAdultDeclared, referralCode }
 
   await repository.createStreakRow(user.id);
 
+  // Reconhece quem volta com uma identidade de conta já eliminada: pode usar a plataforma, mas sem bónus nem convites.
+  const recycled = await identityRepository.markIfRecycled(undefined, user.id, { phone });
+
   // Registro de Consentimento (docx Parte 5): grava o aceite de TODOS os
   // documentos obrigatórios vigentes (Termos + Privacidade) de uma vez só,
   // correspondendo ao checkbox único do cadastro.
@@ -113,7 +117,7 @@ async function register({ name, phone, password, isAdultDeclared, referralCode }
 
   // Vínculo de indicação (Manual Parte 3 — módulo Convites/Indicações).
   // Falha ao vincular a indicação nunca deve impedir o cadastro do usuário.
-  if (referralCode) {
+  if (referralCode && !recycled) {
     try {
       await referralsService.linkReferral(undefined, { referralCode, referredUserId: user.id });
     } catch (err) {
@@ -235,10 +239,11 @@ async function loginWithGoogle({ idToken, referralCode }, context) {
     } else {
       user = await repository.createUserFromGoogle({ name, email, googleId, avatarUrl });
       await repository.createStreakRow(user.id);
+      const recycled = await identityRepository.markIfRecycled(undefined, user.id, { email, googleId });
 
       // Vínculo de indicação, como no cadastro por telefone: só para contas NOVAS (quem já tinha conta não pode ser
       // "convidado" depois, senão dava para ganhar bónus com contas antigas). Falhar aqui nunca impede o login.
-      if (referralCode) {
+      if (referralCode && !recycled) {
         try {
           await referralsService.linkReferral(undefined, {
             referralCode: String(referralCode).trim().toUpperCase(),
@@ -299,6 +304,7 @@ async function completeProfile(userId, { phone, isAdultDeclared }, context) {
   }
 
   await repository.createStreakRow(user.id);
+  await identityRepository.markIfRecycled(undefined, user.id, { phone });
 
   const acceptedDocs = await legalService.acceptMandatoryDocuments(user.id, {
     ipAddress: context.ipAddress,

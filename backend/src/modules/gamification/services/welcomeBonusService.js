@@ -40,6 +40,12 @@ async function getAccountDayNumber(executor, userId) {
   return rows[0] ? rows[0].day_number : null;
 }
 
+/** True se a conta usa uma identidade (telefone/e-mail/Google) que já pertenceu a uma conta eliminada. */
+async function isRecycledAccount(executor, userId) {
+  const { rows } = await executor.query('SELECT identity_recycled FROM users WHERE id = $1', [userId]);
+  return Boolean(rows[0] && rows[0].identity_recycled);
+}
+
 async function getStatus(userId) {
   const cfg = await loadConfig(db);
   const dayNumber = await getAccountDayNumber(db, userId);
@@ -61,7 +67,7 @@ async function getStatus(userId) {
 
   return {
     // Só aparece enquanto o calendário está aberto (dia 1 a 7 da conta).
-    visible: cfg.enabled && windowOpen,
+    visible: cfg.enabled && windowOpen && !(await isRecycledAccount(db, userId)),
     dayNumber: windowOpen ? dayNumber : null,
     days,
     claimedMzn: Math.round(days.filter((d) => d.status === 'claimed').reduce((s, d) => s + d.amountMzn, 0) * 100) / 100,
@@ -80,6 +86,9 @@ async function claimToday(userId) {
 
     const dayNumber = await getAccountDayNumber(client, userId);
     if (dayNumber === null) throw new NotFoundError('Usuário não encontrado.');
+    if (await isRecycledAccount(client, userId)) {
+      throw new BusinessRuleError('Este número ou conta já foi usado antes na plataforma, por isso o bónus de boas-vindas não está disponível.');
+    }
     if (dayNumber < 1 || dayNumber > TOTAL_DAYS) {
       throw new BusinessRuleError('O período de boas-vindas (7 dias) já terminou.');
     }

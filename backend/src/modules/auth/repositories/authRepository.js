@@ -1,4 +1,5 @@
 const db = require('../../../config/database');
+const { normalizeEmail } = require('../../../common/utils/identity');
 
 /**
  * Repository: única camada autorizada a acessar o banco diretamente (Manual Parte 5).
@@ -42,8 +43,8 @@ async function findUserByEmail(email) {
     `SELECT id, name, phone, phone_provider, email, google_id, avatar_url,
             trust_score, status, role, xp_total, points_balance, wallet_balance_mzn
      FROM users
-     WHERE email = $1 AND deleted_at IS NULL`,
-    [email]
+     WHERE email_normalized = $1 AND deleted_at IS NULL`,
+    [normalizeEmail(email)]
   );
   return rows[0] || null;
 }
@@ -56,11 +57,11 @@ async function findUserByEmail(email) {
 async function createUserFromGoogle({ name, email, googleId, avatarUrl }) {
   const { rows } = await db.query(
     `INSERT INTO users (
-        name, email, google_id, avatar_url, status, is_adult_declared, theme_trial_eligible
-     ) VALUES ($1, $2, $3, $4, 'pending_verification', FALSE, TRUE)
+        name, email, email_normalized, google_id, avatar_url, status, is_adult_declared, theme_trial_eligible
+     ) VALUES ($1, $2, $5, $3, $4, 'pending_verification', FALSE, TRUE)
      RETURNING id, name, phone, email, google_id, avatar_url, trust_score, status,
                xp_total, points_balance, wallet_balance_mzn`,
-    [name, email, googleId, avatarUrl]
+    [name, email, googleId, avatarUrl, normalizeEmail(email)]
   );
   return rows[0];
 }
