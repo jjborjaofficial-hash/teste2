@@ -3,7 +3,6 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { PrimaryButton, SecondaryButton } from '../components/Button';
 import { RewardBadge } from '../components/RewardBadge';
 import { CheckIcon, CloseDrawIcon, FireIcon, XpIcon, WalletIcon, PointsIcon, AchievementIcon } from '../icons';
-import { InterstitialAds } from '../ads';
 import { buildResultMessage } from '../lib/resultMessage';
 import { quizApi } from '../api/quizApi';
 
@@ -106,14 +105,10 @@ function QuizResultView({ result, categoryId }) {
   if (showAd) {
     return (
       <div className="min-h-screen bg-[#1C1E21] flex flex-col items-center justify-center text-white px-6">
-        {/* InterstitialAds controla a própria UI de tela cheia do Adcash por
-            cima disto quando um anúncio real está configurado e disponível.
-            A tela abaixo (com o próprio cronômetro de segurança) é a rede de
-            proteção: garante que o usuário NUNCA fica preso esperando,
-            mesmo se o anúncio falhar, demorar, ou não houver Zone ID
-            configurado ainda — a lógica de dismissal aqui é independente do
-            que o Adcash faz. */}
-        <InterstitialAds onDone={() => {}} />
+        {/* Espaço reservado para o anúncio de ecrã inteiro. O script do Adcash
+            (Interstitial) foi retirado de propósito: escapava para outros
+            ecrãs, incluindo perguntas do quiz. O espaço e o cronómetro
+            ficam, para o utilizador nunca ficar preso à espera. */}
         <p className="text-caption text-white/60 mb-2">Publicidade</p>
         <div className="bg-white/10 rounded-card w-full max-w-sm h-64 flex items-center justify-center mb-4">
           <p className="text-body text-white/70">Espaço de anúncio (Intersticial)</p>
