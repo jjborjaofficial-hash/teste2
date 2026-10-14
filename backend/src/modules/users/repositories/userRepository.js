@@ -2,7 +2,7 @@ const db = require('../../../config/database');
 
 async function findProfileById(id) {
   const { rows } = await db.query(
-    `SELECT id, name, phone, phone_provider, avatar_url, country, locale, currency,
+    `SELECT id, name, phone, phone_provider, email, (password_hash IS NOT NULL) AS has_password, avatar_url, country, locale, currency,
             xp_total, points_balance, wallet_balance_mzn, trust_score,
             status, role, terms_version, terms_accepted_at, created_at,
             equipped_avatar_frame, equipped_theme,
@@ -67,6 +67,19 @@ async function updatePhone(userId, phone, provider) {
   );
 }
 
+async function updatePassword(userId, passwordHash) {
+  await db.query('UPDATE users SET password_hash = $2, updated_at = now() WHERE id = $1', [userId, passwordHash]);
+}
+
+// Termina as outras sessões (mantém só a atual, se conhecida).
+async function revokeOtherSessions(userId, keepTokenHash) {
+  await db.query(
+    `UPDATE refresh_tokens SET revoked_at = now() - interval '1 day'
+     WHERE user_id = $1 AND revoked_at IS NULL AND ($2::text IS NULL OR token_hash <> $2)`,
+    [userId, keepTokenHash || null]
+  );
+}
+
 async function exportData(userId) {
   const q = async (sql) => (await db.query(sql, [userId])).rows;
   const [profile] = await q(
@@ -108,5 +121,5 @@ async function anonymize(userId, executor) {
 
 module.exports = {
   findProfileById, findSecurityById, updateNameAvatar, hasActiveWithdrawal, phoneInUse,
-  lastPaymentPhoneChange, updatePhone, exportData, anonymize,
+  lastPaymentPhoneChange, updatePhone, updatePassword, revokeOtherSessions, exportData, anonymize,
 };

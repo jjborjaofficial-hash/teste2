@@ -197,7 +197,7 @@ critério `correta_muito_mais_curta`), 13 (duplicadas) e 14 (posição da corret
 
 ## Conta do utilizador (feito)
 
-- `PATCH /users/me` (nome, foto https), `PUT /users/me/payment-phone` (pede senha; operador deduzido do número; 1 mudança a cada 30 dias; bloqueado com saque em andamento; registado em `audit_logs`), `GET /users/me/export` (cópia dos dados), `DELETE /users/me` (pede senha + escrever ELIMINAR; anonimiza, nunca apaga; bloqueado com saque em andamento; saldo restante só se o utilizador aceitar perdê-lo).
+- `PUT /users/me/password` (senha atual + nova, mínimo 8; termina as outras sessões; conta criada pelo Google, sem senha, pode DEFINIR uma sem senha atual; o e-mail do Google não muda), `PATCH /users/me` (nome, foto https), `PUT /users/me/payment-phone` (pede senha; operador deduzido do número; 1 mudança a cada 30 dias; bloqueado com saque em andamento; registado em `audit_logs`), `GET /users/me/export` (cópia dos dados), `DELETE /users/me` (pede senha + escrever ELIMINAR; anonimiza, nunca apaga; bloqueado com saque em andamento; saldo restante só se o utilizador aceitar perdê-lo).
 - O saque só aceita o método do operador do número registado.
 - Saque mínimo: sempre vindo de `GET /wallet` (`withdrawalMinMzn`); o texto fixo "100 MZN" saiu de `Legal.jsx`. O texto jurídico guardado na base (migration 017) ainda cita 100 MZN: mudar só com o dono, porque exige novo aceite.
 

@@ -1,7 +1,14 @@
 /**
  * Itens 6 e 7: editar perfil / número de pagamento, exportar dados e apagar conta.
  */
-const request = require('supertest');
+process.env.USERS_SENSITIVE_MAX = '1000';
+const supertest = require('supertest');
+// IP próprio nesta suite: os limites por IP não misturam com os outros testes.
+const request = (app) => {
+  const t = supertest(app);
+  const wrap = (m) => (path) => t[m](path).set('X-Forwarded-For', '10.77.0.1');
+  return { get: wrap('get'), post: wrap('post'), put: wrap('put'), patch: wrap('patch'), delete: wrap('delete') };
+};
 const bcrypt = require('bcrypt');
 const app = require('../src/app');
 const db = require('../src/config/database');
@@ -73,6 +80,43 @@ describe('número de pagamento', () => {
     const r = await request(app).post('/api/v1/wallet/withdrawals').set(auth(u)).send({ amountMzn: 100, method: 'emola' });
     expect(r.status).toBe(422);
     expect(r.body.message).toMatch(/M-Pesa/);
+  });
+});
+
+describe('senha', () => {
+  it('troca com a senha atual, recusa errada/igual/curta e termina outras sessões', async () => {
+    const u = await makeUser();
+    const outra = await request(app).post('/api/v1/auth/login').send({ phone: u.phone, password: PASSWORD });
+    const outroCookie = outra.headers['set-cookie'];
+    const errada = await request(app).put('/api/v1/users/me/password').set(auth(u)).send({ currentPassword: 'x', newPassword: 'novaSenha123' });
+    expect(errada.status).toBe(401);
+    const igual = await request(app).put('/api/v1/users/me/password').set(auth(u)).send({ currentPassword: PASSWORD, newPassword: PASSWORD });
+    expect(igual.status).toBe(422);
+    const curta = await request(app).put('/api/v1/users/me/password').set(auth(u)).send({ currentPassword: PASSWORD, newPassword: '123' });
+    expect(curta.status).toBe(400);
+    const ok = await request(app).put('/api/v1/users/me/password').set(auth(u)).send({ currentPassword: PASSWORD, newPassword: 'novaSenha123' });
+    expect(ok.status).toBe(200);
+    expect(ok.body.data.hadPassword).toBe(true);
+    const velha = await request(app).post('/api/v1/auth/login').send({ phone: u.phone, password: PASSWORD });
+    expect(velha.status).toBe(401);
+    const nova = await request(app).post('/api/v1/auth/login').send({ phone: u.phone, password: 'novaSenha123' });
+    expect(nova.status).toBe(200);
+    const refresh = await request(app).post('/api/v1/auth/refresh').set('Cookie', outroCookie);
+    expect(refresh.status).toBe(401);
+  });
+
+  it('conta criada pelo Google (sem senha) pode definir uma, sem senha atual', async () => {
+    const u = await makeUser();
+    await db.query('UPDATE users SET password_hash = NULL WHERE id=$1', [u.id]);
+    const me = await request(app).get('/api/v1/users/me').set(auth(u));
+    expect(me.body.data.hasPassword).toBe(false);
+    const r = await request(app).put('/api/v1/users/me/password').set(auth(u)).send({ newPassword: 'minhaSenha123' });
+    expect(r.status).toBe(200);
+    expect(r.body.data.hadPassword).toBe(false);
+    const login = await request(app).post('/api/v1/auth/login').send({ phone: u.phone, password: 'minhaSenha123' });
+    expect(login.status).toBe(200);
+    const me2 = await request(app).get('/api/v1/users/me').set(auth(u));
+    expect(me2.body.data.hasPassword).toBe(true);
   });
 });
 

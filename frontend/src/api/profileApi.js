@@ -3,6 +3,7 @@ import { api } from './client';
 export const usersApi = {
   me: () => api.get('/users/me'),
   update: (data) => api.patch('/users/me', data),
+  changePassword: (data) => api.put('/users/me/password', data),
   changePaymentPhone: (data) => api.put('/users/me/payment-phone', data),
   exportData: () => api.get('/users/me/export'),
   deleteAccount: (data) => api.delete('/users/me', data),

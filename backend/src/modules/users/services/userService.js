@@ -3,6 +3,7 @@ const legalService = require('../../legal/services/legalService');
 const userCache = require('../../../common/cache/userCache');
 const { computeTrial } = require('../../shop/themeTrial');
 const bcrypt = require('bcrypt');
+const crypto = require('crypto');
 const db = require('../../../config/database');
 const auditLogRepository = require('../../../common/repositories/auditLogRepository');
 const {
@@ -65,6 +66,31 @@ async function changePaymentPhone(userId, { phone, password }, context = {}) {
     ipAddress: context.ipAddress,
   });
   return getProfile(userId);
+}
+
+// Trocar a senha pede a senha atual. Conta criada pelo Google (sem senha) pode DEFINIR uma,
+// para também entrar com telefone + senha. As outras sessões são terminadas.
+async function changePassword(userId, { currentPassword, newPassword }, context = {}) {
+  const sec = await repository.findSecurityById(userId);
+  if (!sec) throw new NotFoundError('Perfil não encontrado.');
+  if (sec.password_hash) {
+    if (!currentPassword || !(await bcrypt.compare(currentPassword, sec.password_hash))) {
+      throw new UnauthorizedError('Senha atual incorreta.');
+    }
+    if (await bcrypt.compare(newPassword, sec.password_hash)) {
+      throw new BusinessRuleError('A nova senha tem de ser diferente da atual.');
+    }
+  }
+  const hash = await bcrypt.hash(newPassword, Number(process.env.BCRYPT_SALT_ROUNDS) || 12);
+  await repository.updatePassword(userId, hash);
+  const keep = context.refreshToken ? crypto.createHash('sha256').update(context.refreshToken).digest('hex') : null;
+  await repository.revokeOtherSessions(userId, keep);
+  await userCache.invalidateProfile(userId);
+  await auditLogRepository.insertAuditLog(db, {
+    userId, action: sec.password_hash ? 'user.password_changed' : 'user.password_set', entity: 'users', entityId: userId,
+    metadata: {}, ipAddress: context.ipAddress,
+  });
+  return { changed: true, hadPassword: Boolean(sec.password_hash) };
 }
 
 async function exportMyData(userId, context = {}) {
@@ -130,6 +156,8 @@ async function getProfile(userId) {
     name: profile.name,
     phone: profile.phone,
     phoneProvider: profile.phone_provider,
+    email: profile.email,
+    hasPassword: Boolean(profile.has_password),
     avatarUrl: profile.avatar_url,
     country: profile.country,
     locale: profile.locale,
@@ -166,4 +194,4 @@ async function getProfile(userId) {
   };
 }
 
-module.exports = { getProfile, updateProfile, changePaymentPhone, exportMyData, deleteAccount };
+module.exports = { getProfile, updateProfile, changePassword, changePaymentPhone, exportMyData, deleteAccount };

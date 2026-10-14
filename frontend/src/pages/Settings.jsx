@@ -47,6 +47,9 @@ export function Settings() {
   const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl || '');
   const [phone, setPhone] = useState('');
   const [phonePassword, setPhonePassword] = useState('');
+  const [curPass, setCurPass] = useState('');
+  const [newPass, setNewPass] = useState('');
+  const [newPass2, setNewPass2] = useState('');
   const [delPassword, setDelPassword] = useState('');
   const [delConfirm, setDelConfirm] = useState('');
   const [acceptLose, setAcceptLose] = useState(false);
@@ -78,6 +81,15 @@ export function Settings() {
     setPhonePassword('');
     await refreshProfile();
   }, 'Número de pagamento atualizado.');
+
+  const savePassword = () => run('password', async () => {
+    if (newPass !== newPass2) throw new Error('As duas senhas novas não são iguais.');
+    await usersApi.changePassword({ currentPassword: curPass || undefined, newPassword: newPass });
+    setCurPass('');
+    setNewPass('');
+    setNewPass2('');
+    await refreshProfile();
+  }, 'Senha atualizada. Os outros aparelhos foram desligados.');
 
   const downloadData = () => run('export', async () => {
     const res = await usersApi.exportData();
@@ -122,6 +134,12 @@ export function Settings() {
             <span className="text-text-secondary">Telefone</span>
             <span className="text-text">{user?.phone}</span>
           </div>
+          {user?.email && (
+            <div className="flex justify-between text-body">
+              <span className="text-text-secondary">E-mail (Google)</span>
+              <span className="text-text">{user.email}</span>
+            </div>
+          )}
           {user?.memberSince && (
             <div className="flex justify-between text-body">
               <span className="text-text-secondary">Membro desde</span>
@@ -164,6 +182,32 @@ export function Settings() {
       </section>
 
       <section className="space-y-2">
+        <h2 className="font-display text-h2 text-text">{user?.hasPassword ? 'Mudar senha' : 'Criar senha'}</h2>
+        <Card className="space-y-3">
+          {!user?.hasPassword && (
+            <p className="text-caption text-text-secondary">
+              A sua conta foi criada com o Google{user?.email ? ` (${user.email})` : ''}. O e-mail não muda, mas pode criar uma senha
+              para também entrar com telefone e senha.
+            </p>
+          )}
+          {user?.hasPassword && (
+            <label className="block text-caption text-text-secondary">Senha atual
+              <input className={inputClass} type="password" value={curPass} onChange={(e) => setCurPass(e.target.value)} />
+            </label>
+          )}
+          <label className="block text-caption text-text-secondary">Nova senha (mínimo 8 caracteres)
+            <input className={inputClass} type="password" value={newPass} onChange={(e) => setNewPass(e.target.value)} />
+          </label>
+          <label className="block text-caption text-text-secondary">Repita a nova senha
+            <input className={inputClass} type="password" value={newPass2} onChange={(e) => setNewPass2(e.target.value)} />
+          </label>
+          <PrimaryButton onClick={savePassword} loading={busy === 'password'} disabled={newPass.length < 8 || (user?.hasPassword && !curPass)}>
+            {user?.hasPassword ? 'Mudar senha' : 'Criar senha'}
+          </PrimaryButton>
+        </Card>
+      </section>
+
+      <section className="space-y-2">
         <h2 className="font-display text-h2 text-text">Número de pagamento</h2>
         <Card className="space-y-3">
           <p className="text-caption text-text-secondary">
@@ -173,9 +217,11 @@ export function Settings() {
           <label className="block text-caption text-text-secondary">Novo número
             <input className={inputClass} value={phone} inputMode="numeric" maxLength={9} placeholder="84xxxxxxx" onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))} />
           </label>
-          <label className="block text-caption text-text-secondary">Sua senha (para confirmar)
-            <input className={inputClass} type="password" value={phonePassword} onChange={(e) => setPhonePassword(e.target.value)} />
-          </label>
+          {user?.hasPassword && (
+            <label className="block text-caption text-text-secondary">Sua senha (para confirmar)
+              <input className={inputClass} type="password" value={phonePassword} onChange={(e) => setPhonePassword(e.target.value)} />
+            </label>
+          )}
           <PrimaryButton onClick={savePhone} loading={busy === 'phone'} disabled={phone.length !== 9}>Mudar número</PrimaryButton>
         </Card>
       </section>
@@ -201,9 +247,11 @@ export function Settings() {
               <span>Tenho {mzn(balance)} na carteira e aceito perder este saldo (ou levante-o antes).</span>
             </label>
           )}
-          <label className="block text-caption text-text-secondary">Sua senha
-            <input className={inputClass} type="password" value={delPassword} onChange={(e) => setDelPassword(e.target.value)} />
-          </label>
+          {user?.hasPassword && (
+            <label className="block text-caption text-text-secondary">Sua senha
+              <input className={inputClass} type="password" value={delPassword} onChange={(e) => setDelPassword(e.target.value)} />
+            </label>
+          )}
           <label className="block text-caption text-text-secondary">Escreva ELIMINAR para confirmar
             <input className={inputClass} value={delConfirm} onChange={(e) => setDelConfirm(e.target.value)} />
           </label>

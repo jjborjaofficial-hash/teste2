@@ -196,3 +196,5 @@ Decisão do dono: um único texto de explicação serve para acerto ("Para compl
 
 ## BE-006 — Conta do utilizador (feito)
 Editar perfil, mudar número de pagamento, exportar dados e eliminar conta (anonimização). Regras e rotas em `INSTRUCOES.md` ("Conta do utilizador"). Migration não necessária. Em aberto: o texto jurídico na base (migration 017) ainda cita "100 MZN" — mudar só com decisão do dono (exige novo aceite). Um token de acesso já emitido continua válido até 15 min após eliminar a conta.
+
+Senha: `PUT /users/me/password` (BE-006); perfil devolve `email` e `hasPassword`. Contas Google sem senha não pedem senha para mudar número/eliminar.

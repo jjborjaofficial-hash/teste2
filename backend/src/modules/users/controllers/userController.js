@@ -1,5 +1,5 @@
 const userService = require('../services/userService');
-const { clearRefreshTokenCookie } = require('../../auth/services/refreshCookie');
+const { clearRefreshTokenCookie, readRefreshTokenCookie } = require('../../auth/services/refreshCookie');
 
 const ok = (res, data, status = 200) => res.status(status).json({ status: 'success', message: null, data });
 const ctx = (req) => ({ ipAddress: req.ip });
@@ -12,6 +12,11 @@ async function updateMe(req, res, next) {
 }
 async function changePaymentPhone(req, res, next) {
   try { return ok(res, await userService.changePaymentPhone(req.user.id, req.validatedBody, ctx(req))); } catch (e) { return next(e); }
+}
+async function changePassword(req, res, next) {
+  try {
+    return ok(res, await userService.changePassword(req.user.id, req.validatedBody, { ...ctx(req), refreshToken: readRefreshTokenCookie(req) }));
+  } catch (e) { return next(e); }
 }
 async function exportMe(req, res, next) {
   try {
@@ -28,4 +33,4 @@ async function deleteMe(req, res, next) {
   } catch (e) { return next(e); }
 }
 
-module.exports = { me, updateMe, changePaymentPhone, exportMe, deleteMe };
+module.exports = { me, updateMe, changePassword, changePaymentPhone, exportMe, deleteMe };
