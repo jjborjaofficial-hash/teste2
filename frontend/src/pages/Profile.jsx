@@ -19,6 +19,8 @@ const BADGE_LABELS = {
   restricted: 'Conta restrita',
 };
 
+const formatBonusMzn = (v) => `${Number(v || 0).toFixed(2).replace('.', ',')} MZN`;
+
 const REFERRAL_STATUS_LABELS = {
   pending: 'Aguardando qualificação',
   rewarded: 'Qualificada — recompensa concedida',
@@ -58,6 +60,7 @@ function ReferralsSection() {
 
   const inviteLink = code ? `${window.location.origin}/cadastro?ref=${code}` : null;
   const qualifiedCount = referrals?.filter((r) => r.status === 'rewarded').length ?? 0;
+  const totalBonus = referrals?.reduce((sum, r) => sum + (r.bonusMzn || 0), 0) ?? 0;
 
   async function handleShare() {
     const shareText = `Estou usando o Aprenda e Ganhe para estudar e ganhar MZN de verdade. Cadastre-se com meu código ${code}: ${inviteLink}`;
@@ -92,7 +95,8 @@ function ReferralsSection() {
           <div className="flex-1">
             <p className="text-body font-semibold text-text">Seu código de indicação</p>
             <p className="text-caption text-text-secondary">
-              Convide amigos. Quando eles responderem alguns quizzes, você ganha Pontos.
+              Convide amigos. Quando eles responderem alguns quizzes, você ganha Pontos e passa a receber
+              20% do que eles ganham nas missões diárias, sempre. É um extra: não sai do saldo deles.
             </p>
           </div>
         </div>
@@ -117,7 +121,7 @@ function ReferralsSection() {
           <span>
             {referrals === null
               ? 'Carregando indicações...'
-              : `${referrals.length} indicação${referrals.length !== 1 ? 'ões' : ''} · ${qualifiedCount} qualificada${qualifiedCount !== 1 ? 's' : ''}`}
+              : `${referrals.length} indicação${referrals.length !== 1 ? 'ões' : ''} · ${qualifiedCount} qualificada${qualifiedCount !== 1 ? 's' : ''}${totalBonus > 0 ? ` · bónus ${formatBonusMzn(totalBonus)}` : ''}`}
           </span>
           <ChevronRightIcon className={`w-4 h-4 shrink-0 transition-transform duration-micro ${expanded ? 'rotate-90' : ''}`} />
         </button>
@@ -129,6 +133,7 @@ function ReferralsSection() {
                 <span className="text-text">{r.referredName}</span>
                 <span className={r.status === 'rewarded' ? 'text-success font-semibold' : 'text-text-secondary'}>
                   {REFERRAL_STATUS_LABELS[r.status] || r.status}
+                  {r.bonusMzn > 0 ? ` · +${formatBonusMzn(r.bonusMzn)}` : ''}
                 </span>
               </div>
             ))}

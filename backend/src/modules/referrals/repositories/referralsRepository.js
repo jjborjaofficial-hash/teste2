@@ -61,9 +61,25 @@ async function markQualifiedAndRewarded(executor, referralId) {
   );
 }
 
+/** Convite já qualificado em que `referredUserId` é o convidado (só estes geram o bónus de 20%). */
+async function findRewardedReferralByReferred(referredUserId, executor = db) {
+  const { rows } = await executor.query(
+    `SELECT id, referrer_user_id FROM referrals
+     WHERE referred_user_id = $1 AND status = 'rewarded'`,
+    [referredUserId]
+  );
+  return rows[0] || null;
+}
+
 async function listMyReferrals(userId, executor = db) {
   const { rows } = await executor.query(
-    `SELECT r.id, r.status, r.created_at, r.reward_granted_at, u.name AS referred_name
+    `SELECT r.id, r.status, r.created_at, r.reward_granted_at, u.name AS referred_name,
+            COALESCE((
+              SELECT SUM(w.amount_mzn) FROM wallet_transactions w
+              WHERE w.user_id = r.referrer_user_id
+                AND w.source = 'referral_bonus'
+                AND w.metadata->>'referralId' = r.id::text
+            ), 0) AS bonus_mzn
      FROM referrals r
      JOIN users u ON u.id = r.referred_user_id
      WHERE r.referrer_user_id = $1
@@ -81,5 +97,6 @@ module.exports = {
   countQualifyingActivity,
   getPendingReferralsForUser,
   markQualifiedAndRewarded,
+  findRewardedReferralByReferred,
   listMyReferrals,
 };

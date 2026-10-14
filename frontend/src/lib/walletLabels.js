@@ -6,6 +6,7 @@
 const KNOWN = {
   mission_reward: { label: 'Missão diária', kind: 'Missões' },
   welcome_reward: { label: 'Bónus de boas-vindas', kind: 'Boas-vindas' },
+  referral_bonus: { label: 'Bónus de convite', kind: 'Convites' },
   points_conversion: { label: 'Conversão de pontos', kind: 'Pontos' },
   withdrawal_request: { label: 'Saque', kind: 'Saque' },
   shop_purchase: { label: 'Compra na loja', kind: 'Loja' },
@@ -23,5 +24,5 @@ export function transactionInfo(source) {
 /** Origens que contam como "ganho" no Histórico de ganhos do Perfil. */
 export function isEarningSource(source) {
   const kind = transactionInfo(source).kind;
-  return kind === 'Missões' || kind === 'Boas-vindas' || kind === 'Streak' || kind === 'Pontos';
+  return kind === 'Missões' || kind === 'Boas-vindas' || kind === 'Streak' || kind === 'Pontos' || kind === 'Convites';
 }

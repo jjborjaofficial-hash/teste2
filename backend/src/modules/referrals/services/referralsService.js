@@ -89,6 +89,7 @@ async function listMyReferrals(userId) {
     status: r.status,
     createdAt: r.created_at,
     rewardGrantedAt: r.reward_granted_at,
+    bonusMzn: Number(r.bonus_mzn),
   }));
 }
 

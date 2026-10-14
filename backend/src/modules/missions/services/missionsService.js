@@ -5,6 +5,7 @@ const repository = require('../repositories/missionsRepository');
 const progressEngine = require('./missionProgressService');
 const xpService = require('../../gamification/services/xpService');
 const walletService = require('../../wallet/services/walletService');
+const referralBonusService = require('../../referrals/services/referralBonusService');
 const notificationsService = require('../../notifications/services/notificationsService');
 const { NotFoundError, BusinessRuleError, ConflictError } = require('../../../common/errors/AppError');
 
@@ -151,6 +152,17 @@ async function claimReward(userId, userMissionId) {
       );
       // Valor REAL creditado (pode ser menor que o nominal se o teto diário de 7,20 MZN cortar).
       moneyCreditedMzn = credit ? Number(credit.amountCreditedMzn) : 0;
+    }
+
+    // Bónus de convite: 20% do que este utilizador acabou de ganhar numa missão DIÁRIA vai para quem o convidou
+    // (extra da plataforma, fora do teto de quem convida). Mesma transação do resgate.
+    if (moneyCreditedMzn > 0 && userMission.type === 'daily') {
+      await referralBonusService.payInviterBonus(client, {
+        referredUserId: userId,
+        creditedMzn: moneyCreditedMzn,
+        userMissionId,
+        missionTitle: userMission.title,
+      });
     }
 
     await repository.markRewardClaimed(client, userMissionId);
