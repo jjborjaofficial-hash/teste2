@@ -1,3 +1,4 @@
+import { OperatorLogo } from '../components/OperatorLogo';
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -88,16 +89,19 @@ export function Register() {
             <label htmlFor="phone" className="text-caption text-text-secondary block mb-1">
               Número de telefone (M-Pesa 84/85 ou e-Mola 86/87)
             </label>
-            <input
-              id="phone"
-              type="tel"
-              inputMode="numeric"
-              placeholder="84XXXXXXX"
-              value={form.phone}
-              onChange={(e) => update('phone', e.target.value)}
-              required
-              className="w-full rounded-button border border-border bg-surface px-4 py-3 text-body text-text focus:border-primary outline-none"
-            />
+            <div className="relative">
+              <input
+                id="phone"
+                type="tel"
+                inputMode="numeric"
+                placeholder="84XXXXXXX"
+                value={form.phone}
+                onChange={(e) => update('phone', e.target.value)}
+                required
+                className="w-full rounded-button border border-border bg-surface pr-24 pl-4 py-3 text-body text-text focus:border-primary outline-none"
+              />
+              <OperatorLogo phone={form.phone} />
+            </div>
           </div>
 
           <div>

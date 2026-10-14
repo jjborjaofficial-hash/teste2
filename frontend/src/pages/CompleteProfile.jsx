@@ -1,3 +1,4 @@
+import { OperatorLogo } from '../components/OperatorLogo';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -59,16 +60,19 @@ export function CompleteProfile() {
             <label htmlFor="phone" className="text-caption text-text-secondary block mb-1">
               Número de telefone (M-Pesa 84/85 ou e-Mola 86/87)
             </label>
-            <input
-              id="phone"
-              type="tel"
-              inputMode="numeric"
-              placeholder="84XXXXXXX"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              required
-              className="w-full rounded-button border border-border bg-surface px-4 py-3 text-body text-text focus:border-primary outline-none"
-            />
+            <div className="relative">
+              <input
+                id="phone"
+                type="tel"
+                inputMode="numeric"
+                placeholder="84XXXXXXX"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                required
+                className="w-full rounded-button border border-border bg-surface pr-24 pl-4 py-3 text-body text-text focus:border-primary outline-none"
+              />
+              <OperatorLogo phone={phone} />
+            </div>
           </div>
 
           <label className="flex items-start gap-3 text-caption text-text-secondary">

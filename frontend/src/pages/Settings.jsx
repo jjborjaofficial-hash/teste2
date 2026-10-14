@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Card } from '../components/Card';
+import { OperatorLogo } from '../components/OperatorLogo';
 import { ThemeTrialCard } from '../components/ThemeTrialCard';
 import { PrimaryButton, SecondaryButton } from '../components/Button';
 import { useToast } from '../components/Toast';
@@ -215,7 +216,10 @@ export function Settings() {
             O operador (M-Pesa ou e-Mola) é detetado pelo número. Só pode mudar uma vez a cada 30 dias e não durante um saque em andamento.
           </p>
           <label className="block text-caption text-text-secondary">Novo número
-            <input className={inputClass} value={phone} inputMode="numeric" maxLength={9} placeholder="84xxxxxxx" onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))} />
+            <div className="relative mt-1">
+              <input className={`${inputClass} pr-24`} value={phone} inputMode="numeric" maxLength={9} placeholder="84xxxxxxx" onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))} />
+              <OperatorLogo phone={phone} />
+            </div>
           </label>
           {user?.hasPassword && (
             <label className="block text-caption text-text-secondary">Sua senha (para confirmar)
