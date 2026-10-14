@@ -193,7 +193,7 @@ export function Shop() {
 
   function load() {
     shopApi.listItems().then((res) => setItems(res.data)).catch(() => setError(true));
-    shopApi.getInventory().then((res) => setInventory(res.data)).catch(() => {});
+    shopApi.getInventory().then((res) => setInventory(res.data)).catch(() => setError(true));
   }
 
   useEffect(load, []);
