@@ -1,3 +1,4 @@
+import { cleanPhone } from '../lib/phone';
 import { OperatorLogo } from '../components/OperatorLogo';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -67,7 +68,8 @@ export function CompleteProfile() {
                 inputMode="numeric"
                 placeholder="84XXXXXXX"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                maxLength={9}
+                onChange={(e) => setPhone(cleanPhone(e.target.value))}
                 required
                 className="w-full rounded-button border border-border bg-surface pr-24 pl-4 py-3 text-body text-text focus:border-primary outline-none"
               />

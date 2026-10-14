@@ -1,3 +1,4 @@
+import { cleanPhone } from '../lib/phone';
 import { OperatorLogo } from '../components/OperatorLogo';
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
@@ -96,7 +97,8 @@ export function Register() {
                 inputMode="numeric"
                 placeholder="84XXXXXXX"
                 value={form.phone}
-                onChange={(e) => update('phone', e.target.value)}
+                maxLength={9}
+                onChange={(e) => update('phone', cleanPhone(e.target.value))}
                 required
                 className="w-full rounded-button border border-border bg-surface pr-24 pl-4 py-3 text-body text-text focus:border-primary outline-none"
               />

@@ -22,3 +22,13 @@ export function operatorOf(phone) {
 export function isValidPhone(phone) {
   return /^\d{9}$/.test(phone) && operatorOf(phone) !== null;
 }
+
+/**
+ * Limpa o que a pessoa escreve ou cola: só dígitos, sem o +258/258 do país, no máximo 9 dígitos.
+ * Ex.: "+258 84 123 4567" -> "841234567".
+ */
+export function cleanPhone(value) {
+  let digits = String(value || '').replace(/\D/g, '');
+  if (digits.startsWith('258') && digits.length > 9) digits = digits.slice(3);
+  return digits.slice(0, 9);
+}

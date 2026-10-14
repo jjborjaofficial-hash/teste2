@@ -1,3 +1,4 @@
+import { cleanPhone } from '../lib/phone';
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -48,7 +49,8 @@ export function Login() {
               inputMode="numeric"
               placeholder="84XXXXXXX"
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              maxLength={9}
+              onChange={(e) => setPhone(cleanPhone(e.target.value))}
               required
               className="w-full rounded-button border border-border bg-surface px-4 py-3 text-body text-text focus:border-primary outline-none"
             />

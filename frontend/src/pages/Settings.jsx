@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Card } from '../components/Card';
 import { OperatorLogo } from '../components/OperatorLogo';
-import { isValidPhone } from '../lib/phone';
+import { cleanPhone, isValidPhone } from '../lib/phone';
 import { ThemeTrialCard } from '../components/ThemeTrialCard';
 import { PrimaryButton, SecondaryButton } from '../components/Button';
 import { useToast } from '../components/Toast';
@@ -218,7 +218,7 @@ export function Settings() {
           </p>
           <label className="block text-caption text-text-secondary">Novo número
             <div className="relative mt-1">
-              <input className={`${inputClass} pr-24`} value={phone} inputMode="numeric" maxLength={9} placeholder="84xxxxxxx" onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))} />
+              <input className={`${inputClass} pr-24`} value={phone} inputMode="numeric" maxLength={9} placeholder="84xxxxxxx" onChange={(e) => setPhone(cleanPhone(e.target.value))} />
               <OperatorLogo phone={phone} />
             </div>
           </label>
