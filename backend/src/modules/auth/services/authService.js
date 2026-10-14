@@ -26,12 +26,7 @@ const {
  * O backend é sempre a autoridade final — nenhuma regra é confiada ao cliente.
  */
 
-function detectPhoneProvider(phone) {
-  const prefix = phone.slice(0, 2);
-  if (['84', '85'].includes(prefix)) return 'mpesa';
-  if (['86', '87'].includes(prefix)) return 'emola';
-  return null; // já barrado pela validação de entrada, mas defensivo
-}
+const { detectPhoneProvider } = require('../../../common/phone');
 
 // Tolerância para renovações simultâneas do mesmo cookie (F5, várias abas). Ver authRepository.
 const REFRESH_GRACE_SECONDS = 15;

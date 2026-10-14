@@ -14,7 +14,7 @@ const logger = require('../logger');
  * 2. Preencher as 3 variáveis de ambiente acima.
  * 3. Nada mais muda.
  *
- * Números moçambicanos (M-Pesa 84/85, e-Mola 86/87) precisam do prefixo
+ * Números moçambicanos (M-Pesa 84/85, e-Mola 86/87/88) precisam do prefixo
  * internacional +258 para o Twilio aceitar — `formatMozambiquePhone` cuida
  * disso, já que `users.phone` é armazenado sem o +258 (ver authValidators.js).
  */

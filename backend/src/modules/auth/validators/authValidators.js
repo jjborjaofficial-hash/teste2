@@ -5,15 +5,15 @@ const { z } = require('zod');
  * Regras alinhadas à Seção 16.1 (Elegibilidade) e Seção 17 (Check-in Jurídico) do Doc. Mestre.
  */
 
-// Telefone moçambicano: M-Pesa (84/85) ou e-Mola (86/87)
-const phoneRegex = /^8[4-7][0-9]{7}$/;
+// Telefone moçambicano: regra única em common/phone.js (M-Pesa 84/85, e-Mola 86/87/88)
+const { phoneRegex, PHONE_HELP } = require('../../../common/phone');
 
 const registerSchema = z.object({
   name: z.string().trim().min(2, 'Nome muito curto').max(120),
   phone: z
     .string()
     .trim()
-    .regex(phoneRegex, 'Número de telefone inválido. Use um número M-Pesa (84/85) ou e-Mola (86/87).'),
+    .regex(phoneRegex, `Número de telefone inválido. ${PHONE_HELP}`),
   password: z
     .string()
     .min(8, 'A senha deve ter no mínimo 8 caracteres')
@@ -51,7 +51,7 @@ const completeProfileSchema = z.object({
   phone: z
     .string()
     .trim()
-    .regex(phoneRegex, 'Número de telefone inválido. Use um número M-Pesa (84/85) ou e-Mola (86/87).'),
+    .regex(phoneRegex, `Número de telefone inválido. ${PHONE_HELP}`),
   isAdultDeclared: z.literal(true, {
     errorMap: () => ({ message: 'É necessário declarar maioridade para continuar.' }),
   }),

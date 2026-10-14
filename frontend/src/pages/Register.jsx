@@ -87,7 +87,7 @@ export function Register() {
 
           <div>
             <label htmlFor="phone" className="text-caption text-text-secondary block mb-1">
-              Número de telefone (M-Pesa 84/85 ou e-Mola 86/87)
+              Número de telefone (M-Pesa 84/85 ou e-Mola 86/87/88)
             </label>
             <div className="relative">
               <input

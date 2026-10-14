@@ -23,7 +23,7 @@ constitui aceite das novas condições.
 ### 2. Elegibilidade e Cadastro
 2.1. O usuário deve residir em Moçambique.
 2.2. O usuário deve possuir um número de telefone ativo, vinculado a uma conta
-M-Pesa (prefixos 84/85) ou e-Mola (prefixos 86/87).
+M-Pesa (prefixos 84/85) ou e-Mola (prefixos 86/87/88).
 2.3. O usuário deve ser maior de idade, conforme a legislação moçambicana.
 2.4. Cada pessoa tem direito a **apenas uma conta**. Um mesmo número de telefone
 não pode estar vinculado a mais de uma conta ativa simultaneamente.

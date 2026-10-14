@@ -3,6 +3,7 @@ const legalService = require('../../legal/services/legalService');
 const userCache = require('../../../common/cache/userCache');
 const { computeTrial } = require('../../shop/themeTrial');
 const bcrypt = require('bcrypt');
+const { detectPhoneProvider } = require('../../../common/phone');
 const crypto = require('crypto');
 const db = require('../../../config/database');
 const auditLogRepository = require('../../../common/repositories/auditLogRepository');
@@ -12,9 +13,7 @@ const {
 
 const PHONE_CHANGE_COOLDOWN_DAYS = Number(process.env.PHONE_CHANGE_COOLDOWN_DAYS) || 30;
 
-function providerOf(phone) {
-  return ['84', '85'].includes(phone.slice(0, 2)) ? 'mpesa' : 'emola';
-}
+const providerOf = detectPhoneProvider;
 
 // Operações sensíveis pedem a senha. Contas só-Google não têm senha: a sessão
 // ativa vale como prova (não há outra forma de confirmar).

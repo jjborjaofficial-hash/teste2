@@ -263,7 +263,7 @@ const FAQ_GROUPS = [
       },
       {
         q: 'Que número de telefone posso usar?',
-        a: 'Um número ativo M-Pesa (prefixos 84/85) ou e-Mola (prefixos 86/87), registrado em seu nome.',
+        a: 'Um número ativo M-Pesa (prefixos 84/85) ou e-Mola (prefixos 86/87/88), registrado em seu nome.',
       },
       {
         q: 'Esqueci minha senha, e agora?',

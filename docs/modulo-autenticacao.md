@@ -11,7 +11,7 @@ M-Pesa ou e-Mola, com emissão de tokens JWT e proteção contra fraude e força
 ## Regras de negócio implementadas
 
 - Um telefone = uma conta ativa (constraint de unicidade parcial no banco).
-- Telefone deve seguir o padrão M-Pesa (84/85) ou e-Mola (86/87) — Seção 16.1.
+- Telefone deve seguir o padrão M-Pesa (84/85) ou e-Mola (86/87/88) — Seção 16.1.
 - Cadastro exige declaração explícita de maioridade e aceite dos Termos de Uso — Seção 17.
 - Senhas nunca são armazenadas em texto puro (bcrypt, custo configurável via env).
 - Após 5 tentativas de login falhas em 15 minutos, o telefone é temporariamente bloqueado.

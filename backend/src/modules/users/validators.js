@@ -1,5 +1,5 @@
 const { z } = require('zod');
-const { phoneRegex } = require('../auth/validators/authValidators');
+const { phoneRegex, PHONE_HELP } = require('../../common/phone');
 
 const updateProfileSchema = z
   .object({
@@ -15,7 +15,7 @@ const updateProfileSchema = z
   .refine((v) => v.name !== undefined || v.avatarUrl !== undefined, { message: 'Nada para alterar.' });
 
 const changePaymentPhoneSchema = z.object({
-  phone: z.string().trim().regex(phoneRegex, 'Número inválido. Use um número M-Pesa (84/85) ou e-Mola (86/87).'),
+  phone: z.string().trim().regex(phoneRegex, `Número inválido. ${PHONE_HELP}`),
   password: z.string().max(72).optional(),
 });
 

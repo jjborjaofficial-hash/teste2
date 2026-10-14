@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Card } from '../components/Card';
 import { OperatorLogo } from '../components/OperatorLogo';
+import { isValidPhone } from '../lib/phone';
 import { ThemeTrialCard } from '../components/ThemeTrialCard';
 import { PrimaryButton, SecondaryButton } from '../components/Button';
 import { useToast } from '../components/Toast';
@@ -226,7 +227,7 @@ export function Settings() {
               <input className={inputClass} type="password" value={phonePassword} onChange={(e) => setPhonePassword(e.target.value)} />
             </label>
           )}
-          <PrimaryButton onClick={savePhone} loading={busy === 'phone'} disabled={phone.length !== 9}>Mudar número</PrimaryButton>
+          <PrimaryButton onClick={savePhone} loading={busy === 'phone'} disabled={!isValidPhone(phone)}>Mudar número</PrimaryButton>
         </Card>
       </section>
 

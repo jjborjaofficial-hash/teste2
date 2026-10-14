@@ -83,6 +83,23 @@ describe('número de pagamento', () => {
   });
 });
 
+describe('prefixo 88 (Movitel)', () => {
+  it('registo e mudança de número aceitam 88 e ficam como e-Mola', async () => {
+    const phone = `88${rnd()}`.slice(0, 9);
+    const reg = await request(app).post('/api/v1/auth/register').send({
+      name: 'Movitel 88', phone, password: PASSWORD, isAdultDeclared: true, termsAccepted: true,
+    });
+    expect(reg.status).toBe(201);
+    const { rows } = await db.query('SELECT phone_provider FROM users WHERE phone=$1', [phone]);
+    expect(rows[0].phone_provider).toBe('emola');
+    const u = await makeUser('84');
+    const novo = `88${rnd()}`.slice(0, 9);
+    const r = await request(app).put('/api/v1/users/me/payment-phone').set(auth(u)).send({ phone: novo, password: PASSWORD });
+    expect(r.status).toBe(200);
+    expect(r.body.data.phoneProvider).toBe('emola');
+  });
+});
+
 describe('senha', () => {
   it('troca com a senha atual, recusa errada/igual/curta e termina outras sessões', async () => {
     const u = await makeUser();

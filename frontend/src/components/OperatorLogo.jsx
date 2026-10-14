@@ -2,17 +2,10 @@ import vodacom1x from '../assets/operators/vodacom.png';
 import vodacom2x from '../assets/operators/vodacom@2x.png';
 import movitel1x from '../assets/operators/movitel.png';
 import movitel2x from '../assets/operators/movitel@2x.png';
+import { operatorOf } from '../lib/phone';
 
-/**
- * Operadora de um número de Moçambique, pelo prefixo: 84/85 = Vodacom (M-Pesa), 86/87 = Movitel (e-Mola).
- * Devolve null enquanto a pessoa ainda não escreveu os dois primeiros dígitos ou se o prefixo não é um destes.
- */
-export function operatorOf(phone) {
-  const prefix = String(phone || '').replace(/\D/g, '').slice(0, 2);
-  if (prefix === '84' || prefix === '85') return 'vodacom';
-  if (prefix === '86' || prefix === '87') return 'movitel';
-  return null;
-}
+export { operatorOf };
+
 
 const LOGOS = {
   vodacom: { src: vodacom1x, srcSet: `${vodacom1x} 1x, ${vodacom2x} 2x`, alt: 'Vodacom (M-Pesa)', className: 'h-5 w-auto' },
