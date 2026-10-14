@@ -9,9 +9,15 @@ export const OPERATOR_PREFIXES = {
 
 export const PHONE_PREFIX_HINT = 'M-Pesa 84/85 ou e-Mola 86/87/88';
 
-/** 'vodacom' | 'movitel' | null (null enquanto faltam os 2 primeiros dígitos ou se o prefixo não existe). */
+/**
+ * 'vodacom' | 'movitel' | null. Vale igual para as duas operadoras:
+ * null enquanto faltam os 2 primeiros dígitos, se o prefixo não existe, ou se passar de 9 dígitos
+ * (número a mais = deixa de reconhecer e o logo some).
+ */
 export function operatorOf(phone) {
-  const prefix = String(phone || '').replace(/\D/g, '').slice(0, 2);
+  const digits = String(phone || '').replace(/\D/g, '');
+  if (digits.length > 9) return null;
+  const prefix = digits.slice(0, 2);
   for (const [operator, list] of Object.entries(OPERATOR_PREFIXES)) {
     if (list.includes(prefix)) return operator;
   }
