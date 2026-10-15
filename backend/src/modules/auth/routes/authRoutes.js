@@ -7,6 +7,8 @@ const {
   registerSchema,
   loginSchema,
   googleLoginSchema,
+  linkGoogleSchema,
+  recoverWithGoogleSchema,
   completeProfileSchema,
 } = require('../validators/authValidators');
 
@@ -16,6 +18,9 @@ const router = Router();
 router.post('/register', registerRateLimiter, validate(registerSchema), controller.register);
 router.post('/login', authRateLimiter, validate(loginSchema), controller.login);
 router.post('/google', authRateLimiter, validate(googleLoginSchema), controller.googleLogin);
+// Recuperação de conta sem SMS: o Google ligado antes prova quem é a pessoa.
+router.post('/link-google', authenticate, authRateLimiter, validate(linkGoogleSchema), controller.linkGoogle);
+router.post('/recover-with-google', authRateLimiter, validate(recoverWithGoogleSchema), controller.recoverWithGoogle);
 // Pedida logo após o primeiro login via Google (conta nasce sem telefone).
 router.post(
   '/complete-profile',

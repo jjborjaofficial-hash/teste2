@@ -27,6 +27,15 @@ async function findUserById(id) {
   return rows[0] || null;
 }
 
+/** Só o estado da ligação com o Google (usado ao ligar o Google a uma conta). */
+async function findGoogleLinkState(userId) {
+  const { rows } = await db.query(
+    'SELECT id, email, google_id FROM users WHERE id = $1 AND deleted_at IS NULL',
+    [userId]
+  );
+  return rows[0] || null;
+}
+
 async function findUserByGoogleId(googleId) {
   const { rows } = await db.query(
     `SELECT id, name, phone, phone_provider, email, google_id, avatar_url,
@@ -76,6 +85,36 @@ async function linkGoogleToUser(userId, { googleId, avatarUrl }) {
     [googleId, avatarUrl, userId]
   );
   return rows[0];
+}
+
+
+/**
+ * Liga o Google (e o e-mail verificado por ele) a uma conta que ainda NÃO tem Google.
+ * O "AND google_id IS NULL" torna a operação segura contra dois pedidos ao mesmo tempo.
+ */
+async function attachGoogleToAccount(userId, { googleId, email, avatarUrl }) {
+  const { rows } = await db.query(
+    `UPDATE users
+        SET google_id = $1,
+            email = COALESCE(email, $2),
+            email_normalized = COALESCE(email_normalized, $3),
+            avatar_url = COALESCE(avatar_url, $4),
+            updated_at = now()
+      WHERE id = $5 AND google_id IS NULL AND deleted_at IS NULL
+      RETURNING id`,
+    [googleId, email, normalizeEmail(email), avatarUrl, userId]
+  );
+  return rows[0] || null;
+}
+
+/** Guarda a nova senha e termina TODAS as sessões abertas da conta (recuperação). */
+async function resetPasswordAndRevokeSessions(userId, passwordHash) {
+  await db.query('UPDATE users SET password_hash = $2, updated_at = now() WHERE id = $1', [userId, passwordHash]);
+  await db.query(
+    `UPDATE refresh_tokens SET revoked_at = now() - interval '1 day'
+      WHERE user_id = $1 AND revoked_at IS NULL`,
+    [userId]
+  );
 }
 
 /** Preenche telefone + check-in jurídico de uma conta criada via Google. */
@@ -196,6 +235,9 @@ module.exports = {
   findUserById,
   findUserByGoogleId,
   findUserByEmail,
+  findGoogleLinkState,
+  attachGoogleToAccount,
+  resetPasswordAndRevokeSessions,
   createUser,
   createUserFromGoogle,
   linkGoogleToUser,

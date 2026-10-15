@@ -80,6 +80,31 @@ async function googleLogin(req, res, next) {
   }
 }
 
+async function linkGoogle(req, res, next) {
+  try {
+    const { idToken } = req.validatedBody;
+    const data = await authService.linkGoogle(req.user.id, { idToken }, buildContext(req));
+    return res.status(200).json({ status: 'success', message: 'Google ligado à sua conta.', data });
+  } catch (err) {
+    return next(err);
+  }
+}
+
+async function recoverWithGoogle(req, res, next) {
+  try {
+    const { idToken, newPassword } = req.validatedBody;
+    const result = await authService.recoverPasswordWithGoogle({ idToken, newPassword }, buildContext(req));
+    setRefreshTokenCookie(res, result.refreshToken);
+    return res.status(200).json({
+      status: 'success',
+      message: 'Senha redefinida. A sua conta está recuperada.',
+      data: sanitizeAuthResult(result),
+    });
+  } catch (err) {
+    return next(err);
+  }
+}
+
 async function completeProfile(req, res, next) {
   try {
     const { phone, isAdultDeclared } = req.validatedBody;
@@ -155,4 +180,4 @@ async function acceptTerms(req, res, next) {
   }
 }
 
-module.exports = { register, login, googleLogin, completeProfile, refresh, logout, acceptTerms };
+module.exports = { register, login, googleLogin, linkGoogle, recoverWithGoogle, completeProfile, refresh, logout, acceptTerms };

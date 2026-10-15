@@ -187,6 +187,84 @@ async function login({ phone, password }, context) {
   return { user: sanitizeUser(user), ...tokens };
 }
 
+
+/** Confirma o idToken junto da Google e devolve só os dados verificados. */
+async function verifyGoogleIdToken(idToken) {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  if (!clientId) {
+    logger.warn('Google chamado sem GOOGLE_CLIENT_ID configurado no servidor.');
+    throw new ForbiddenError('O Google não está disponível no momento.');
+  }
+  let payload;
+  try {
+    const ticket = await new OAuth2Client(clientId).verifyIdToken({ idToken, audience: clientId });
+    payload = ticket.getPayload();
+  } catch (err) {
+    throw new UnauthorizedError('Não foi possível verificar o login com o Google.');
+  }
+  if (!payload?.sub || !payload?.email || payload.email_verified === false) {
+    throw new UnauthorizedError('Resposta do Google incompleta.');
+  }
+  return {
+    googleId: payload.sub,
+    email: payload.email.toLowerCase(),
+    name: payload.name || payload.email.split('@')[0],
+    avatarUrl: payload.picture || null,
+  };
+}
+
+/**
+ * Liga o Google à conta de quem já tem sessão (cadastro por telefone). É isto que permite
+ * recuperar a conta mais tarde. Recusa se este Google ou este e-mail já pertencem a outra conta.
+ */
+async function linkGoogle(userId, { idToken }, context) {
+  const g = await verifyGoogleIdToken(idToken);
+  const me = await repository.findGoogleLinkState(userId);
+  if (!me) throw new UnauthorizedError('Sessão inválida.');
+  if (me.google_id) {
+    if (me.google_id === g.googleId) return { linked: true, email: me.email };
+    throw new ConflictError('Esta conta já está ligada a outro Google.');
+  }
+  const byGoogle = await repository.findUserByGoogleId(g.googleId);
+  const byEmail = await repository.findUserByEmail(g.email);
+  if ((byGoogle && byGoogle.id !== userId) || (byEmail && byEmail.id !== userId)) {
+    throw new ConflictError('Este Google já está ligado a outra conta.');
+  }
+  const done = await repository.attachGoogleToAccount(userId, g);
+  if (!done) throw new ConflictError('Esta conta já está ligada a um Google.');
+  await userCache.invalidateProfile(userId);
+  await repository.insertAuditLog({
+    userId, action: 'user.google_linked', entity: 'users', entityId: userId,
+    metadata: { email: g.email }, ipAddress: context.ipAddress,
+  });
+  return { linked: true, email: me.email || g.email };
+}
+
+/**
+ * Recuperação de conta sem SMS: quem ligou o Google antes prova quem é entrando com ele e
+ * escolhe uma senha nova. Todas as sessões antigas terminam. Não mexe em saldo nem em saques.
+ */
+async function recoverPasswordWithGoogle({ idToken, newPassword }, context) {
+  const g = await verifyGoogleIdToken(idToken);
+  const user = await repository.findUserByGoogleId(g.googleId);
+  if (!user) {
+    throw new UnauthorizedError('Este Google não está ligado a nenhuma conta. Fale com o suporte.');
+  }
+  if (user.status === 'banned' || user.status === 'suspended') {
+    throw new ForbiddenError('Esta conta está inativa. Contate o suporte.');
+  }
+  const hash = await bcrypt.hash(newPassword, Number(process.env.BCRYPT_SALT_ROUNDS) || 12);
+  await repository.resetPasswordAndRevokeSessions(user.id, hash);
+  await userCache.invalidateProfile(user.id);
+  await repository.insertAuditLog({
+    userId: user.id, action: 'user.password_recovered_google', entity: 'users', entityId: user.id,
+    metadata: {}, ipAddress: context.ipAddress,
+  });
+  await repository.touchLastLogin(user.id);
+  const tokens = await issueTokenPair(user, context);
+  return { user: sanitizeUser(user), ...tokens };
+}
+
 /**
  * Login/Cadastro via Google (Doc. Mestre Seção 17, variante sem telefone no
  * primeiro passo). O backend NUNCA confia em dados enviados pelo cliente
@@ -400,6 +478,8 @@ module.exports = {
   register,
   login,
   loginWithGoogle,
+  linkGoogle,
+  recoverPasswordWithGoogle,
   completeProfile,
   refresh,
   logout,
