@@ -8,6 +8,8 @@ import { ThemeTrialCard } from '../components/ThemeTrialCard';
 import { PrimaryButton, SecondaryButton } from '../components/Button';
 import { useToast } from '../components/Toast';
 import { usersApi } from '../api/profileApi';
+import { authApi } from '../api/authApi';
+import { GoogleCredentialButton } from '../components/GoogleCredentialButton';
 import { ChevronRightIcon } from '../icons';
 import { walletApi } from '../api/gameplayApi';
 import { DEFAULT_WITHDRAWAL_MIN_MZN } from './Wallet';
@@ -83,6 +85,11 @@ export function Settings() {
     setPhonePassword('');
     await refreshProfile();
   }, 'Número de pagamento atualizado.');
+
+  const linkGoogle = (idToken) => run('google', async () => {
+    await authApi.linkGoogle(idToken);
+    await refreshProfile();
+  }, 'Google ligado à sua conta.');
 
   const savePassword = () => run('password', async () => {
     if (newPass !== newPass2) throw new Error('As duas senhas novas não são iguais.');
@@ -206,6 +213,25 @@ export function Settings() {
           <PrimaryButton onClick={savePassword} loading={busy === 'password'} disabled={newPass.length < 8 || (user?.hasPassword && !curPass)}>
             {user?.hasPassword ? 'Mudar senha' : 'Criar senha'}
           </PrimaryButton>
+        </Card>
+      </section>
+
+      <section className="space-y-2">
+        <h2 className="font-display text-h2 text-text">Recuperar a conta</h2>
+        <Card className="space-y-3">
+          {user?.email ? (
+            <p className="text-caption text-text-secondary">
+              Google ligado ({user.email}). Se esquecer a senha, use "Esqueci a senha" no ecrã de login e confirme com este Google.
+            </p>
+          ) : (
+            <>
+              <p className="text-caption text-text-secondary">
+                Ligue o seu Google à conta. Sem isto, se esquecer a senha não conseguimos recuperar a sua conta nem o seu saldo.
+              </p>
+              <GoogleCredentialButton onCredential={linkGoogle} />
+              {busy === 'google' && <p className="text-caption text-text-secondary text-center">A ligar...</p>}
+            </>
+          )}
         </Card>
       </section>
 

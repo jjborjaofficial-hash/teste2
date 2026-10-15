@@ -75,6 +75,12 @@ export function Login() {
           <PrimaryButton type="submit" loading={loading} className="w-full">
             Entrar
           </PrimaryButton>
+
+          <p className="text-caption text-center">
+            <Link to="/recuperar-senha" className="text-primary font-semibold">
+              Esqueci a senha
+            </Link>
+          </p>
         </form>
 
         <GoogleLoginButton />

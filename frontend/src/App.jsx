@@ -8,6 +8,7 @@ import { FocusLayout } from './layouts/FocusLayout';
 import { AdminLayout } from './layouts/AdminLayout';
 
 import { Onboarding } from './pages/Onboarding';
+import { RecoverPassword } from './pages/RecoverPassword';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { CompleteProfile } from './pages/CompleteProfile';
@@ -55,6 +56,7 @@ export default function App() {
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/entrar" element={<Login />} />
             <Route path="/cadastro" element={<Register />} />
+            <Route path="/recuperar-senha" element={<RecoverPassword />} />
 
             {/* Legal — acessível sem autenticação (links no rodapé e no cadastro) */}
             <Route path="/legal" element={<CentralJuridica />} />

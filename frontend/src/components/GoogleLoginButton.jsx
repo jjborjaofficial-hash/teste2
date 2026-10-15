@@ -17,7 +17,7 @@ const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
  * cadastro. Se a conta for nova, ainda não tem telefone: redirecionamos
  * para /completar-perfil antes do dashboard.
  */
-function loadGsiScript() {
+export function loadGsiScript() {
   if (window.google?.accounts?.id) return Promise.resolve();
   return new Promise((resolve, reject) => {
     const existing = document.querySelector(`script[src="${GSI_SCRIPT_SRC}"]`);
