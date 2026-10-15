@@ -34,11 +34,12 @@ function getFirebaseApp() {
     // ainda não tiver sido instalado (`npm install`), o resto do backend
     // continua funcionando normalmente — só o push fica inativo.
     // eslint-disable-next-line global-require
-    const admin = require('firebase-admin');
-    firebaseApp = admin.apps.length
-      ? admin.app()
-      : admin.initializeApp({
-          credential: admin.credential.cert({
+    // API modular (firebase-admin 13+): o antigo `admin.credential`/`admin.messaging()` já não existe.
+    const { initializeApp, getApps, getApp, cert } = require('firebase-admin/app');
+    firebaseApp = getApps().length
+      ? getApp()
+      : initializeApp({
+          credential: cert({
             projectId: FIREBASE_PROJECT_ID,
             clientEmail: FIREBASE_CLIENT_EMAIL,
             // No .env, quebras de linha da chave privada vêm como "\\n" literal;
@@ -69,7 +70,7 @@ async function sendToUser(userId, { title, body, data = {} }, tokensRepository) 
   if (tokens.length === 0) return { sent: 0, skipped: false };
 
   // eslint-disable-next-line global-require
-  const admin = require('firebase-admin');
+  const { getMessaging } = require('firebase-admin/messaging');
   const message = {
     notification: { title, body },
     data: Object.fromEntries(Object.entries(data).map(([k, v]) => [k, String(v)])),
@@ -77,7 +78,7 @@ async function sendToUser(userId, { title, body, data = {} }, tokensRepository) 
   };
 
   try {
-    const response = await admin.messaging().sendEachForMulticast(message);
+    const response = await getMessaging(app).sendEachForMulticast(message);
 
     const invalidTokens = [];
     response.responses.forEach((r, i) => {

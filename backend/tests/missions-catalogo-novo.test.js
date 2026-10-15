@@ -123,8 +123,16 @@ describe('convidar 1 utilizador novo', () => {
 });
 
 describe('acertar 6 perguntas seguidas numa rodada', () => {
+  let savedDays;
+  afterAll(async () => {
+    if (savedDays !== undefined) await db.query(`UPDATE missions SET weekdays = $1 WHERE activity_type = 'round_streak'`, [savedDays]);
+  });
   it('um erro volta a sequência a 0; 6 seguidas completam a missão e o progresso guarda a melhor sequência', async () => {
     const missionsService2 = require('../src/modules/missions/services/missionsService');
+    // A rotação semanal não agenda esta missão em todos os dias (ex.: quinta-feira): para o teste valer
+    // em qualquer dia, ela fica agendada todos os dias e volta ao normal no fim.
+    savedDays = (await db.query(`SELECT weekdays FROM missions WHERE activity_type = 'round_streak'`)).rows[0].weekdays;
+    await db.query(`UPDATE missions SET weekdays = NULL WHERE activity_type = 'round_streak'`);
     const quizRepository = require('../src/modules/quiz/repositories/quizRepository');
     // uma pergunta diferente por resposta (índice único round_id + question_id)
     const qs = (await db.query(
