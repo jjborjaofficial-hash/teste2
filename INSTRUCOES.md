@@ -5,16 +5,26 @@ O dono do projeto (Borja) só precisa de enviar o **link do repositório**: tudo
 por fazer fica escrito aqui e nos ficheiros `PENDENTE.md` de cada área.
 
 > ## PRÓXIMO PASSO AGORA
-> **O trabalho em andamento é o Quiz v2.** A ordem de execução está na secção
-> **"Quiz v2 — estado e próximos passos"** (mais abaixo neste ficheiro). Resumo:
-> 1. Feedback pedagógico depois de cada resposta (`BE-004` + `FE-003`). Finanças (fácil, médio, difícil) está
->    **concluída**; **ordem seguinte (decidida pelo dono em 2026-10-07):** 1.º Finanças só com a correção das alternativas (lotes de 25, com revisão do dono; regra: a certa e a explicação não mudam, só se ajustam as erradas; **Finanças fácil e médio CONCLUÍDOS (migrations 141 a 148); Finanças difícil lote 1 FEITO (149)**), 2.º IA (explicações + alternativas juntas; **faixa de migrations 400+; IA fácil lote 1 FEITO (migrations 400 e 401); próximo: IA fácil lote 2, migrações 402 e 403**), 3.º Marketing, Produtividade (faixa 200+) e Tecnologia (faixa 300+). Detalhe em `backend/PENDENTE.md` (BE-003/BE-004).
-> 2. Validador de qualidade das alternativas (`BE-003`): validador **feito** (`npm run quiz:validate`, relatório no CI) e
->    ordem das opções já aleatória; padrão e modelos em `docs/quiz-v2-alternativas-padrao.md`; **próximo:** o dono ver o relatório e aprovar o 1.º lote de 25 correções.
-> 3. Sobras das rodadas (`BE-005`).
+> **Atualizado em 15/10 e verificado de forma independente.** O conteúdo do **Quiz v2 está COMPLETO**: reconstruindo a base do
+> zero com todas as migrations, as 5 categorias têm **100% das explicações (1.641 perguntas ativas)**, o validador reprova **0** e a
+> correta é a mais longa em **20,4%** (era 90,8%; meta <= 35% por grupo). Os 48 grupos de testes do backend passam (767 testes).
+> **Não há mais lotes de alternativas nem de explicações por fazer: não abrir lotes nem reservas novas.** Qualquer texto de
+> "RESERVADO" ou "PRÓXIMO lote" que ainda apareça no `backend/PENDENTE.md` é histórico; confira sempre pelas migrations em
+> `backend/database/migrations/` antes de agir (esse texto antigo já enganou uma sessão).
 >
-> Os pontos da secção **"Ideias ainda NÃO aprovadas"** (fim do ficheiro) **não** são para
-> implementar: só se o dono aprovar.
+> **O que falta agora (nada disto é conteúdo do quiz):**
+> 1. **Anúncios (Adcash).** Nos prints do dono de 13/10 apareceram anúncios de conteúdo adulto e um aviso falso de "Flash Player" por cima
+>    das perguntas. O código já foi corrigido (commit `3ceb5e7`: script do Interstitial retirado do resultado do quiz), mas o **dono tem de
+>    refazer o deploy do frontend** no Render, **configurar as restrições de categoria nas 4 zonas do Adcash** (separador *Restrictions*) e
+>    denunciar o anúncio falso ao suporte. Interruptor geral de emergência: `VITE_ADS_ENABLED=false`.
+> 2. **Capacidade.** No plano gratuito aguenta cerca de 50 a 100 pessoas ao mesmo tempo (cada consulta custa ~0,13 s entre o Render em
+>    Oregon e o Neon em Londres; pool de 20 ligações; quota do Neon de 100 CU-horas/mês). Melhoria mais barata: servidor e base na **mesma
+>    região**. Antes de lançar: plano pago, worker no Render e teste de carga.
+> 3. **Decisões do dono** (secção "Ideias ainda NÃO aprovadas", no fim): teto diário vs pedidos simultâneos (dinheiro), verificação por
+>    SMS, economia vs receita real do Adcash, testes + deploy automático, e o destino da branch `feat/quiz-aprendizagem` (abaixo).
+>    **Não implementar sem aprovação.**
+> 4. O dono conferir os rascunhos em `docs/quiz-lotes-alternativas/`.
+
 - **Vulnerabilidades de dependências (npm audit, 2026-10-09):** o `npm audit fix` seguro já foi aplicado (saiu a crítica `proxy-addr` e a alta `compression`; backend 19 → 12). **`bcrypt` 5 → 6 FEITO em 14/10 (aprovado pelo dono; testes verdes no ramo à parte e no main; backend publicado).** **`firebase-admin` 12 → 14 FEITO em 15/10 (pedido do dono; `pushService.js` passou à API modular `firebase-admin/app` e `/messaging`) e `firebase` (frontend) 10 → 13; `uuid` (não usado) removido.** Em produção (`npm audit --omit=dev`) sobram no backend 2 moderadas (`uuid` dentro do `gaxios`, sem uso do caminho afetado) e no frontend 6 (`react-router`, `@grpc/grpc-js`/firestore que o projeto não importa). O resto são ferramentas de desenvolvimento (`jest`, `nodemon`, `vite`, `tailwindcss`), que não vão para produção; só trocar com o dono. O `firebase-messaging-sw.js` continua a usar o `firebase` 10.13 compat via CDN (independente do pacote).
 
 >
@@ -155,7 +165,7 @@ Se uma tarefa nova não encaixar em nenhuma área, crie um `PENDENTE.md` na past
   `teste2-backend` e `teste2-frontend` (diferentes dos do `render.yaml`); confira
   `CORS_ALLOWED_ORIGINS` no painel antes de supor algo.
 
-## Quiz v2 — estado e próximos passos (ordem de execução) — ESTES SÃO OS PRÓXIMOS PASSOS
+## Quiz v2 — histórico e estado (o estado ATUAL está na caixa "PRÓXIMO PASSO AGORA", no topo)
 
 Especificação do dono: `docs/quiz-v2-rodadas-e-feedback.md` (ler primeiro). Detalhes de cada
 tarefa nos `PENDENTE.md` (`BE-003`, `BE-004`, `BE-005`, `FE-003`). Trabalhar sobre o que já
