@@ -29,9 +29,11 @@ export function AdminLayout() {
 
   useEffect(() => {
     let mounted = true;
-    notificationsApi.unreadCount().then((res) => {
-      if (mounted) setUnreadCount(res.data.count);
-    });
+    notificationsApi.unreadCount()
+      .then((res) => {
+        if (mounted) setUnreadCount(res.data.count);
+      })
+      .catch(() => { /* a contagem é só um aviso; sem ela o painel continua a funcionar */ });
     return () => { mounted = false; };
   }, []);
 

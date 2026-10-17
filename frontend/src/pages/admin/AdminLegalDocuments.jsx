@@ -24,8 +24,12 @@ function DocumentVersions({ document, onChanged }) {
   const [stats, setStats] = useState(null);
 
   function loadVersions() {
-    adminLegalApi.listVersions(document.id).then((res) => setVersions(res.data));
-    adminLegalApi.getAcceptanceStats(document.id).then((res) => setStats(res.data));
+    adminLegalApi.listVersions(document.id)
+      .then((res) => setVersions(res.data))
+      .catch(() => showToast('Não foi possível carregar as versões.', 'error'));
+    adminLegalApi.getAcceptanceStats(document.id)
+      .then((res) => setStats(res.data))
+      .catch(() => showToast('Não foi possível carregar as estatísticas de aceite.', 'error'));
   }
 
   useEffect(loadVersions, [document.id]);
@@ -129,9 +133,12 @@ function DocumentVersions({ document, onChanged }) {
 
 export function AdminLegalDocuments() {
   const [documents, setDocuments] = useState(null);
+  const [loadError, setLoadError] = useState(null);
 
   function load() {
-    adminLegalApi.listDocuments().then((res) => setDocuments(res.data));
+    adminLegalApi.listDocuments()
+      .then((res) => setDocuments(res.data))
+      .catch((err) => setLoadError(err instanceof ApiError ? err.message : 'Não foi possível carregar os documentos.'));
   }
 
   useEffect(load, []);
@@ -144,7 +151,8 @@ export function AdminLegalDocuments() {
         Documentos nunca são substituídos, apenas versionados.
       </p>
 
-      {!documents && <p className="text-caption text-text-secondary">Carregando...</p>}
+      {!documents && !loadError && <p className="text-caption text-text-secondary">Carregando...</p>}
+      {loadError && <p className="text-caption text-danger">{loadError}</p>}
 
       <div className="space-y-3">
         {documents?.map((doc) => (

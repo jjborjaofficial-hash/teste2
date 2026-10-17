@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { adminApi } from '../../api/adminApi';
+import { ApiError } from '../../api/client';
 import { Card } from '../../components/Card';
 
 /**
@@ -9,9 +10,12 @@ import { Card } from '../../components/Card';
  */
 export function AdminDailyReports() {
   const [reports, setReports] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    adminApi.listDailyReports(30).then((res) => setReports(res.data));
+    adminApi.listDailyReports(30)
+      .then((res) => setReports(res.data))
+      .catch((err) => setError(err instanceof ApiError ? err.message : 'Não foi possível carregar os relatórios.'));
   }, []);
 
   return (
@@ -21,7 +25,8 @@ export function AdminDailyReports() {
         Gerado automaticamente todos os dias às 06:00, referente ao dia anterior.
       </p>
 
-      {!reports && <p className="text-caption text-text-secondary">Carregando...</p>}
+      {!reports && !error && <p className="text-caption text-text-secondary">Carregando...</p>}
+      {error && <p className="text-caption text-danger">{error}</p>}
       {reports?.length === 0 && <Card><p className="text-body text-text-secondary">Nenhum relatório gerado ainda.</p></Card>}
 
       <div className="space-y-3">

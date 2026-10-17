@@ -1,13 +1,18 @@
 import { useEffect, useState } from 'react';
 import { adminApi } from '../../api/adminApi';
+import { ApiError } from '../../api/client';
 import { Card } from '../../components/Card';
 
 export function AdminAuditLogs() {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    adminApi.listAuditLogs().then((res) => setLogs(res.data)).finally(() => setLoading(false));
+    adminApi.listAuditLogs()
+      .then((res) => setLogs(res.data))
+      .catch((err) => setError(err instanceof ApiError ? err.message : 'Não foi possível carregar os logs.'))
+      .finally(() => setLoading(false));
   }, []);
 
   return (
@@ -15,7 +20,8 @@ export function AdminAuditLogs() {
       <h1 className="font-display text-h1 text-text">Logs de Auditoria</h1>
 
       {loading && <p className="text-caption text-text-secondary">Carregando...</p>}
-      {!loading && logs.length === 0 && (
+      {error && <p className="text-caption text-danger">{error}</p>}
+      {!loading && !error && logs.length === 0 && (
         <Card><p className="text-body text-text-secondary">Nenhum log registrado ainda.</p></Card>
       )}
 

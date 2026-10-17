@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { rankingApi } from '../api/gameplayApi';
+import { ApiError } from '../api/client';
 import { Card } from '../components/Card';
 import { RankingIcon, ProfileIcon } from '../icons';
 import { AVATAR_FRAME_CLASSES } from '../constants/shopCosmetics';
@@ -11,6 +12,7 @@ import { AVATAR_FRAME_CLASSES } from '../constants/shopCosmetics';
 export function Ranking() {
   const [top, setTop] = useState([]);
   const [myPosition, setMyPosition] = useState(null);
+  const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -19,6 +21,7 @@ export function Ranking() {
         setTop(topRes.data);
         setMyPosition(meRes.data);
       })
+      .catch((err) => setError(err instanceof ApiError ? err.message : 'Não foi possível carregar o ranking. Tente novamente.'))
       .finally(() => setLoading(false));
   }, []);
 
@@ -39,6 +42,7 @@ export function Ranking() {
       )}
 
       {loading && <p className="text-caption text-text-secondary">Carregando ranking...</p>}
+      {error && <p className="text-caption text-danger">{error}</p>}
 
       <div className="space-y-2">
         {top.map((entry) => (
@@ -60,7 +64,7 @@ export function Ranking() {
           </Card>
         ))}
 
-        {!loading && top.length === 0 && (
+        {!loading && !error && top.length === 0 && (
           <Card><p className="text-body text-text-secondary">O ranking desta semana ainda está sendo construído.</p></Card>
         )}
       </div>
