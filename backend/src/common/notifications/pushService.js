@@ -19,6 +19,18 @@ const logger = require('../logger');
 let firebaseApp = null;
 let initAttempted = false;
 
+/**
+ * Aceita a chave como vem do ficheiro JSON do Firebase: com "\\n" literais (como se cola no Render) e, por engano,
+ * entre aspas. Devolve a chave PEM com quebras de linha reais.
+ */
+function normalizePrivateKey(raw) {
+  let key = String(raw).trim();
+  if ((key.startsWith('"') && key.endsWith('"')) || (key.startsWith("'") && key.endsWith("'"))) {
+    key = key.slice(1, -1);
+  }
+  return key.replace(/\\n/g, '\n');
+}
+
 function getFirebaseApp() {
   if (initAttempted) return firebaseApp;
   initAttempted = true;
@@ -44,7 +56,7 @@ function getFirebaseApp() {
             clientEmail: FIREBASE_CLIENT_EMAIL,
             // No .env, quebras de linha da chave privada vêm como "\\n" literal;
             // aqui convertemos de volta para quebras de linha reais.
-            privateKey: FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+            privateKey: normalizePrivateKey(FIREBASE_PRIVATE_KEY),
           }),
         });
     logger.info('pushService: Firebase Admin inicializado com sucesso.');
@@ -82,6 +94,11 @@ async function sendToUser(userId, { title, body, data = {} }, tokensRepository) 
 
     const invalidTokens = [];
     response.responses.forEach((r, i) => {
+      // Falhas que NÃO são token inválido (credencial errada, serviço em baixo...) ficavam em silêncio: agora aparecem
+      // nos logs, só com o código do erro (nunca o token do aparelho).
+      if (!r.success && r.error?.code && !['messaging/registration-token-not-registered', 'messaging/invalid-registration-token'].includes(r.error.code)) {
+        logger.warn('pushService: falha ao entregar a um dispositivo', { userId, code: r.error.code });
+      }
       if (!r.success && ['messaging/registration-token-not-registered', 'messaging/invalid-registration-token'].includes(r.error?.code)) {
         invalidTokens.push(tokens[i].token);
       }
@@ -97,4 +114,4 @@ async function sendToUser(userId, { title, body, data = {} }, tokensRepository) 
   }
 }
 
-module.exports = { sendToUser };
+module.exports = { sendToUser, normalizePrivateKey };
