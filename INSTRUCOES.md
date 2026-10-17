@@ -25,6 +25,26 @@ por fazer fica escrito aqui e nos ficheiros `PENDENTE.md` de cada área.
 >    **Não implementar sem aprovação.**
 > 4. O dono conferir os rascunhos em `docs/quiz-lotes-alternativas/`.
 
+> ## EM CURSO: mudança para Frankfurt (começou em 16/10, pedido do dono)
+> **Objetivo:** servidor e base de dados na Europa Central para cada consulta deixar de atravessar o Atlântico (hoje: backend e Redis no
+> Render **Oregon**, base no Neon **Londres**). Plano em fases, **sem apagar nada do que existe** (o antigo fica de reserva).
+> - **Feito:** projeto Neon novo e VAZIO em Frankfurt: `aprenda-e-ganhe-frankfurt` (id `ancient-bar-90010031`, ramo `main`, base `neondb`).
+>   O antigo é `aprenda-e-ganhe` (id `summer-glitter-52566854`, Londres, ramo `production`). Fluxo temporário
+>   `.github/workflows/copiar-base-frankfurt.yml` (só manual; recusa se a base nova não estiver vazia; compara linhas no fim).
+> - **Falta o dono:** criar no GitHub (Settings > Secrets and variables > Actions) `OLD_DATABASE_URL` (base antiga) e
+>   `NEW_DATABASE_URL` (base nova), ambos **sem `-pooler`** (ligação direta). **Nunca escrever endereços nem passwords em ficheiros do repositório.**
+>   Esta sessão não consegue criar secrets (o token do `gh` é inválido e o proxy bloqueia a API de secrets).
+> - **Depois:** (1) Actions > "Copiar base para Frankfurt" > Run workflow > escrever `COPIAR`; ver o relatório (todas as tabelas "OK").
+>   (2) Criar no Render, região **Frankfurt**, um web service novo (mesmo repo, `backend`, mesmos comandos: build `npm install`,
+>   start `npm run migrate:up && npm start`, health `/health`) e um Redis novo; o dono copia as variáveis do serviço antigo (esta sessão não
+>   lê valores), trocando `DATABASE_URL` pela nova e `REDIS_URL` pela nova. (3) Testar o novo serviço. (4) No frontend mudar `VITE_API_URL`
+>   para o endereço novo, e no backend conferir `CORS_ALLOWED_ORIGINS`; redeploy do frontend. (5) Só depois **suspender** (não apagar) o
+>   servidor antigo, para não gastar horas gratuitas em dobro. Manter a base antiga até confirmar tudo.
+> - **Cuidados:** a cópia final deve ser feita de madrugada, com pouco movimento (o que for gravado depois da cópia perde-se);
+>   as passwords das duas bases foram coladas numa conversa, por isso **trocá-las no fim** (Neon > Roles > Reset password) e atualizar a
+>   ligação na Render. O deploy na Render é **automático a cada commit no `main`** (confirmado em 16/10), não manual.
+> - **Se algo correr mal:** o backend antigo continua a apontar para a base antiga, por isso não há perda; basta não trocar o `VITE_API_URL`.
+
 - **Vulnerabilidades de dependências (npm audit, 2026-10-09):** o `npm audit fix` seguro já foi aplicado (saiu a crítica `proxy-addr` e a alta `compression`; backend 19 → 12). **`bcrypt` 5 → 6 FEITO em 14/10 (aprovado pelo dono; testes verdes no ramo à parte e no main; backend publicado).** **`firebase-admin` 12 → 14 FEITO em 15/10 (pedido do dono; `pushService.js` passou à API modular `firebase-admin/app` e `/messaging`) e `firebase` (frontend) 10 → 13; `uuid` (não usado) removido.** Em produção (`npm audit --omit=dev`) sobram no backend 2 moderadas (`uuid` dentro do `gaxios`, sem uso do caminho afetado) e no frontend 6 (`react-router`, `@grpc/grpc-js`/firestore que o projeto não importa). O resto são ferramentas de desenvolvimento (`jest`, `nodemon`, `vite`, `tailwindcss`), que não vão para produção; só trocar com o dono. O `firebase-messaging-sw.js` continua a usar o `firebase` 10.13 compat via CDN (independente do pacote).
 
 >
@@ -37,7 +57,7 @@ por fazer fica escrito aqui e nos ficheiros `PENDENTE.md` de cada área.
 > **Testes automáticos.** A cada push o GitHub roda `.github/workflows/testes.yml` (migrations
 > num banco novo, testes do backend e build do frontend); o resultado fica na aba **Actions** e ao
 > lado de cada commit. Serve para confirmar os testes mesmo quando o ambiente da sessão não
-> consegue rodar `npm install`. Não faz deploy (o deploy no Render continua manual). Se ficar
+> consegue rodar `npm install`. Não faz deploy (o deploy do Render é automático a cada commit no `main`). Se ficar
 > vermelho, leia o relatório antes de continuar.
 >
 > **Decisão do dono (2026-10-04):** o anúncio intersticial continua com a mesma lógica de antes
