@@ -13,7 +13,7 @@ on:
 
 jobs:
   copiar:
-    if: ${{ github.event.inputs.confirmar == 'COPIAR' }}
+    if: ${{ contains(github.event.inputs.confirmar, 'copiar') }}
     runs-on: ubuntu-latest
     steps:
       - name: Verificar que os secrets existem
