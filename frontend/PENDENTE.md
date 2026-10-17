@@ -16,3 +16,7 @@ sem explicação escrita, só a resposta correta. **DESCARTADO pelo dono (11/10)
 `Settings.jsx` com editar nome/foto, mudar número M-Pesa/e-Mola, descarregar dados e eliminar conta. Carteira fixa o método do saque ao operador do número. `Legal.jsx` sem "100 MZN" fixo.
 
 Settings: secção 'Mudar senha / Criar senha' (conta Google); pedidos de senha só aparecem se `hasPassword`.
+
+## DECISÃO DO DONO (17/10/2026): modo noite
+- Fica **só** o empréstimo do Tema Noite por 10 minutos para contas novas (GER-002); o Tema Noite continua à venda na Loja.
+- **NÃO** criar "modo escuro grátis" nem seletor claro/escuro/automático nas Configurações: concorre com a venda do Tema Noite. Item riscado.
