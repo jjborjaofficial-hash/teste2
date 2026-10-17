@@ -75,6 +75,10 @@ async function creditReward({ userId, amountMzn, source, referenceId, metadata, 
     return { ...credited, amountCreditedMzn: amountMzn };
   }
 
+  // Bloqueia a linha do utilizador ANTES de ler quanto já ganhou hoje: um segundo pedido simultâneo espera aqui,
+  // e quando passa já vê o total atualizado (sem isto, dois pedidos furavam o teto de 7,20 MZN).
+  await repository.lockUserForEarnings(executor, userId);
+
   const dailyCap = Number(
     (await configRepository.getConfigValue('daily_earning_cap_mzn', executor)) ?? 7.2
   );

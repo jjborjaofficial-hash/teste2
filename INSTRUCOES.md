@@ -229,7 +229,7 @@ Isto NÃO é o próximo passo e não são instruções: são pontos já conversa
 ordem de prioridade sugerida. Quando ele aprovar um, passa a ser uma instrução na área certa
 (`BE-`, `FE-`, `ADS-` ou `GER-`) e sai desta lista.
 
-1. Teto diário das missões: bloquear a linha do utilizador antes de somar os ganhos do dia, para dois pedidos simultâneos não furarem o teto (dinheiro).
+1. ~~Teto diário das missões com pedidos simultâneos~~ **FEITO em 17/10 (aprovado pelo dono):** `walletService.creditReward` bloqueia a linha do utilizador (`walletRepository.lockUserForEarnings`) antes de somar os ganhos do dia; teste `tests/earning-cap-concurrency.test.js` (4 resgates de 3 MZN ao mesmo tempo: sem o bloqueio pagava 12,00, com ele 7,20).
 2. Cadastro: verificar o telefone por SMS (Twilio já está nas dependências) para evitar contas falsas.
 3. Economia: conferir se o bónus de boas-vindas (12,00 MZN por utilizador) e a conversão de Pontos (até ~50 MZN/dia por utilizador no teto de 5.000 Pontos) cabem na receita real de anúncios (Adcash).
 4. Testes para boas-vindas e carteira; fazer o push disparar o deploy sozinho (hoje é manual) e pôr um `healthCheckPath` no backend.

@@ -47,6 +47,15 @@ async function hasActiveWithdrawal(userId, executor = db) {
  * Credita valor na carteira do usuário. Deve ser chamado dentro de uma transação
  * (client com BEGIN já iniciado) quando compuser outra operação de negócio.
  */
+/**
+ * Bloqueia a linha do utilizador até ao fim da transação. Serve para o teto diário: quem lê "quanto já ganhou hoje"
+ * tem de esperar por quem está a creditar, senão dois pedidos simultâneos leem o mesmo total e ambos pagam.
+ * Só tem efeito dentro de uma transação (o executor tem de ser o client da transação).
+ */
+async function lockUserForEarnings(executor, userId) {
+  await executor.query('SELECT id FROM users WHERE id = $1 FOR UPDATE', [userId]);
+}
+
 async function creditWallet(executor, { userId, amountMzn, source, referenceId, metadata }) {
   const lockResult = await executor.query(
     'SELECT wallet_balance_mzn FROM users WHERE id = $1 FOR UPDATE',
@@ -166,5 +175,6 @@ module.exports = {
   debitWallet,
   getTransactionHistory,
   sumEarningsToday,
+  lockUserForEarnings,
   createWithdrawalRequest,
 };
