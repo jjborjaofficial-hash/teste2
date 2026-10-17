@@ -8,6 +8,7 @@ import { NotificationIcon } from '../icons';
 import { requestPushPermission } from '../lib/pushNotifications';
 import { notificationRoute } from '../lib/notificationRoute';
 
+const PUSH_FLAG = 'push_enabled';
 const PUSH_STATUS_MESSAGES = {
   unsupported: 'Seu navegador não suporta notificações push.',
   unconfigured: 'Notificações push ainda não estão disponíveis nesta plataforma.',
@@ -21,6 +22,15 @@ export function Notifications() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pushLoading, setPushLoading] = useState(false);
+  // "Ativado" só se este navegador já registou o push (flag local) E a permissão continua concedida.
+  const [pushEnabled, setPushEnabled] = useState(() => {
+    try {
+      return localStorage.getItem(PUSH_FLAG) === '1'
+        && typeof Notification !== 'undefined' && Notification.permission === 'granted';
+    } catch {
+      return false;
+    }
+  });
 
   async function load() {
     const res = await notificationsApi.list();
@@ -53,6 +63,10 @@ export function Notifications() {
     setPushLoading(true);
     const result = await requestPushPermission();
     showToast(PUSH_STATUS_MESSAGES[result], result === 'registered' ? 'success' : 'info');
+    if (result === 'registered') {
+      setPushEnabled(true);
+      try { localStorage.setItem(PUSH_FLAG, '1'); } catch { /* sem armazenamento: só não lembra */ }
+    }
     setPushLoading(false);
   }
 
@@ -68,9 +82,15 @@ export function Notifications() {
           <p className="text-body font-semibold text-text">Notificações no celular</p>
           <p className="text-caption text-text-secondary">Receba avisos mesmo com o app fechado.</p>
         </div>
-        <PrimaryButton onClick={handleEnablePush} loading={pushLoading} className="!py-2 !px-3 text-caption shrink-0">
-          Ativar
-        </PrimaryButton>
+        {pushEnabled ? (
+          <span className="shrink-0 rounded-lg bg-green-100 px-3 py-2 text-caption font-semibold text-green-700">
+            ✓ Ativado
+          </span>
+        ) : (
+          <PrimaryButton onClick={handleEnablePush} loading={pushLoading} className="!py-2 !px-3 text-caption shrink-0">
+            Ativar
+          </PrimaryButton>
+        )}
       </Card>
 
       {loading && <p className="text-caption text-text-secondary">Carregando...</p>}
