@@ -252,7 +252,7 @@ ordem de prioridade sugerida. Quando ele aprovar um, passa a ser uma instrução
 1. ~~Teto diário das missões com pedidos simultâneos~~ **FEITO em 17/10 (aprovado pelo dono):** `walletService.creditReward` bloqueia a linha do utilizador (`walletRepository.lockUserForEarnings`) antes de somar os ganhos do dia; teste `tests/earning-cap-concurrency.test.js` (4 resgates de 3 MZN ao mesmo tempo: sem o bloqueio pagava 12,00, com ele 7,20).
 2. Cadastro: verificar o telefone por SMS (Twilio já está nas dependências) para evitar contas falsas.
 3. Economia: conferir se o bónus de boas-vindas (12,00 MZN por utilizador) e a conversão de Pontos (até ~50 MZN/dia por utilizador no teto de 5.000 Pontos) cabem na receita real de anúncios (Adcash).
-4. Testes para boas-vindas e carteira; fazer o push disparar o deploy sozinho (hoje é manual) e pôr um `healthCheckPath` no backend.
+4. ~~Testes para boas-vindas e carteira~~ **FEITO em 17/10 (`tests/welcome-wallet-money.test.js`, 11 testes com banco real: bónus por dia, cliques simultâneos, dia 8, conta reciclada, saque mínimo/saldo/método/pedido ativo/2 pedidos simultâneos; o código já estava correto).** Falta: fazer o push disparar o deploy sozinho (hoje é manual) e pôr um `healthCheckPath` no backend.
 
 ## Prefixos dos números (regra fixa)
 Vodacom (M-Pesa): 84, 85 · Movitel (e-Mola): 86, 87, 88. A regra vive num só sítio: `backend/src/common/phone.js` (validação, operador, mensagens) e `frontend/src/lib/phone.js` (logo e aviso). Para um prefixo novo, mude só esses dois ficheiros e os textos de ajuda (Register, CompleteProfile, Legal). Teste: `phone-prefixes.test.js`.
