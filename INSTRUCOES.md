@@ -213,6 +213,16 @@ critério `correta_muito_mais_curta`), 13 (duplicadas) e 14 (posição da corret
 - O saque só aceita o método do operador do número registado.
 - Saque mínimo: sempre vindo de `GET /wallet` (`withdrawalMinMzn`); o texto fixo "100 MZN" saiu de `Legal.jsx`. O texto jurídico guardado na base (migration 017) ainda cita 100 MZN: mudar só com o dono, porque exige novo aceite.
 
+## Notificações push (Firebase) — ligado em 16/10/2026
+
+- **Projeto Firebase:** `aprenda-e-ganhe-3b646` (só app **Web**; Analytics e Gemini desligados). Quando houver app Android, adiciona-se no mesmo projeto.
+- **Frontend (Render, variáveis públicas):** `VITE_FIREBASE_API_KEY`, `_AUTH_DOMAIN`, `_PROJECT_ID`, `_MESSAGING_SENDER_ID`, `_APP_ID` e `_VAPID_KEY`. O mesmo config público está em `frontend/public/firebase-messaging-sw.js` (o service worker não lê variáveis do Vite; se o projeto mudar, atualizar os dois sítios).
+- **Backend (Render, SECRETAS):** `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY` (com `\n` literais; o `pushService.js` converte). Sem elas o push fica desligado em silêncio. **Nunca** guardar estas chaves em ficheiros, no GitHub nem em chats.
+- **Chave do servidor (service account):** a que foi usada passou pelo chat em 16/10 a pedido do dono; **trocar** quando o teste de envio estiver confirmado (Google Cloud, Contas de serviço, `firebase-adminsdk-fbsvc`, Chaves: apagar a antiga, gerar nova e colar só no Render) e apagar o `.json` do telemóvel.
+- **Ativar no site:** página Notificações, botão "Ativar" (o botão passa a "✓ Ativado" depois de registar; flag local `push_enabled`). Se o utilizador bloquear, só desbloqueia nas definições do site no Chrome.
+- **Por testar:** envio real com o Chrome fechado (o servidor envia push sempre que cria uma notificação). Verificar nos logs do backend.
+- **Modo noite (decisão do dono, 17/10):** fica só o empréstimo de 10 minutos para contas novas; NÃO criar modo escuro grátis nas Configurações (ver `frontend/PENDENTE.md`).
+
 ## Ideias ainda NÃO aprovadas (NÃO implementar até o dono pedir)
 
 Isto NÃO é o próximo passo e não são instruções: são pontos já conversados que o dono ainda não aprovou, na
