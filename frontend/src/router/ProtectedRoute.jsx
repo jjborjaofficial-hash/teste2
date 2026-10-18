@@ -28,7 +28,10 @@ export function ProtectedRoute({ children }) {
   // Mecanismo de reaceite de Termos: se os Termos mudaram de versão desde o
   // último aceite do usuário, o app inteiro fica bloqueado até ele confirmar
   // novamente (checkbox), antes de liberar qualquer outra tela.
-  if (user.needsTermsReacceptance && location.pathname !== '/reaceitar-termos') {
+  // Só depois do telefone: a conta Google nova tem os DOIS pendentes e o "Completar perfil" já regista o
+  // aceite dos documentos. Sem esta condição, os dois redirecionamentos mandavam o utilizador de um ecrã
+  // para o outro sem parar (página branca).
+  if (user.needsTermsReacceptance && !user.needsPhone && location.pathname !== '/reaceitar-termos') {
     return <Navigate to="/reaceitar-termos" replace />;
   }
 
