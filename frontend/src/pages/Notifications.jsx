@@ -5,10 +5,9 @@ import { Card } from '../components/Card';
 import { PrimaryButton } from '../components/Button';
 import { useToast } from '../components/Toast';
 import { NotificationIcon } from '../icons';
-import { requestPushPermission } from '../lib/pushNotifications';
+import { requestPushPermission, PUSH_FLAG } from '../lib/pushNotifications';
 import { notificationRoute } from '../lib/notificationRoute';
 
-const PUSH_FLAG = 'push_enabled';
 const PUSH_STATUS_MESSAGES = {
   unsupported: 'Seu navegador não suporta notificações push.',
   unconfigured: 'Notificações push ainda não estão disponíveis nesta plataforma.',

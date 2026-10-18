@@ -30,8 +30,41 @@ const firebaseConfig = {
 
 const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY;
 
+// Mesma chave que a página de Notificações usa para lembrar que este navegador ativou o push.
+export const PUSH_FLAG = 'push_enabled';
+
 function isConfigured() {
   return Boolean(firebaseConfig.apiKey && firebaseConfig.projectId && VAPID_KEY);
+}
+
+/**
+ * Liga o aparelho (token) à conta que está com a sessão aberta, SEM pedir permissão.
+ *
+ * Porquê: o "Ativado" é lembrado por navegador, mas o token de push tem de pertencer à conta
+ * certa. Se alguém entrar com outra conta no mesmo navegador, o site mostrava "Ativado" e o
+ * aparelho continuava ligado à conta anterior (a nova não recebia avisos). O servidor já move o
+ * token para a conta nova (upsert), por isso basta voltar a registá-lo depois de cada início de
+ * sessão. Só age se o navegador já tinha ativado e a permissão continua concedida; nunca lança
+ * erro. Devolve true se registou.
+ */
+export async function syncPushToken() {
+  try {
+    if (!('Notification' in window) || !('serviceWorker' in navigator)) return false;
+    if (!isConfigured() || Notification.permission !== 'granted') return false;
+    if (localStorage.getItem(PUSH_FLAG) !== '1') return false;
+
+    const { initializeApp, getApps, getApp } = await import('firebase/app');
+    const { getMessaging, getToken } = await import('firebase/messaging');
+    const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+    const messaging = getMessaging(app);
+    const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+    const token = await getToken(messaging, { vapidKey: VAPID_KEY, serviceWorkerRegistration: registration });
+    if (!token) return false;
+    await notificationsApi.registerPushToken(token, 'web');
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /**

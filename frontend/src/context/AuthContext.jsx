@@ -3,6 +3,7 @@ import { authApi } from '../api/authApi';
 import { setTokens, clearTokens, ApiError } from '../api/client';
 import { usersApi } from '../api/profileApi';
 import { shopApi } from '../api/shopApi';
+import { syncPushToken } from '../lib/pushNotifications';
 
 const AuthContext = createContext(null);
 
@@ -81,6 +82,14 @@ export function AuthProvider({ children }) {
       cancelled = true;
     };
   }, [user]);
+
+  // Push: cada vez que uma conta fica com a sessão aberta, liga o aparelho a ela (sem pedir
+  // permissão). Resolve o caso de trocar de conta no mesmo navegador, em que o "Ativado" ficava
+  // a valer mas o aparelho continuava ligado à conta anterior.
+  const userId = user?.id;
+  useEffect(() => {
+    if (userId) syncPushToken();
+  }, [userId]);
 
   // Ao carregar o app, sempre tenta restaurar a sessão buscando o perfil. Não
   // há mais como checar de antemão se existe um refresh token — ele vive num
