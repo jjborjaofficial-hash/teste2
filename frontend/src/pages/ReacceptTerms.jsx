@@ -23,9 +23,23 @@ export function ReacceptTerms() {
   const [accepted, setAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [loadFailed, setLoadFailed] = useState(false);
+
+  // Carrega a lista de documentos pendentes. Se falhar (rede fraca, servidor a acordar), NÃO
+  // finge que não há documentos: mostra um aviso com "Tentar de novo" e os links fixos.
+  function loadPending() {
+    setLoadFailed(false);
+    setPending(null);
+    legalApi.getPending()
+      .then((res) => setPending(res.data))
+      .catch(() => {
+        setPending([]);
+        setLoadFailed(true);
+      });
+  }
 
   useEffect(() => {
-    legalApi.getPending().then((res) => setPending(res.data)).catch(() => setPending([]));
+    loadPending();
   }, []);
 
   async function handleConfirm() {
@@ -55,6 +69,31 @@ export function ReacceptTerms() {
           Para continuar usando o Aprenda e Ganhe, você precisa revisar e aceitar a
           versão mais recente {pending?.length === 1 ? 'do documento abaixo' : 'dos documentos abaixo'}.
         </p>
+
+        {pending === null && (
+          <p className="text-caption text-text-secondary">A carregar os documentos...</p>
+        )}
+
+        {(loadFailed || (pending && pending.length === 0)) && (
+          <div className="text-caption text-text-secondary space-y-1">
+            {loadFailed && (
+              <p>
+                Não foi possível carregar a lista agora.{' '}
+                <button type="button" onClick={loadPending} className="text-primary font-semibold underline">
+                  Tentar de novo
+                </button>
+              </p>
+            )}
+            <ul className="space-y-1">
+              <li>
+                • <Link to={DOC_ROUTES.termos} target="_blank" className="text-primary font-semibold">Termos de Uso</Link>
+              </li>
+              <li>
+                • <Link to={DOC_ROUTES.privacidade} target="_blank" className="text-primary font-semibold">Política de Privacidade</Link>
+              </li>
+            </ul>
+          </div>
+        )}
 
         {pending && pending.length > 0 && (
           <ul className="text-caption text-text-secondary space-y-1">
