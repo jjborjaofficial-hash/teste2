@@ -97,7 +97,14 @@ async function sendToUser(userId, { title, body, data = {} }, tokensRepository) 
       // Falhas que NÃO são token inválido (credencial errada, serviço em baixo...) ficavam em silêncio: agora aparecem
       // nos logs, só com o código do erro (nunca o token do aparelho).
       if (!r.success && r.error?.code && !['messaging/registration-token-not-registered', 'messaging/invalid-registration-token'].includes(r.error.code)) {
-        logger.warn('pushService: falha ao entregar a um dispositivo', { userId, code: r.error.code });
+        // Inclui o texto do erro e o projeto usado (nunca o token do aparelho nem a chave) para diagnosticar
+        // falhas como "mismatched-credential", cujo código sozinho não diz qual das duas pontas está errada.
+        logger.warn('pushService: falha ao entregar a um dispositivo', {
+          userId,
+          code: r.error.code,
+          detail: String(r.error.message || '').replace(/[A-Za-z0-9_-]{100,}/g, '[omitido]').slice(0, 300),
+          projectId: app.options?.credential?.projectId || app.options?.projectId || null,
+        });
       }
       if (!r.success && ['messaging/registration-token-not-registered', 'messaging/invalid-registration-token'].includes(r.error?.code)) {
         invalidTokens.push(tokens[i].token);
