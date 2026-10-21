@@ -26,6 +26,9 @@ O dinheiro dos saques (mínimo 100 MZN, cerca de 2 semanas de uso) tem de sair d
 2. **Regra "Porque" do validador do quiz:** aceitar ou não perguntas cuja explicação não começa assim.
 3. **Pedir a ativação do push** logo após o 1.º login ou a 1.ª missão (cartão "Quer receber avisos?"), para subir a adesão. Só recebe push quem tocar em "Ativar".
 
+### B2. Pedido do dono, por fazer (design a confirmar)
+- **FE-007 — Ecrã animado ao subir de nível**, com identidade visual. Detalhes e critérios em `frontend/PENDENTE.md`. Falta o dono confirmar o que é "identidade" (marca da plataforma ou dados do utilizador).
+
 ### C. Dono: testar e conferir (5 min cada)
 - Definições em produção: funcionalidades novas, prefixo 88 e campo de telefone de 9 dígitos.
 - No cron-job.org, conferir o intervalo do agendador (5 ou 15 minutos; 15 poupa as horas grátis do Neon).
