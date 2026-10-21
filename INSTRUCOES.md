@@ -193,11 +193,12 @@ Se uma tarefa nova não encaixar em nenhuma área, crie um `PENDENTE.md` na past
   `teste2-backend` e `teste2-frontend` (diferentes dos do `render.yaml`); confira
   `CORS_ALLOWED_ORIGINS` no painel antes de supor algo.
 
-## GER-003 — Achados de 18 a 21/10/2026 (por decidir com o dono; NÃO corrigir sem ele dizer)
-- **Missão "Explorador" nunca avança.** `missionProgressService.updateAfterCategoryExploration` (e `missionsRepository.incrementCategoryExploration`)
-  existem, mas **nada as chama** (conferido com busca no código; o comentário diz que deveria ser ao pedir a 1.ª pergunta de um quiz, em
-  `quizService.getNextQuestion`). Prova na base: dia 19/10 tinha jogado 2 categorias e ficou 0/3. Correção provável: chamar essa função no
-  início de cada rodada/1.ª pergunta, com teste. Mexe nas regras das missões: pedir ok.
+## GER-003 — Achados de 18 a 21/10/2026 (o Explorador já foi corrigido; o resto é por decidir com o dono, NÃO corrigir sem ele dizer)
+- **Missão "Explorador" nunca avançava — CORRIGIDO em 21/10/2026 (aprovado pelo dono, commit `b1a4e68`).** `missionProgressService.updateAfterCategoryExploration`
+  existia, mas nada a chamava (dia 19/10 tinha jogado 2 categorias e ficou 0/3). Agora `quizService.startRound` chama
+  `missionsService.recordCategoryExploration` ao CRIAR uma rodada (não ao retomar a que estava em andamento); categorias repetidas no dia não
+  somam; à 3.ª categoria a missão conclui e avisa. Teste: `backend/tests/missions-explorer.test.js` (precisa de PostgreSQL+Redis; corre no
+  GitHub Actions). Quem já jogou antes do deploy não recebe retroativo.
 - **Aviso duplicado no Chrome:** o teste do Firebase apareceu duas vezes (uma com título, outra com o texto genérico "Recebeu uma nova
   mensagem"). Provável efeito de o service worker (`frontend/public/firebase-messaging-sw.js`) mostrar uma notificação e o Chrome outra quando a
   mensagem traz `notification` + `data`. Ver se acontece também com os avisos reais e, se sim, enviar só `data` e deixar o service worker mostrar.
