@@ -1,0 +1,16 @@
+{
+  "root": true,
+  "env": { "browser": true, "es2022": true },
+  "parserOptions": { "ecmaVersion": 2022, "sourceType": "module", "ecmaFeatures": { "jsx": true } },
+  "plugins": ["react", "react-hooks"],
+  "extends": ["eslint:recommended"],
+  "globals": { "aclib": "readonly" },
+  "settings": { "react": { "version": "18" } },
+  "rules": {
+    "no-unused-vars": "off",
+    "no-empty": ["warn", { "allowEmptyCatch": true }],
+    "react/jsx-uses-vars": "error",
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "warn"
+  }
+}

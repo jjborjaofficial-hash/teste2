@@ -16,6 +16,20 @@ import { FireIcon, WalletIcon, XpIcon, ChevronRightIcon, NotificationIcon, Missi
  * Painel Principal / "Centro de Comando" (Doc. Mestre Seção 19.2 e Seção 6).
  * Prioriza: Nível (XP), Ganhos Totais, Ofensiva atual, Missões Pendentes.
  */
+// Repete um pedido (só leituras) uma vez após uma pausa curta, antes de desistir.
+async function withRetry(fn, tries = 2, delayMs = 1500) {
+  let lastErr;
+  for (let i = 0; i < tries; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastErr = err;
+      if (i < tries - 1) await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+  }
+  throw lastErr;
+}
+
 export function Dashboard() {
   const { user, refreshProfile } = useAuth();
   const navigate = useNavigate();
@@ -30,11 +44,13 @@ export function Dashboard() {
     let mounted = true;
     async function load() {
       try {
+        // Cada pedido é repetido uma vez se falhar (servidor gratuito a acordar, limite de pedidos):
+        // antes, uma falha deixava o Painel vazio, ou fazia o cartão de boas-vindas sumir, em silêncio.
         const [gamResult, missionsResult, unreadResult, welcomeResult] = await Promise.all([
-          gamificationApi.me(),
-          missionsApi.listMine(),
-          notificationsApi.unreadCount(),
-          gamificationApi.welcomeBonus().catch(() => null),
+          withRetry(() => gamificationApi.me()),
+          withRetry(() => missionsApi.listMine()),
+          withRetry(() => notificationsApi.unreadCount()),
+          withRetry(() => gamificationApi.welcomeBonus()).catch(() => null),
         ]);
         if (!mounted) return;
         setGamification(gamResult.data);
@@ -50,6 +66,9 @@ export function Dashboard() {
           if (seen !== String(brokenAt)) setShowStreakBroken(true);
         }
         setUnreadCount(unreadResult.data.count);
+      } catch (err) {
+        // Falha mesmo depois da repetição: o Painel fica sem dados, mas sem erro não tratado.
+        if (mounted) console.error('Painel: falha ao carregar os dados', err);
       } finally {
         if (mounted) setLoading(false);
       }

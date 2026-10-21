@@ -1,5 +1,3 @@
-const db = require('../../config/database');
-
 /**
  * Repository compartilhado de auditoria (Manual Parte 4: audit_logs é append-only).
  * Centralizado aqui para evitar duplicação entre módulos (Auth, Admin, etc.).

@@ -19,7 +19,7 @@ const MAX_ATTEMPTS = 3;
 const KEEP_SECONDS = 7 * 24 * 3600;
 
 function resolveHandler(job) {
-  // eslint-disable-next-line global-require, import/no-dynamic-require
+  // eslint-disable-next-line global-require
   return require(path.resolve(__dirname, '../../queue', job.handlerPath));
 }
 
