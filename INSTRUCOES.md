@@ -31,11 +31,24 @@ por fazer fica escrito aqui e nos ficheiros `PENDENTE.md` de cada área.
 >   latência da base passou de ~130 ms para ~2 ms. O frontend aponta para o backend novo (`VITE_API_URL`) e o cron-job.org também.
 > - **ATENÇÃO, deploy MANUAL:** o serviço novo tem auto-deploy **desligado**. Depois de cada commit no `main` é preciso mandar publicar
 >   (Claude usa `trigger_deploy` no `srv-db9qbdnavr4c73f1opt0`; o frontend é `srv-da6u5461egvs73er3m20`). Não assumir "automático".
-> - **Ainda por arrumar (dono):** health check `/health` no serviço novo; após alguns dias estáveis **suspender** (não apagar) o backend
->   antigo `teste2-backend` (Oregon, `srv-da6pe0h42hec73dskbs0`) e só depois apagar o Redis antigo e a base Neon de Londres
->   (`summer-glitter-52566854`); trocar as passwords das bases (foram coladas numa conversa) e atualizar `DATABASE_URL` na Render;
->   apagar no GitHub os secrets `OLD_DATABASE_URL`/`NEW_DATABASE_URL`. O fluxo temporário de cópia foi removido do repositório.
+> - **Ainda por arrumar (dono):** após alguns dias estáveis **suspender** (não apagar) o backend antigo `teste2-backend` (Oregon,
+>   `srv-da6pe0h42hec73dskbs0`, já a dormir) e só depois apagar a base Neon de Londres (`summer-glitter-52566854`); **trocar as passwords
+>   das duas bases Neon** (foram coladas numa conversa; Neon > Roles > Reset password) e atualizar o `DATABASE_URL` do backend novo na
+>   Render; apagar no GitHub os secrets `OLD_DATABASE_URL`/`NEW_DATABASE_URL`. O fluxo temporário de cópia foi removido do repositório.
 >   **Nunca escrever endereços nem passwords em ficheiros do repositório.**
+> - **Já arrumado (18/10):** Redis antigo apagado; `healthCheckPath` = `/health` no serviço novo.
+> - **Configuração que o serviço novo EXIGE (fora do repositório, na Render):** `DATABASE_URL` (Neon Frankfurt, ligação direta, com
+>   `sslmode=require`), `DATABASE_SSL=true`, `REDIS_URL=redis://red-db9r388m7kps73eeb700:6379` (Redis `teste2-redis-fra`, rede interna),
+>   `COOKIE_SAMESITE=none`, mais as `FIREBASE_*` (ver "Notificações push"). Num backend novo copiar todas as variáveis do anterior.
+> - **O site e a API passaram a ser do MESMO endereço (18/10):** no `teste2-frontend` (Render, Redirects/Rewrites) a regra **`/api/*` →
+>   `https://teste2-backend-fra.onrender.com/api/*` (Rewrite)** tem de ficar **ACIMA** de `/*` → `/index.html` (Rewrite), e
+>   `VITE_API_URL=https://teste2-frontend.onrender.com/api/v1`. As variáveis `VITE_*` entram na compilação: depois de mudar uma, é preciso
+>   **novo deploy do frontend** (`trigger_deploy`). Se um dia o backend mudar de endereço, só se altera o destino dessa regra.
+> - **Agendador (cron-job.org):** o código/documentação falam em ticks de 5 em 5 minutos e os registos mostraram ticks de 5 min em 18/10;
+>   o dono tinha decidido 15 min para poupar as horas do Neon grátis (~100 CU-h/mês; ticks de 5 min mantêm a base acordada). **Conferir
+>   no cron-job.org** qual intervalo está ativo.
+> - **Limitação antiga, ainda por tratar:** o IP do cliente aparece como endereço interno da Render (10.x) nos registos de auditoria e no
+>   limitador de pedidos (`TRUST_PROXY_HOPS=1`), antes e depois da regra `/api`. Investigar antes de mexer.
 
 - **Vulnerabilidades de dependências (npm audit, 2026-10-09):** o `npm audit fix` seguro já foi aplicado (saiu a crítica `proxy-addr` e a alta `compression`; backend 19 → 12). **`bcrypt` 5 → 6 FEITO em 14/10 (aprovado pelo dono; testes verdes no ramo à parte e no main; backend publicado).** **`firebase-admin` 12 → 14 FEITO em 15/10 (pedido do dono; `pushService.js` passou à API modular `firebase-admin/app` e `/messaging`) e `firebase` (frontend) 10 → 13; `uuid` (não usado) removido.** Em produção (`npm audit --omit=dev`) sobram no backend 2 moderadas (`uuid` dentro do `gaxios`, sem uso do caminho afetado) e no frontend 6 (`react-router`, `@grpc/grpc-js`/firestore que o projeto não importa). O resto são ferramentas de desenvolvimento (`jest`, `nodemon`, `vite`, `tailwindcss`), que não vão para produção; só trocar com o dono. O `firebase-messaging-sw.js` continua a usar o `firebase` 10.13 compat via CDN (independente do pacote).
 
@@ -164,7 +177,10 @@ Se uma tarefa nova não encaixar em nenhuma área, crie um `PENDENTE.md` na past
   (banco lento, reinício); agora só apaga em 401. E `AuthContext.restoreSession` tratava qualquer falha (servidor
   a acordar no plano gratuito, rede fraca, 5xx) como "sem sessão"; agora repete 4 vezes (0, 3, 6 e 10 s) e só um
   401/403 encerra. Testes em `auth-refresh-race.test.js`. **Exige deploy manual dos dois serviços.**
-- Causa de fundo ainda aberta: frontend e backend estão em `teste2-frontend.onrender.com` e
+- **Causa de fundo RESOLVIDA em 18/10/2026** (confirmado pelo dono: "o bug de F5 já está feito"): com a mudança para Frankfurt o F5 voltou a
+  perder a sessão; `COOKIE_SAMESITE=none` sozinho não chegou. Corrigido tornando a API do MESMO endereço do site (regra `/api/*` da Render +
+  `VITE_API_URL`, ver a caixa "FEITO em 17/10/2026" no topo). O texto abaixo fica como histórico.
+- (Histórico) Causa de fundo: frontend e backend estão em `teste2-frontend.onrender.com` e
   `teste2-backend.onrender.com`; `onrender.com` é um sufixo público, logo o cookie é de terceiros. Safari/iPhone,
   Firefox, Brave e o modo anónimo do Chrome bloqueiam-no mesmo com `SameSite=None`. Só um domínio próprio com os
   dois no mesmo site (ou o site a encaminhar `/api` para o backend) resolve de vez. Decisão do dono.
@@ -176,6 +192,20 @@ Se uma tarefa nova não encaixar em nenhuma área, crie um `PENDENTE.md` na past
 - Cuidados: nunca escrever tokens neste repositório. Os nomes dos serviços reais no Render são
   `teste2-backend` e `teste2-frontend` (diferentes dos do `render.yaml`); confira
   `CORS_ALLOWED_ORIGINS` no painel antes de supor algo.
+
+## GER-003 — Achados de 18 a 21/10/2026 (por decidir com o dono; NÃO corrigir sem ele dizer)
+- **Missão "Explorador" nunca avança.** `missionProgressService.updateAfterCategoryExploration` (e `missionsRepository.incrementCategoryExploration`)
+  existem, mas **nada as chama** (conferido com busca no código; o comentário diz que deveria ser ao pedir a 1.ª pergunta de um quiz, em
+  `quizService.getNextQuestion`). Prova na base: dia 19/10 tinha jogado 2 categorias e ficou 0/3. Correção provável: chamar essa função no
+  início de cada rodada/1.ª pergunta, com teste. Mexe nas regras das missões: pedir ok.
+- **Aviso duplicado no Chrome:** o teste do Firebase apareceu duas vezes (uma com título, outra com o texto genérico "Recebeu uma nova
+  mensagem"). Provável efeito de o service worker (`frontend/public/firebase-messaging-sw.js`) mostrar uma notificação e o Chrome outra quando a
+  mensagem traz `notification` + `data`. Ver se acontece também com os avisos reais e, se sim, enviar só `data` e deixar o service worker mostrar.
+- **Primeira ativação:** na 1.ª tentativa apareceu "Notificações push ainda não estão disponíveis nesta plataforma" e logo a seguir "✓ Ativado".
+  `requestPushPermission()` devolve `unconfigured` em qualquer erro (rede, service worker ainda a arrancar); sugerir uma 2.ª tentativa automática.
+- **Contas Google novas** precisam de telefone e de aceitar documentos; é fricção no cadastro (decisão de produto, não é erro).
+- **Teste de missões na conta de teste:** durante os testes de push o progresso de algumas missões da conta BORJA OFICIAL foi adiantado à mão na
+  tabela `user_missions` (só `progress_count`/`active_seconds`/`visited_categories` de missões do dia). Não é bug; não repetir em contas reais.
 
 ## Quiz v2 — histórico e estado (o estado ATUAL está na caixa "PRÓXIMO PASSO AGORA", no topo)
 
@@ -230,9 +260,18 @@ critério `correta_muito_mais_curta`), 13 (duplicadas) e 14 (posição da corret
 - **Projeto Firebase:** `aprenda-e-ganhe-3b646` (só app **Web**; Analytics e Gemini desligados). Quando houver app Android, adiciona-se no mesmo projeto.
 - **Frontend (Render, variáveis públicas):** `VITE_FIREBASE_API_KEY`, `_AUTH_DOMAIN`, `_PROJECT_ID`, `_MESSAGING_SENDER_ID`, `_APP_ID` e `_VAPID_KEY`. O mesmo config público está em `frontend/public/firebase-messaging-sw.js` (o service worker não lê variáveis do Vite; se o projeto mudar, atualizar os dois sítios).
 - **Backend (Render, SECRETAS):** `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY` (com `\n` literais; o `pushService.js` converte). Sem elas o push fica desligado em silêncio. **Nunca** guardar estas chaves em ficheiros, no GitHub nem em chats.
-- **Chave do servidor (service account):** a que foi usada passou pelo chat em 16/10 a pedido do dono; **trocar** quando o teste de envio estiver confirmado (Google Cloud, Contas de serviço, `firebase-adminsdk-fbsvc`, Chaves: apagar a antiga, gerar nova e colar só no Render) e apagar o `.json` do telemóvel.
-- **Ativar no site:** página Notificações, botão "Ativar" (o botão passa a "✓ Ativado" depois de registar; flag local `push_enabled`). Se o utilizador bloquear, só desbloqueia nas definições do site no Chrome.
-- **Por testar:** envio real com o Chrome fechado (o servidor envia push sempre que cria uma notificação). Verificar nos logs do backend.
+- **Chave do servidor (service account): AINDA POR TROCAR (segurança, dono).** Passaram pelo chat DUAS chaves (16/10 e 18/10; a de 18/10, id `80b0fa26...`, é a que está na Render). Trocar: Firebase > Configurações do projeto > Contas de serviço > Gerar nova chave privada; colar `private_key` e `client_email` só na Render (`teste2-backend-fra`, Environment), **sem passar pelo chat**; depois apagar TODAS as chaves antigas em Google Cloud > IAM > Contas de serviço > `firebase-adminsdk-fbsvc` > Chaves, e apagar o `.json` do telemóvel.
+- **Ativar no site:** página Notificações, botão "Ativar" (o botão passa a "✓ Ativado" depois de registar; flag local `push_enabled`). Se o utilizador bloquear, só desbloqueia nas definições do site no Chrome. Nenhum site consegue ativar sozinho: o Chrome exige o "Permitir" de cada pessoa em cada aparelho.
+- **FUNCIONA DE PONTA A PONTA (confirmado pelo dono em 21/10/2026):** aviso "Missão concluída!" apareceu no topo do telemóvel. Pelo caminho resolveram-se estas causas, que convém conhecer se voltar a falhar:
+  1. **Permissão na Google (a causa real).** A conta de serviço `firebase-adminsdk-fbsvc` estava SEM nenhum papel no projeto, e o envio falhava com `messaging/mismatched-credential` (mensagem enganadora; o texto completo dizia "Permission `cloudmessaging.messages.create` denied"). Corrigido em Google Cloud > IAM > Permitir acesso: principal `firebase-adminsdk-fbsvc@aprenda-e-ganhe-3b646.iam.gserviceaccount.com`, papel **"Administrador da API Firebase Cloud Messaging"** (`roles/firebasecloudmessaging.admin`). Demora 1 a 2 min a valer. Numa conta de serviço nova, repetir isto.
+  2. **Conta certa no Google/Firebase:** os links abrem com a conta Google ativa no navegador; um 403 "Your client does not have permission" quer dizer conta errada (trocar na foto de perfil).
+  3. **Chave VAPID:** em Firebase > Configurações do projeto > Cloud Messaging > Certificados push da Web há pares de chaves; o par "atual" tem de ser o de `VITE_FIREBASE_VAPID_KEY` (chave pública, não secreta). Hoje é a que começa por `BM9-2j9pm`.
+  4. **O aparelho segue a conta com sessão aberta:** `syncPushToken()` (`frontend/src/lib/pushNotifications.js`, chamada pelo `AuthContext` ao iniciar sessão) volta a registar o token na conta atual sem pedir permissão (o servidor move o token no upsert). Sem isto, ao trocar de conta no mesmo navegador o "Ativado" ficava, mas o aviso ia para a conta anterior.
+- **Diagnóstico nos logs do backend (Render > Logs):** `WEB: push processado` com `sent: 1` = entregue ao Firebase; `sent: 0` + `pushService: falha ao entregar a um dispositivo` traz `code`, `detail` (texto do erro, sem token) e `projectId` (commit `f936661`). Tokens de aparelhos mortos são apagados sozinhos só quando o erro é `registration-token-not-registered`/`invalid-registration-token`.
+- **Onde o aviso aparece:** com o site ABERTO e à frente o Chrome entrega o aviso ao próprio site (não aparece no topo do telemóvel); no topo só aparece com o site fechado ou em segundo plano (uma aba anónima conta como "outro navegador" para este efeito). Ao testar, não concluir a missão com o site à frente.
+- **Teste sem esforço:** às 20:00 (Maputo) o agendador envia "Sua ofensiva está em risco!" a quem ainda não fez quiz no dia; é o caso real de uso com o site fechado.
+- **Por fazer (decisão do dono, não implementado):** pedir a ativação logo após o primeiro login ou depois da primeira missão concluída (cartão "Quer receber avisos?"), para subir a adesão.
+- **O site abre em branco / erros de ecrã (18/10):** (a) `ProtectedRoute` mandava as contas Google novas (que têm "falta telefone" E "falta aceitar documentos") de `/completar-perfil` para `/reaceitar-termos` e de volta, sem parar; agora o reaceite só é pedido depois do telefone (`!user.needsPhone`), porque "Completar perfil" já regista o aceite. (b) `ErrorBoundary` (`frontend/src/components/ErrorBoundary.jsx`, em `main.jsx`) mostra "Algo correu mal" com "Recarregar" e "Limpar dados e recarregar" em vez de página branca. (c) `ReacceptTerms.jsx` já não finge lista vazia: mostra erro + "Tentar de novo" e links fixos para Termos e Privacidade, e só confirma com a caixa marcada.
 - **Modo noite (decisão do dono, 17/10):** fica só o empréstimo de 10 minutos para contas novas; NÃO criar modo escuro grátis nas Configurações (ver `frontend/PENDENTE.md`).
 
 ## Ideias ainda NÃO aprovadas (NÃO implementar até o dono pedir)
