@@ -7,6 +7,7 @@ const compression = require('compression');
 const corsOptions = require('./config/cors');
 const { defaultRateLimiter } = require('./middleware/rateLimiter');
 const errorHandler = require('./middleware/errorHandler');
+const ipDiagnostic = require('./middleware/ipDiagnostic'); // TEMPORÁRIO: ver nota no ficheiro
 const cronRoutes = require('./cron/scheduler/cronRoutes');
 const { tickOnAccess } = require('./cron/scheduler/tickOnAccess');
 const { NotFoundError } = require('./common/errors/AppError');
@@ -49,6 +50,7 @@ app.use(cookieParser());
 // Agendador sem worker (docs/agendador-sem-worker.md): rotas internas protegidas por segredo e gatilho por acesso.
 app.use('/internal/cron', cronRoutes);
 app.use(tickOnAccess);
+app.use(ipDiagnostic); // TEMPORÁRIO: só liga com IP_DIAGNOSTIC=1
 app.use(defaultRateLimiter);
 
 // Healthcheck (usado por Render e por monitoramento externo)
