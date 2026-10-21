@@ -9,7 +9,7 @@ const equipSchema = z.object({
 });
 
 const unequipSchema = z.object({
-  slot: z.enum(['frame', 'theme'], { errorMap: () => ({ message: 'Slot deve ser "frame" ou "theme".' }) }),
+  slot: z.enum(['frame', 'theme', 'avatar'], { errorMap: () => ({ message: 'Slot deve ser "frame", "theme" ou "avatar".' }) }),
 });
 
 const createItemSchema = z.object({

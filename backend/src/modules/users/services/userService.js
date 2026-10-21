@@ -181,6 +181,7 @@ async function getProfile(userId) {
     // Cosméticos equipados (Loja de Pontos) — o frontend usa isso para
     // renderizar a moldura de perfil e aplicar o tema de cor globalmente.
     equippedAvatarFrame: profile.equipped_avatar_frame,
+    equippedAvatarImage: profile.equipped_avatar_image,
     equippedTheme: profile.equipped_theme,
     // Tema Noite emprestado por 10 minutos (GER-002). Calculado na hora (o perfil em cache só guarda as datas),
     // para o tempo restante nunca ficar desatualizado.

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { rankingApi } from '../api/gameplayApi';
 import { Card } from '../components/Card';
 import { RankingIcon, ProfileIcon } from '../icons';
-import { AVATAR_FRAME_CLASSES } from '../constants/shopCosmetics';
+import { AVATAR_FRAME_CLASSES, AVATAR_IMAGES } from '../constants/shopCosmetics';
 
 /**
  * Ranking Semanal (Doc. Mestre Seção 9 — Estratégia de Engajamento e Retenção:
@@ -47,11 +47,15 @@ export function Ranking() {
               {entry.position}
             </span>
             <div
-              className={`w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0 ${
+              className={`w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden shrink-0 ${
                 AVATAR_FRAME_CLASSES[entry.avatarFrame] || ''
               }`}
             >
-              <ProfileIcon className="w-5 h-5 text-primary" />
+              {AVATAR_IMAGES[entry.avatarImage] ? (
+                <img src={AVATAR_IMAGES[entry.avatarImage]} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <ProfileIcon className="w-5 h-5 text-primary" />
+              )}
             </div>
             <div className="flex-1">
               <p className="text-body font-semibold text-text">{entry.name}</p>

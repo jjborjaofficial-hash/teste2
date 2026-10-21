@@ -7,6 +7,7 @@ const rankingRepository = require('../../ranking/repositories/rankingRepository'
 const userCache = require('../../../common/cache/userCache');
 const { resolveRarity } = require('../rarity');
 const { BusinessRuleError, ForbiddenError, NotFoundError, ConflictError } = require('../../../common/errors/AppError');
+const { slotForKey, columnForSlot } = require('../slots');
 
 /**
  * Service da Loja de Pontos (docx "SISTEMA DE ECONOMIA E RECOMPENSAS", Seção 3
@@ -215,7 +216,7 @@ async function purchase(userId, itemKey, { ipAddress } = {}) {
 
 /**
  * Equipa (ou remove) um cosmético já comprado. O "slot" é inferido pelo
- * prefixo da chave do item (`frame_...` → moldura, `theme_...` → tema) — não
+ * prefixo da chave do item (`frame_...` → moldura, `theme_...` → tema, `avatar_...` → imagem de avatar) — não
  * precisamos de uma coluna extra de slot enquanto o catálogo for pequeno.
  */
 async function equip(userId, itemKey) {
@@ -228,8 +229,8 @@ async function equip(userId, itemKey) {
   const owned = await repository.hasPurchased(userId, item.id);
   if (!owned) throw new ForbiddenError('Você ainda não possui este item.');
 
-  const slot = item.key.startsWith('theme_') ? 'theme' : 'frame';
-  const column = slot === 'theme' ? 'equipped_theme' : 'equipped_avatar_frame';
+  const slot = slotForKey(item.key);
+  const column = columnForSlot(slot);
 
   await db.query(`UPDATE users SET ${column} = $1 WHERE id = $2`, [item.key, userId]);
   await userCache.invalidateProfile(userId);
@@ -238,7 +239,7 @@ async function equip(userId, itemKey) {
 }
 
 async function unequip(userId, slot) {
-  const column = slot === 'theme' ? 'equipped_theme' : slot === 'frame' ? 'equipped_avatar_frame' : null;
+  const column = columnForSlot(slot);
   if (!column) throw new BusinessRuleError('Slot inválido.');
 
   await db.query(`UPDATE users SET ${column} = NULL WHERE id = $1`, [userId]);
@@ -250,12 +251,13 @@ async function unequip(userId, slot) {
 async function getMyInventory(userId) {
   const purchases = await repository.listMyPurchases(userId);
   const { rows } = await db.query(
-    `SELECT equipped_avatar_frame, equipped_theme FROM users WHERE id = $1`,
+    `SELECT equipped_avatar_frame, equipped_avatar_image, equipped_theme FROM users WHERE id = $1`,
     [userId]
   );
 
   return {
     equippedAvatarFrame: rows[0]?.equipped_avatar_frame || null,
+    equippedAvatarImage: rows[0]?.equipped_avatar_image || null,
     equippedTheme: rows[0]?.equipped_theme || null,
     purchases: purchases.map((p) => ({
       id: p.id,

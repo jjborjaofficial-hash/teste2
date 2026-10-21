@@ -53,6 +53,7 @@ async function getTopRanking(limit = 20) {
         // RECOMPENSAS"): sem isso, o item de status nunca aparecia para
         // ninguém além do próprio dono, esvaziando o propósito do item.
         avatarFrame: r.equipped_avatar_frame,
+        avatarImage: r.equipped_avatar_image,
       };
     })
   );

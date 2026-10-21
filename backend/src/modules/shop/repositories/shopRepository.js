@@ -108,7 +108,7 @@ async function listOwnedPermanentItemsForInventory(userId, executor = db) {
   const { rows } = await executor.query(
     `SELECT up.id AS purchase_id, up.created_at AS acquired_at,
             si.key, si.category, si.name, si.description, si.price_points, si.eligibility_rule,
-            u.equipped_avatar_frame, u.equipped_theme
+            u.equipped_avatar_frame, u.equipped_avatar_image, u.equipped_theme
      FROM user_purchases up
      JOIN shop_items si ON si.id = up.shop_item_id
      JOIN users u ON u.id = up.user_id

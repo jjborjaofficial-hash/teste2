@@ -4,6 +4,7 @@ const shopRepository = require('../repositories/shopRepository');
 const gamificationRepository = require('../../gamification/repositories/gamificationRepository');
 const { resolveRarity } = require('../rarity');
 const { NotFoundError, BusinessRuleError } = require('../../../common/errors/AppError');
+const { SLOT_COLUMNS, slotForKey } = require('../slots');
 
 /**
  * Service do Inventário ("Meus Recursos", spec Seções 34-60).
@@ -82,8 +83,8 @@ function mapEntry(row) {
  * fazem parte do inventário, não só do Perfil).
  */
 function mapPermanentEntry(row) {
-  const slot = row.key.startsWith('theme_') ? 'theme' : row.category === 'cosmetic' ? 'frame' : null;
-  const equippedKey = slot === 'theme' ? row.equipped_theme : slot === 'frame' ? row.equipped_avatar_frame : null;
+  const slot = row.category === 'cosmetic' ? slotForKey(row.key) : null;
+  const equippedKey = slot ? row[SLOT_COLUMNS[slot]] : null;
   const isEquipped = slot !== null && equippedKey === row.key;
 
   return {

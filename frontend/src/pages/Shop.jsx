@@ -8,6 +8,7 @@ import { useToast } from '../components/Toast';
 import { ApiError } from '../api/client';
 import { PointsIcon, ShopIcon, CheckIcon } from '../icons';
 import { ThemeTrialCard } from '../components/ThemeTrialCard';
+import { AVATAR_IMAGES, slotForKey } from '../constants/shopCosmetics';
 
 /**
  * Loja de Pontos (docx "SISTEMA DE ECONOMIA E RECOMPENSAS", Seção 3 — "sink de
@@ -50,6 +51,7 @@ function ItemCard({ item, equippedKeys, onChanged }) {
   const isOwned = !!item.owned;
   const isEquipped = equippedKeys.includes(item.key);
   const isBlocked = item.eligible === false;
+  const avatarImage = AVATAR_IMAGES[item.key];
 
   async function handlePurchase() {
     setLoading(true);
@@ -69,8 +71,7 @@ function ItemCard({ item, equippedKeys, onChanged }) {
     setLoading(true);
     try {
       if (isEquipped) {
-        const slot = item.key.startsWith('theme_') ? 'theme' : 'frame';
-        await shopApi.unequip(slot);
+        await shopApi.unequip(slotForKey(item.key));
         showToast('Item removido.', 'success');
       } else {
         await shopApi.equip(item.key);
@@ -88,12 +89,24 @@ function ItemCard({ item, equippedKeys, onChanged }) {
   return (
     <Card status={isEquipped ? 'completed' : 'normal'} className="space-y-2">
       <div className="flex items-start justify-between gap-2">
-        <div className="flex-1">
-          <div className="flex items-center gap-2 flex-wrap">
-            <p className="text-body font-semibold text-text">{item.name}</p>
-            <RarityBadge rarity={item.rarity} />
+        <div className="flex-1 min-w-0 flex items-start gap-3">
+          {avatarImage && (
+            <img
+              src={avatarImage}
+              alt={`Pré-visualização: ${item.name}`}
+              width="64"
+              height="64"
+              loading="lazy"
+              className={`w-16 h-16 rounded-full object-cover shrink-0 ring-2 ${isEquipped ? 'ring-success' : 'ring-gold/60'}`}
+            />
+          )}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className="text-body font-semibold text-text">{item.name}</p>
+              <RarityBadge rarity={item.rarity} />
+            </div>
+            {item.description && <p className="text-caption text-text-secondary mt-0.5">{item.description}</p>}
           </div>
-          {item.description && <p className="text-caption text-text-secondary mt-0.5">{item.description}</p>}
         </div>
         {isEquipped && <CheckIcon className="w-5 h-5 text-success shrink-0" />}
       </div>
@@ -198,7 +211,7 @@ export function Shop() {
 
   useEffect(load, []);
 
-  const equippedKeys = [inventory?.equippedAvatarFrame, inventory?.equippedTheme].filter(Boolean);
+  const equippedKeys = [inventory?.equippedAvatarFrame, inventory?.equippedAvatarImage, inventory?.equippedTheme].filter(Boolean);
 
   return (
     <div className="space-y-4 pb-4">

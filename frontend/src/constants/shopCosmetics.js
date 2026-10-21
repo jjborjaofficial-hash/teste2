@@ -6,6 +6,25 @@
  * consistente em qualquer lugar onde o usuário é exibido — sem isso, o item
  * de status só aparecia para o próprio dono, esvaziando o propósito da compra.
  */
+import avatarNaruto from '../assets/avatars/avatar_naruto.webp';
+
+/**
+ * Imagens de avatar compráveis na Loja (migration 730). A chave é o `key` do item em `shop_items`
+ * (prefixo `avatar_`); a imagem equipada substitui a foto/ícone do utilizador no Perfil, no Ranking
+ * e na celebração de nível. Para vender outro avatar: pôr o ficheiro em src/assets/avatars, registar
+ * aqui e semear o item numa migration.
+ */
+export const AVATAR_IMAGES = {
+  avatar_naruto: avatarNaruto,
+};
+
+/** Slot de um item pelo prefixo da chave — igual ao do backend (backend/src/modules/shop/slots.js). */
+export function slotForKey(key) {
+  if (key.startsWith('theme_')) return 'theme';
+  if (key.startsWith('avatar_')) return 'avatar';
+  return 'frame';
+}
+
 export const AVATAR_FRAME_CLASSES = {
   frame_streak: 'ring-4 ring-warning ring-offset-2 ring-offset-background',
   frame_champion: 'ring-4 ring-gold ring-offset-2 ring-offset-background shadow-[0_0_16px_rgb(var(--color-gold)/0.5)]',

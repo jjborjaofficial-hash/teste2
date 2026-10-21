@@ -44,7 +44,7 @@ async function recomputeWeeklyRanking(weekStartDate, executor = db) {
 
 async function getTopRanking(weekStartDate, limit = 20, executor = db) {
   const { rows } = await executor.query(
-    `SELECT wr.position, wr.xp_earned, u.id AS user_id, u.name, u.avatar_url, u.xp_total, u.equipped_avatar_frame
+    `SELECT wr.position, wr.xp_earned, u.id AS user_id, u.name, u.avatar_url, u.xp_total, u.equipped_avatar_frame, u.equipped_avatar_image
      FROM weekly_rankings wr
      JOIN users u ON u.id = wr.user_id
      WHERE wr.week_start_date = $1

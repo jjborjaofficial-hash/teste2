@@ -6,7 +6,7 @@ async function findProfileById(id) {
     `SELECT id, name, phone, phone_provider, email, (password_hash IS NOT NULL) AS has_password, avatar_url, country, locale, currency,
             xp_total, points_balance, wallet_balance_mzn, trust_score,
             status, role, terms_version, terms_accepted_at, created_at,
-            equipped_avatar_frame, equipped_theme,
+            equipped_avatar_frame, equipped_avatar_image, equipped_theme,
             theme_trial_eligible, theme_trial_started_at, theme_trial_intro_seen_at
      FROM users
      WHERE id = $1 AND deleted_at IS NULL`,
@@ -115,7 +115,7 @@ async function anonymize(userId, executor) {
   await executor.query(
     `UPDATE users SET name = 'Utilizador removido', phone = NULL, phone_provider = NULL,
             email = NULL, email_normalized = NULL, google_id = NULL, avatar_url = NULL, password_hash = NULL,
-            wallet_balance_mzn = 0, equipped_avatar_frame = NULL, equipped_theme = NULL,
+            wallet_balance_mzn = 0, equipped_avatar_frame = NULL, equipped_avatar_image = NULL, equipped_theme = NULL,
             deleted_at = now(), updated_at = now()
      WHERE id = $1`,
     [userId]

@@ -10,7 +10,7 @@ import { PrimaryButton, SecondaryButton } from '../components/Button';
 import { useToast } from '../components/Toast';
 import { ApiError } from '../api/client';
 import { TrustShieldIcon, ProfileIcon, SettingsIcon, InviteIcon, ChevronRightIcon, ShopIcon, PointsIcon, AchievementIcon, FireIcon, XpIcon, WalletIcon } from '../icons';
-import { AVATAR_FRAME_CLASSES } from '../constants/shopCosmetics';
+import { AVATAR_FRAME_CLASSES, AVATAR_IMAGES } from '../constants/shopCosmetics';
 
 const BADGE_LABELS = {
   verified_trusted: 'Conta Verificada e Confiável',
@@ -197,11 +197,15 @@ export function Profile() {
         </button>
 
         <div
-          className={`w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-3 ${
+          className={`w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden mb-3 ${
             AVATAR_FRAME_CLASSES[user?.equippedAvatarFrame] || ''
           }`}
         >
-          <ProfileIcon className="w-10 h-10 text-primary" />
+          {AVATAR_IMAGES[user?.equippedAvatarImage] ? (
+            <img src={AVATAR_IMAGES[user.equippedAvatarImage]} alt="O seu avatar" className="w-full h-full object-cover" />
+          ) : (
+            <ProfileIcon className="w-10 h-10 text-primary" />
+          )}
         </div>
         <h1 className="font-display text-h1 text-text">{user?.name}</h1>
         <p className="text-caption text-text-secondary">{user?.phone}</p>

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ProfileIcon, XpIcon } from '../icons';
-import { AVATAR_FRAME_CLASSES } from '../constants/shopCosmetics';
+import { AVATAR_FRAME_CLASSES, AVATAR_IMAGES } from '../constants/shopCosmetics';
 
 /**
  * Ecrã de celebração ao subir de nível (FE-007).
@@ -57,7 +57,8 @@ export function LevelUpCelebration({ level, previousLevel, xpAwarded, user, onCl
   const [photoFailed, setPhotoFailed] = useState(false);
   const firstName = (user?.name || '').trim().split(/\s+/)[0] || '';
   const frameClass = AVATAR_FRAME_CLASSES[user?.equippedAvatarFrame] || '';
-  const showPhoto = Boolean(user?.avatarUrl) && !photoFailed;
+  const storeAvatar = AVATAR_IMAGES[user?.equippedAvatarImage];
+  const showPhoto = !storeAvatar && Boolean(user?.avatarUrl) && !photoFailed;
 
   useEffect(() => {
     closeRef.current?.focus({ preventScroll: true });
@@ -145,7 +146,9 @@ export function LevelUpCelebration({ level, previousLevel, xpAwarded, user, onCl
         {/* Identidade do utilizador: foto ou ícone, com a moldura equipada. */}
         <div className="lu-up2 mt-5 flex items-center justify-center gap-3">
           <div className={`w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden shrink-0 ${frameClass}`}>
-            {showPhoto ? (
+            {storeAvatar ? (
+              <img src={storeAvatar} alt="" className="w-full h-full object-cover" />
+            ) : showPhoto ? (
               <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" onError={() => setPhotoFailed(true)} referrerPolicy="no-referrer" />
             ) : (
               <ProfileIcon className="w-7 h-7 text-primary" />
