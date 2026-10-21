@@ -195,13 +195,13 @@ Decisão do dono: um único texto de explicação serve para acerto ("Para compl
 ("Por quê?"). **DESCARTADO pelo dono (11/10):** "Aprenda"/"O que aprender" e "Dica" como campos próprios não serão feitos; fica o texto único de explicação.
 
 ## BE-006 — Conta do utilizador (feito)
-Editar perfil, mudar número de pagamento, exportar dados e eliminar conta (anonimização). Regras e rotas em `INSTRUCOES.md` ("Conta do utilizador"). Migration não necessária. Em aberto: o texto jurídico na base (migration 017) ainda cita "100 MZN" — mudar só com decisão do dono (exige novo aceite). Um token de acesso já emitido continua válido até 15 min após eliminar a conta.
+Editar perfil, mudar número de pagamento, exportar dados e eliminar conta (anonimização). Regras e rotas em `HISTORICO.md` ("Conta do utilizador"). Migration não necessária. Em aberto: o texto jurídico na base (migration 017) ainda cita "100 MZN" — mudar só com decisão do dono (exige novo aceite). Um token de acesso já emitido continua válido até 15 min após eliminar a conta.
 
 Senha: `PUT /users/me/password` (BE-006); perfil devolve `email` e `hasPassword`. Contas Google sem senha não pedem senha para mudar número/eliminar.
 
 ## BE-007 — Push (Firebase) e achados de 18 a 21/10/2026
 - **Feito e confirmado em produção (21/10):** o envio de push do servidor funciona. Causa que atrasou tudo: a conta de serviço `firebase-adminsdk-fbsvc` não tinha papel no projeto Google (faltava "Administrador da API Firebase Cloud Messaging", `roles/firebasecloudmessaging.admin`), e o Firebase devolvia `messaging/mismatched-credential`, código enganador. Passos e diagnóstico: `INSTRUCOES.md`, secção "Notificações push (Firebase)".
 - **`pushService.sendToUser` (commit `f936661`):** quando um envio falha por motivo que não seja token inválido, o log traz `code`, `detail` (texto do erro com sequências longas removidas, para nunca vazar um token) e `projectId`. Mantido de propósito.
-- **Em aberto (dono):** trocar a chave privada do Firebase (duas passaram pelo chat) e as passwords das bases Neon. Detalhes na caixa "FEITO em 17/10/2026" e na secção de push do `INSTRUCOES.md`.
+- **Em aberto (dono):** trocar a chave privada do Firebase (duas passaram pelo chat) e as passwords das bases Neon. Detalhes na secção D de `INSTRUCOES.md` e em `REGRAS.md`.
 - **Feito em 21/10 (ok do dono):** missão "Explorador" (`category_exploration`) passou a progredir; `quizService.startRound` chama `missionsService.recordCategoryExploration` ao criar rodada nova. Teste `tests/missions-explorer.test.js`.
 - **Variáveis exigidas no backend novo:** `DATABASE_URL`, `DATABASE_SSL=true`, `REDIS_URL`, `COOKIE_SAMESITE=none`, `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`. O serviço não faz auto-deploy: publicar à mão depois de cada commit.
