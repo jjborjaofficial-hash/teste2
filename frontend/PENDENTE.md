@@ -20,10 +20,3 @@ Settings: secção 'Mudar senha / Criar senha' (conta Google); pedidos de senha 
 ## DECISÃO DO DONO (17/10/2026): modo noite
 - Fica **só** o empréstimo do Tema Noite por 10 minutos para contas novas (GER-002); o Tema Noite continua à venda na Loja.
 - **NÃO** criar "modo escuro grátis" nem seletor claro/escuro/automático nas Configurações: concorre com a venda do Tema Noite. Item riscado.
-
-## FE-007 — Ecrã animado ao subir de nível (pedido do dono, 21/10/2026)
-- **Pedido:** quando o utilizador sobe de nível, aparecer um ecrã animado a celebrar, com "umas coisinhas bonitas" e a **identidade** da plataforma. (O dono escreveu "mandando a identidade": confirmar com ele se é a marca "Aprenda e Ganhe", ou a identidade do próprio utilizador, como nome, foto e moldura equipada, antes de desenhar.)
-- **Já existe no servidor:** a resposta do quiz já traz `leveledUp` e `newLevel` (`quizService.js`). O frontend só os usa em `QuizResult.jsx` e `lib/resultMessage.js`; não há ecrã próprio de subida de nível.
-- **Onde mexer:** novo componente (por exemplo `LevelUpCelebration`) chamado a partir do resultado do quiz e de qualquer outro sítio que dê XP; textos em `lib/resultMessage.js`.
-- **Pronto quando:** (1) aparece uma única vez por subida, mesmo que se suba vários níveis de uma vez (mostrar o nível final, ou um de cada vez, a decidir); (2) tem animação curta e pode ser fechada com um toque; (3) respeita "reduzir movimento" do sistema (`prefers-reduced-motion`); (4) funciona em ecrãs pequenos e não tapa botões de anúncio nem de ação; (5) não depende de rede (usa só `leveledUp`/`newLevel` já recebidos); (6) build do frontend passa.
-- **Cuidados:** não conceder dinheiro nem Pontos aqui (é só apresentação); não bloquear o fluxo do quiz (nunca impedir "Ver missões"); não pôr anúncio dentro do ecrã de celebração sem o dono decidir; manter as cores e o estilo atuais do site.

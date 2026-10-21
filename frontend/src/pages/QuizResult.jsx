@@ -5,6 +5,8 @@ import { RewardBadge } from '../components/RewardBadge';
 import { CheckIcon, CloseDrawIcon, FireIcon, XpIcon, WalletIcon, PointsIcon, AchievementIcon } from '../icons';
 import { buildResultMessage } from '../lib/resultMessage';
 import { quizApi } from '../api/quizApi';
+import { useAuth } from '../context/AuthContext';
+import { LevelUpCelebration } from '../components/LevelUpCelebration';
 
 /**
  * Tela de Resultados (Doc. Mestre Seção 19.5). "Momento de maior pico de dopamina."
@@ -81,6 +83,28 @@ function QuizResultView({ result, categoryId }) {
   const [heading] = useState(() => buildResultMessage(result));
   const [showAd, setShowAd] = useState(true);
   const headingRef = useRef(null);
+  const { user } = useAuth();
+  // Ecrã de celebração: só uma vez por nível (guardado por conta + nível), depois do anúncio.
+  const levelUpKey = result?.leveledUp && result?.newLevel ? `levelup_seen:${user?.id || 'anon'}:${result.newLevel}` : null;
+  const [celebrating, setCelebrating] = useState(false);
+  useEffect(() => {
+    if (showAd || !levelUpKey) return;
+    let alreadySeen = false;
+    try {
+      alreadySeen = localStorage.getItem(levelUpKey) === '1';
+    } catch {
+      alreadySeen = false;
+    }
+    if (!alreadySeen) setCelebrating(true);
+  }, [showAd, levelUpKey]);
+  const closeCelebration = () => {
+    setCelebrating(false);
+    try {
+      if (levelUpKey) localStorage.setItem(levelUpKey, '1');
+    } catch {
+      /* sem armazenamento: pior caso, volta a aparecer uma vez */
+    }
+  };
   const [adSecondsLeft, setAdSecondsLeft] = useState(5);
 
   useEffect(() => {
@@ -122,6 +146,14 @@ function QuizResultView({ result, categoryId }) {
 
   return (
     <div className="space-y-5 pt-6 pb-4">
+      {celebrating && (
+        <LevelUpCelebration
+          level={result.newLevel}
+          xpAwarded={result.xpAwarded}
+          user={user}
+          onClose={closeCelebration}
+        />
+      )}
       <div className="text-center">
         <div
           className={`w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center ${
