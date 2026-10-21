@@ -47,8 +47,14 @@ por fazer fica escrito aqui e nos ficheiros `PENDENTE.md` de cada área.
 > - **Agendador (cron-job.org):** o código/documentação falam em ticks de 5 em 5 minutos e os registos mostraram ticks de 5 min em 18/10;
 >   o dono tinha decidido 15 min para poupar as horas do Neon grátis (~100 CU-h/mês; ticks de 5 min mantêm a base acordada). **Conferir
 >   no cron-job.org** qual intervalo está ativo.
-> - **Limitação antiga, ainda por tratar:** o IP do cliente aparece como endereço interno da Render (10.x) nos registos de auditoria e no
->   limitador de pedidos (`TRUST_PROXY_HOPS=1`), antes e depois da regra `/api`. Investigar antes de mexer.
+> - **IP do cliente — RESOLVIDO em 21/10/2026 (aprovado pelo dono em 2026-10-21):** o backend lia o endereço interno da Render (10.x) em vez do
+>   IP do utilizador, por isso o limitador de pedidos e os registos de auditoria não viam a pessoa real. Medido com um log temporário nos
+>   pedidos reais pelo site: a cadeia `X-Forwarded-For` tem sempre **6 endereços** (utilizador, Cloudflare duas vezes, proxy da Render, Cloudflare,
+>   balanceador interno) e o IP do utilizador é o primeiro; conferido com o IP real do dono. Na Render, no `teste2-backend-fra`, a variável
+>   **`TRUST_PROXY_HOPS=6`** (antes 1, por omissão) faz `req.ip` ser o IP real; verificado em 6 pedidos (login Google, refresh, quiz).
+>   **Não apagar essa variável.** Contar a partir da direita ignora o que o cliente escreva à esquerda do cabeçalho, mas o 6 é fixo: se a Render
+>   mudar o número de intermediários, ou se alguém chamar o backend diretamente (cadeia mais curta), o IP lido pode sair errado ou ser forjado.
+>   Se algo mudar, repetir a medição (log temporário que mostre `req.ip`, `X-Forwarded-For` e o endereço da ligação, ligado por variável).
 
 - **Vulnerabilidades de dependências (npm audit, 2026-10-09):** o `npm audit fix` seguro já foi aplicado (saiu a crítica `proxy-addr` e a alta `compression`; backend 19 → 12). **`bcrypt` 5 → 6 FEITO em 14/10 (aprovado pelo dono; testes verdes no ramo à parte e no main; backend publicado).** **`firebase-admin` 12 → 14 FEITO em 15/10 (pedido do dono; `pushService.js` passou à API modular `firebase-admin/app` e `/messaging`) e `firebase` (frontend) 10 → 13; `uuid` (não usado) removido.** Em produção (`npm audit --omit=dev`) sobram no backend 2 moderadas (`uuid` dentro do `gaxios`, sem uso do caminho afetado) e no frontend 6 (`react-router`, `@grpc/grpc-js`/firestore que o projeto não importa). O resto são ferramentas de desenvolvimento (`jest`, `nodemon`, `vite`, `tailwindcss`), que não vão para produção; só trocar com o dono. O `firebase-messaging-sw.js` continua a usar o `firebase` 10.13 compat via CDN (independente do pacote).
 
