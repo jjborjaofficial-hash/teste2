@@ -31,7 +31,8 @@ por fazer fica escrito aqui e nos ficheiros `PENDENTE.md` de cada área.
 >   latência da base passou de ~130 ms para ~2 ms. O frontend aponta para o backend novo (`VITE_API_URL`) e o cron-job.org também.
 > - **ATENÇÃO, deploy MANUAL:** o serviço novo tem auto-deploy **desligado**. Depois de cada commit no `main` é preciso mandar publicar
 >   (Claude usa `trigger_deploy` no `srv-db9qbdnavr4c73f1opt0`; o frontend é `srv-da6u5461egvs73er3m20`). Não assumir "automático".
-> - **Ainda por arrumar (dono):** após alguns dias estáveis **suspender** (não apagar) o backend antigo `teste2-backend` (Oregon,
+> - **DECISÃO DO DONO (21/10/2026):** não trocar já a chave do Firebase nem as passwords do Neon, e não apagar/suspender o que é antigo. Fica assim até ele pedir; não insistir. (Risco conhecido: a chave do Firebase e as passwords passaram por conversas.) Push confirmado a funcionar em 21/10 (`sent: 1`).
+> - **Ainda por arrumar (dono, só quando ele quiser):** após alguns dias estáveis **suspender** (não apagar) o backend antigo `teste2-backend` (Oregon,
 >   `srv-da6pe0h42hec73dskbs0`, já a dormir) e só depois apagar a base Neon de Londres (`summer-glitter-52566854`); **trocar as passwords
 >   das duas bases Neon** (foram coladas numa conversa; Neon > Roles > Reset password) e atualizar o `DATABASE_URL` do backend novo na
 >   Render; apagar no GitHub os secrets `OLD_DATABASE_URL`/`NEW_DATABASE_URL`. O fluxo temporário de cópia foi removido do repositório.
