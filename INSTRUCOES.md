@@ -38,7 +38,7 @@ por fazer fica escrito aqui e nos ficheiros `PENDENTE.md` de cada área.
 >   **Nunca escrever endereços nem passwords em ficheiros do repositório.**
 > - **Já arrumado (18/10):** Redis antigo apagado; `healthCheckPath` = `/health` no serviço novo.
 > - **Configuração que o serviço novo EXIGE (fora do repositório, na Render):** `DATABASE_URL` (Neon Frankfurt, ligação direta, com
->   `sslmode=require`), `DATABASE_SSL=true`, `REDIS_URL=redis://red-db9r388m7kps73eeb700:6379` (Redis `teste2-redis-fra`, rede interna),
+>   `sslmode=require`), `DATABASE_SSL=true`, `REDIS_URL` (endereço interno do Redis `teste2-redis-fra`, id `red-db9r388m7kps73eeb700`; ver a página do Redis na Render),
 >   `COOKIE_SAMESITE=none`, mais as `FIREBASE_*` (ver "Notificações push"). Num backend novo copiar todas as variáveis do anterior.
 > - **O site e a API passaram a ser do MESMO endereço (18/10):** no `teste2-frontend` (Render, Redirects/Rewrites) a regra **`/api/*` →
 >   `https://teste2-backend-fra.onrender.com/api/*` (Rewrite)** tem de ficar **ACIMA** de `/*` → `/index.html` (Rewrite), e
