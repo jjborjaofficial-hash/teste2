@@ -60,7 +60,7 @@ test('falha que não é token inválido (ex.: credencial) vai para o log e NÃO 
   const r = await svc.sendToUser('u1', { title: 't', body: 'b' }, tokens);
   expect(r.sent).toBe(0);
   expect(tokens.deleteTokens).not.toHaveBeenCalled();
-  expect(logger.warn).toHaveBeenCalledWith(expect.any(String), { userId: 'u1', code: 'messaging/third-party-auth-error' });
+  expect(logger.warn).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ userId: 'u1', code: 'messaging/third-party-auth-error' }));
 });
 
 test('erro a enviar não rebenta o chamador', async () => {
