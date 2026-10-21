@@ -92,6 +92,9 @@ async function startRound({ userId, categoryId }) {
       categoryId,
       questionIds: picked.map((q) => q.id),
     });
+    // Missão "Explorador": começar uma rodada numa categoria nova conta como experimentá-la. Só aqui (rodada nova),
+    // nunca ao retomar a que já estava em andamento; categorias repetidas no mesmo dia não somam.
+    await missionsService.recordCategoryExploration(client, { userId, categoryId });
     await client.query('COMMIT');
     return serializeRound(round);
   } catch (err) {

@@ -113,6 +113,15 @@ async function incrementRoundCompletion(executor, { userId, categoryId }) {
   return updated;
 }
 
+/**
+ * Chamado pelo Quiz quando o utilizador COMEÇA uma rodada numa categoria (missão "Explorador": experimentar N
+ * categorias diferentes hoje). Conta categorias distintas: voltar à mesma categoria não soma. Corre na mesma
+ * transação que cria a rodada. Antes disto nada chamava o motor de progresso e a missão ficava sempre a 0.
+ */
+async function recordCategoryExploration(executor, { userId, categoryId }) {
+  return progressEngine.updateAfterCategoryExploration(executor, { userId, categoryId });
+}
+
 async function claimReward(userId, userMissionId) {
   const client = await db.getClient();
   try {
@@ -242,6 +251,7 @@ module.exports = {
   listMyMissions,
   incrementProgressForCategory,
   incrementRoundCompletion,
+  recordCategoryExploration,
   completeReferralMissions,
   updateRoundStreak,
   claimReward,
