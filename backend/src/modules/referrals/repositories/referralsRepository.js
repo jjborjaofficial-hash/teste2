@@ -64,8 +64,10 @@ async function markQualifiedAndRewarded(executor, referralId) {
 /** Convite já qualificado em que `referredUserId` é o convidado (só estes geram o bónus de 20%). */
 async function findRewardedReferralByReferred(referredUserId, executor = db) {
   const { rows } = await executor.query(
-    `SELECT id, referrer_user_id FROM referrals
-     WHERE referred_user_id = $1 AND status = 'rewarded'`,
+    `SELECT r.id, r.referrer_user_id, u.name AS referred_name
+     FROM referrals r
+     JOIN users u ON u.id = r.referred_user_id
+     WHERE r.referred_user_id = $1 AND r.status = 'rewarded'`,
     [referredUserId]
   );
   return rows[0] || null;

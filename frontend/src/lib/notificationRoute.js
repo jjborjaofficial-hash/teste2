@@ -20,6 +20,7 @@ export function notificationRoute(notification) {
       return '/perfil'; // resumo da ofensiva
     case 'daily_earning_cap_reached':
     case 'points_converted':
+    case 'referral_bonus_received':
     case 'credit':
     case 'debit':
     case 'withdrawal_requested':

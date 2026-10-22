@@ -1,4 +1,5 @@
 const db = require('../../../config/database');
+const logger = require('../../../common/logger');
 const cacheService = require('../../../common/cache/cacheService');
 const { todayInPlatformTz } = require('../../../common/time/platformTimezone');
 const repository = require('../repositories/missionsRepository');
@@ -165,8 +166,9 @@ async function claimReward(userId, userMissionId) {
 
     // Bónus de convite: 20% do que este utilizador acabou de ganhar numa missão DIÁRIA vai para quem o convidou
     // (extra da plataforma, fora do teto de quem convida). Mesma transação do resgate.
+    let inviterBonus = null;
     if (moneyCreditedMzn > 0 && userMission.type === 'daily') {
-      await referralBonusService.payInviterBonus(client, {
+      inviterBonus = await referralBonusService.payInviterBonus(client, {
         referredUserId: userId,
         creditedMzn: moneyCreditedMzn,
         userMissionId,
@@ -177,6 +179,21 @@ async function claimReward(userId, userMissionId) {
     await repository.markRewardClaimed(client, userMissionId);
 
     await client.query('COMMIT');
+
+    // Aviso a quem convidou (uma notificação por missão). Depois do COMMIT e sem nunca falhar o resgate:
+    // se a notificação der erro, o bónus já está pago e o convidado recebe a sua missão na mesma.
+    if (inviterBonus) {
+      try {
+        await notificationsService.notifyReferralBonusReceived(db, inviterBonus.referrerUserId, {
+          bonusMzn: inviterBonus.bonusMzn,
+          referredName: inviterBonus.referredName,
+          referredUserId: userId,
+          userMissionId,
+        });
+      } catch (notifyErr) {
+        logger.error('Falha ao notificar o bónus de convite', { error: notifyErr.message, userMissionId });
+      }
+    }
 
     return {
       userMissionId,

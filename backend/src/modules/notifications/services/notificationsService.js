@@ -121,6 +121,23 @@ async function notifyItemExpiringSoon(executor, userId, { itemName, minutesRemai
   });
 }
 
+/**
+ * Aviso a quem convidou, a cada bónus de convite recebido (20% de uma missão diária do convidado; migration 720).
+ * Uma notificação por missão, a pedido do dono (21/10/2026). Mostra o nome do convidado exatamente como ele o
+ * registou; sem nome, "um amigo". O valor é o que foi realmente creditado, com vírgula e duas casas.
+ */
+async function notifyReferralBonusReceived(executor, userId, { bonusMzn, referredName, referredUserId, userMissionId }) {
+  const name = typeof referredName === 'string' && referredName.trim() !== '' ? referredName : 'um amigo';
+  const amount = Number(bonusMzn).toFixed(2).replace('.', ',');
+  return repository.create(executor, {
+    userId,
+    type: 'referral_bonus_received',
+    title: 'Comissão de convite recebida',
+    body: `Recebeste ${amount} MZN pela comissão do convite, utilizador ${name}.`,
+    metadata: { bonusMzn: Number(bonusMzn), referredName: name, referredUserId, userMissionId },
+  });
+}
+
 async function notifyWithdrawalStatus(executor, userId, status, amountMzn) {
   // Texto de "paid" segue literalmente o documento "Sistema de Saques v1.0"
   // (Seção 9 — "Notificação de Pagamento").
@@ -248,4 +265,5 @@ module.exports = {
   notifyDailyEarningCapReached,
   notifyPointsConverted,
   notifyItemExpiringSoon,
+  notifyReferralBonusReceived,
 };

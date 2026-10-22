@@ -42,7 +42,9 @@ async function payInviterBonus(executor, { referredUserId, creditedMzn, userMiss
     executor
   );
 
-  return credit ? { referrerUserId: referral.referrer_user_id, bonusMzn } : null;
+  return credit
+    ? { referrerUserId: referral.referrer_user_id, bonusMzn, referredName: referral.referred_name }
+    : null;
 }
 
 module.exports = { payInviterBonus };

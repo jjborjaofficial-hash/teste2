@@ -182,4 +182,87 @@ describe('bónus de convite de 20% nas missões diárias', () => {
     expect(lista[0]).toMatchObject({ id: referralId, status: 'rewarded' });
     expect(lista[0].bonusMzn).toBeCloseTo(0.24, 2);
   });
+
+  describe('notificação a quem convida (uma por missão)', () => {
+    async function notificacoes(userId) {
+      const { rows } = await db.query(
+        "SELECT title, body, metadata FROM notifications WHERE user_id = $1 AND type = 'referral_bonus_received' ORDER BY created_at",
+        [userId]
+      );
+      return rows;
+    }
+
+    it('quem convida recebe a notificação com o valor e o nome exato do convidado; o convidado não recebe nenhuma', async () => {
+      const { inviter, invitee } = await makePair('rewarded');
+      await missionsService.claimReward(invitee, await completedMission(invitee, dailyMissionId));
+
+      const lista = await notificacoes(inviter);
+      expect(lista).toHaveLength(1);
+      expect(lista[0].title).toBe('Comissão de convite recebida');
+      expect(lista[0].body).toBe('Recebeste 0,24 MZN pela comissão do convite, utilizador Teste Bonus Convidado.');
+      expect(lista[0].metadata).toMatchObject({ bonusMzn: 0.24, referredName: 'Teste Bonus Convidado' });
+      expect(await notificacoes(invitee)).toHaveLength(0);
+    });
+
+    it('uma notificação por missão: 3 missões do convidado dão 3 notificações', async () => {
+      const { inviter, invitee } = await makePair('rewarded');
+      // Um utilizador só tem uma atribuição por missão e período, por isso são 3 missões diárias diferentes.
+      for (let i = 0; i < 3; i += 1) {
+        // eslint-disable-next-line no-await-in-loop
+        const missaoId = await createMission(`TESTE bonus convite (diaria extra ${i})`, 'daily');
+        // eslint-disable-next-line no-await-in-loop
+        await missionsService.claimReward(invitee, await completedMission(invitee, missaoId));
+      }
+      expect(await notificacoes(inviter)).toHaveLength(3);
+    });
+
+    it('sem bónus não há notificação (convite pendente, missão semanal, percentagem 0)', async () => {
+      const pendente = await makePair('pending');
+      await missionsService.claimReward(pendente.invitee, await completedMission(pendente.invitee, dailyMissionId));
+      expect(await notificacoes(pendente.inviter)).toHaveLength(0);
+
+      const semanal = await makePair('rewarded');
+      await missionsService.claimReward(semanal.invitee, await completedMission(semanal.invitee, weeklyMissionId));
+      expect(await notificacoes(semanal.inviter)).toHaveLength(0);
+
+      const zero = await makePair('rewarded');
+      await db.query("UPDATE system_config SET value = '0' WHERE key = 'referral_bonus_percent'");
+      try {
+        await missionsService.claimReward(zero.invitee, await completedMission(zero.invitee, dailyMissionId));
+        expect(await notificacoes(zero.inviter)).toHaveLength(0);
+      } finally {
+        await db.query("UPDATE system_config SET value = '20' WHERE key = 'referral_bonus_percent'");
+      }
+    });
+
+    it('o valor da notificação acompanha o valor realmente creditado (teto do convidado cortou)', async () => {
+      const { inviter, invitee } = await makePair('rewarded');
+      await walletService.creditReward({ userId: invitee, amountMzn: 7.0, source: 'mission_reward', referenceId: null });
+      await missionsService.claimReward(invitee, await completedMission(invitee, dailyMissionId));
+
+      const lista = await notificacoes(inviter);
+      expect(lista).toHaveLength(1);
+      expect(lista[0].body).toBe('Recebeste 0,04 MZN pela comissão do convite, utilizador Teste Bonus Convidado.');
+    });
+
+    it('um convidado sem nome mostra "um amigo", e uma falha na notificação não estraga o resgate nem o bónus', async () => {
+      const semNome = await makePair('rewarded');
+      await db.query("UPDATE users SET name = '   ' WHERE id = $1", [semNome.invitee]);
+      await missionsService.claimReward(semNome.invitee, await completedMission(semNome.invitee, dailyMissionId));
+      expect((await notificacoes(semNome.inviter))[0].body).toBe(
+        'Recebeste 0,24 MZN pela comissão do convite, utilizador um amigo.'
+      );
+
+      const falha = await makePair('rewarded');
+      const notificationsService = require('../src/modules/notifications/services/notificationsService');
+      const spy = jest.spyOn(notificationsService, 'notifyReferralBonusReceived').mockRejectedValue(new Error('boom'));
+      try {
+        const r = await missionsService.claimReward(falha.invitee, await completedMission(falha.invitee, dailyMissionId));
+        expect(r.rewardsGranted.moneyMzn).toBeCloseTo(1.2, 2);
+        expect(await totalBySource(falha.inviter, 'referral_bonus')).toBeCloseTo(0.24, 2);
+      } finally {
+        spy.mockRestore();
+      }
+    });
+  });
 });
