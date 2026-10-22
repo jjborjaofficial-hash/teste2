@@ -1,5 +1,7 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { StoreAvatar } from '../components/StoreAvatar';
 import { inventoryApi } from '../api/inventoryApi';
 import { shopApi } from '../api/shopApi';
 import { Card } from '../components/Card';
@@ -253,6 +255,7 @@ function DetailModal({ entry, onClose }) {
 }
 
 export function MeusRecursos() {
+  const { user } = useAuth();
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -317,7 +320,13 @@ export function MeusRecursos() {
     <div className="max-w-2xl mx-auto px-4 py-6 pb-24">
       <div className="flex items-center justify-between mb-1">
         <h1 className="text-h1 font-display font-bold text-text">Meus Recursos</h1>
-        <PointsIcon className="w-7 h-7" />
+        {user?.equippedAvatarImage ? (
+          <Link to="/perfil" aria-label="Abrir o meu perfil" className="shrink-0">
+            <StoreAvatar user={user} className="w-11 h-11" />
+          </Link>
+        ) : (
+          <PointsIcon className="w-7 h-7" />
+        )}
       </div>
       <p className="text-body text-text-secondary mb-4">
         Tudo que você já possui na plataforma: boosts, proteções, personalizações e conquistas —

@@ -101,7 +101,9 @@ export function Dashboard() {
       )}
       <header className="flex items-center justify-between pt-2">
         <div className="flex items-center gap-3 min-w-0">
-          <StoreAvatar user={user} />
+          <Link to="/perfil" aria-label="Abrir o meu perfil" className="shrink-0">
+            <StoreAvatar user={user} />
+          </Link>
           <div className="min-w-0">
             <p className="text-caption text-text-secondary">Olá,</p>
             <h1 className="font-display text-h1 text-text truncate">{firstName || 'estudante'}!</h1>
