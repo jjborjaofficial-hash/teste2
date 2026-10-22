@@ -94,10 +94,10 @@ function ItemCard({ item, equippedKeys, onChanged }) {
             <img
               src={avatarImage}
               alt={`Pré-visualização: ${item.name}`}
-              width="64"
-              height="64"
+              width="96"
+              height="96"
               loading="lazy"
-              className={`w-16 h-16 rounded-full object-cover shrink-0 ring-2 ${isEquipped ? 'ring-success' : 'ring-gold/60'}`}
+              className={`w-24 h-24 rounded-full object-cover shrink-0 ring-4 ${isEquipped ? 'ring-success' : 'ring-gold/60'}`}
             />
           )}
           <div className="flex-1 min-w-0">

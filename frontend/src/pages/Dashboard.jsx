@@ -10,6 +10,7 @@ import { SocialProofActivity } from '../components/SocialProofActivity';
 import { DisplayAds } from '../ads';
 import { StreakBrokenModal } from '../components/StreakBrokenModal';
 import { WelcomeBonusCard } from '../components/WelcomeBonusCard';
+import { StoreAvatar } from '../components/StoreAvatar';
 import { FireIcon, WalletIcon, XpIcon, ChevronRightIcon, NotificationIcon, MissionsIcon, PointsIcon } from '../icons';
 
 /**
@@ -99,9 +100,12 @@ export function Dashboard() {
         <StreakBrokenModal days={gamification?.streak?.brokenStreakDays ?? 0} onClose={closeStreakBroken} />
       )}
       <header className="flex items-center justify-between pt-2">
-        <div>
-          <p className="text-caption text-text-secondary">Olá,</p>
-          <h1 className="font-display text-h1 text-text">{firstName || 'estudante'}!</h1>
+        <div className="flex items-center gap-3 min-w-0">
+          <StoreAvatar user={user} />
+          <div className="min-w-0">
+            <p className="text-caption text-text-secondary">Olá,</p>
+            <h1 className="font-display text-h1 text-text truncate">{firstName || 'estudante'}!</h1>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <Link to="/notificacoes" className="relative w-11 h-11 flex items-center justify-center">
