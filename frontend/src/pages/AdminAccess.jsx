@@ -57,7 +57,7 @@ export function AdminAccess() {
     try {
       const res = passwordSet
         ? await adminAccessApi.unlock({ identifier, adminPassword })
-        : await adminAccessApi.setPassword({ currentPassword, adminPassword });
+        : await adminAccessApi.setPassword({ identifier, currentPassword, adminPassword });
       unlockAdmin(res.data);
       navigate('/admin', { replace: true });
     } catch (err) {
@@ -82,20 +82,19 @@ export function AdminAccess() {
           : 'É a senha só do painel, diferente da senha com que entra na plataforma. Mínimo 10 caracteres.'}
       </p>
       <form onSubmit={handleSubmit} className="space-y-4">
-        {passwordSet ? (
-          <Field id="admin-id" label="Número de telefone ou Gmail">
-            <input
-              id="admin-id"
-              type="text"
-              autoComplete="username"
-              placeholder="84XXXXXXX ou nome@gmail.com"
-              value={identifier}
-              onChange={(e) => setIdentifier(e.target.value)}
-              required
-              className={inputClass}
-            />
-          </Field>
-        ) : (
+        <Field id="admin-id" label="Número de telefone ou Gmail da conta">
+          <input
+            id="admin-id"
+            type="text"
+            autoComplete="username"
+            placeholder="84XXXXXXX ou nome@gmail.com"
+            value={identifier}
+            onChange={(e) => setIdentifier(e.target.value)}
+            required
+            className={inputClass}
+          />
+        </Field>
+        {!passwordSet && (
           <Field id="admin-current" label="Senha normal da sua conta (a de login)">
             <input
               id="admin-current"

@@ -54,8 +54,11 @@ async function getStatus(userId) {
 }
 
 /** Cria a senha de admin (1.ª vez) ou troca-a (exige a senha de admin atual). Sempre confirma a senha NORMAL. */
-async function setPassword(userId, { currentPassword, adminPassword, currentAdminPassword }) {
+async function setPassword(userId, { identifier, currentPassword, adminPassword, currentAdminPassword }) {
   const user = await loadAdmin(userId);
+  if (!matchesIdentifier(user, identifier)) {
+    throw new UnauthorizedError('O número ou Gmail não é o desta conta de administrador.');
+  }
   if (!user.password_hash || !(await bcrypt.compare(String(currentPassword || ''), user.password_hash))) {
     throw new UnauthorizedError('A senha normal da conta não está correta.');
   }
