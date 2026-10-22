@@ -13,6 +13,11 @@
  * deste, ou fazer este componente consumi-lo como fonte do valor inicial.
  */
 export const socialProofConfig = {
+  // Números de DEMONSTRAÇÃO (decisão do dono, 22/10, projeto ainda não lançado). Só aparecem com
+  // VITE_PROVA_SOCIAL_DEMO=true; não são dados reais. Desligar antes do lançamento.
+  demoPessoas: 6000,
+  demoMzn: 22000,
+
   // Linhas fixas da prova social (mantidas propositalmente sem ligação
   // ao banco de dados, por pedido explícito do produto).
   totalAtivosTexto: '12.000',

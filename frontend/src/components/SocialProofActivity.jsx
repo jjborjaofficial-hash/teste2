@@ -1,13 +1,21 @@
 import { useEffect, useState } from 'react';
 import { platformStatsApi } from '../api/platformStatsApi';
 import { maisDe } from '../lib/socialProofMilestones';
+import { socialProofConfig } from '../config/socialProofConfig';
 
 /**
  * Prova social do Onboarding e do Dashboard: SÓ dados reais (GET /platform-stats, cache de 2 min no servidor).
  * Mostra "Mais de X", com X = o maior marco (10, 20, 50, 100...) que o valor real já ultrapassou; por isso o texto
  * é sempre verdadeiro e só muda quando a plataforma passa um marco. Substitui os números fixos e o contador
  * simulado de antes (decisão do dono, 22/10).
+ *
+ * MODO DEMONSTRAÇÃO (pedido do dono, 22/10, projeto ainda não lançado): com VITE_PROVA_SOCIAL_DEMO=true as duas
+ * primeiras linhas mostram os números de demonstração de socialProofConfig (pessoas e MZN), só para ver como fica.
+ * NÃO são dados reais. ANTES DO LANÇAMENTO: apagar/pôr a false essa variável no Render (frontend) e fazer deploy;
+ * a partir daí volta a mostrar só dados reais.
  */
+const MODO_DEMO = import.meta.env.VITE_PROVA_SOCIAL_DEMO === 'true';
+
 export function SocialProofActivity({ variant = 'card' }) {
   const [stats, setStats] = useState(null);
 
@@ -28,8 +36,8 @@ export function SocialProofActivity({ variant = 'card' }) {
 
   if (!stats) return null;
 
-  const pessoas = maisDe(stats.activeUsersCount ?? 0);
-  const mzn = maisDe(Math.floor(stats.totalRewardsDistributedMzn ?? 0));
+  const pessoas = MODO_DEMO ? socialProofConfig.demoPessoas : maisDe(stats.activeUsersCount ?? 0);
+  const mzn = MODO_DEMO ? socialProofConfig.demoMzn : maisDe(Math.floor(stats.totalRewardsDistributedMzn ?? 0));
   const ligados = maisDe(stats.onlineNowCount ?? 0);
   const novos = maisDe(stats.newUsers7dCount ?? 0);
   if (pessoas === null && mzn === null) {

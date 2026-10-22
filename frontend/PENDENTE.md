@@ -20,3 +20,7 @@ Settings: secção 'Mudar senha / Criar senha' (conta Google); pedidos de senha 
 ## DECISÃO DO DONO (17/10/2026): modo noite
 - Fica **só** o empréstimo do Tema Noite por 10 minutos para contas novas (GER-002); o Tema Noite continua à venda na Loja.
 - **NÃO** criar "modo escuro grátis" nem seletor claro/escuro/automático nas Configurações: concorre com a venda do Tema Noite. Item riscado.
+
+## ANTES DO LANÇAMENTO: prova social em modo demonstração (22/10/2026)
+- A pedido do dono, a prova social mostra números de DEMONSTRAÇÃO (6.000 pessoas, 22.000 MZN) enquanto `VITE_PROVA_SOCIAL_DEMO=true` no Render (frontend). O texto é o atual ("Mais de X ..."). Não são dados reais.
+- **Antes de lançar:** apagar essa variável (ou pôr `false`) no Render e fazer deploy do frontend. A partir daí volta a mostrar só dados reais de `GET /platform-stats`.
