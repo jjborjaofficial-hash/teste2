@@ -130,6 +130,15 @@ body {
   animation: xp-level-up 0.8s ease-in-out;
 }
 
+/* Engrenagem das Definições: giro lento e contínuo (pedido do dono, 22/10; sem movimento com prefers-reduced-motion). */
+@keyframes gear-slow-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.animate-gear-slow {
+  animation: gear-slow-spin 14s linear infinite;
+}
+
 /* Ranking: "Barras crescem em stagger ao abrir" */
 @keyframes bar-grow {
   from { transform: scaleY(0); }

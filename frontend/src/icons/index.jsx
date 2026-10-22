@@ -282,7 +282,7 @@ export function InviteIcon({ className = '' }) {
 }
 
 /**
- * Configurações: "Rotação suave só durante o toque, sem loop" (13.6).
+ * Configurações: gira devagar e sem parar (decisão do dono, 22/10; substitui a regra 13.6 de "só durante o toque").
  * `spinKey` deve mudar (ex: incrementar um contador) a cada toque, disparando
  * a animação de rotação uma única vez, sem loop contínuo.
  */
@@ -291,7 +291,7 @@ export function SettingsIcon({ className = '', spinKey = 0 }) {
     <svg
       key={spinKey}
       {...base}
-      className={`${className} ${spinKey > 0 ? 'animate-rotate-once' : ''}`}
+      className={`${className} animate-gear-slow`}
       stroke="currentColor"
     >
       <path d="M29.8,13.1 L30.2,6.1 L33.8,6.1 L34.2,13.1 L43.8,17.1 L49.0,12.4 L51.6,15.0 L46.9,20.2 L50.9,29.8 L57.9,30.2 L57.9,33.8 L50.9,34.2 L46.9,43.8 L51.6,49.0 L49.0,51.6 L43.8,46.9 L34.2,50.9 L33.8,57.9 L30.2,57.9 L29.8,50.9 L20.2,46.9 L15.0,51.6 L12.4,49.0 L17.1,43.8 L13.1,34.2 L6.1,33.8 L6.1,30.2 L13.1,29.8 L17.1,20.2 L12.4,15.0 L15.0,12.4 L20.2,17.1 Z" strokeLinejoin="round" />
