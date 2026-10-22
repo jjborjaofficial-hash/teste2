@@ -53,14 +53,11 @@ async function getStatus(userId) {
   return { adminPasswordSet: Boolean(user.admin_password_hash) };
 }
 
-/** Cria a senha de admin (1.ª vez) ou troca-a (exige a senha de admin atual). Sempre confirma a senha NORMAL. */
-async function setPassword(userId, { identifier, currentPassword, adminPassword, currentAdminPassword }) {
+/** Cria a senha de admin (1.ª vez) ou troca-a (exige a senha de admin atual). Confirma número ou email da conta (e, na troca, a senha de admin atual). */
+async function setPassword(userId, { identifier, adminPassword, currentAdminPassword }) {
   const user = await loadAdmin(userId);
   if (!matchesIdentifier(user, identifier)) {
     throw new UnauthorizedError('O número ou Gmail não é o desta conta de administrador.');
-  }
-  if (!user.password_hash || !(await bcrypt.compare(String(currentPassword || ''), user.password_hash))) {
-    throw new UnauthorizedError('A senha normal da conta não está correta.');
   }
   if (user.admin_password_hash) {
     if (!(await bcrypt.compare(String(currentAdminPassword || ''), user.admin_password_hash))) {
@@ -71,7 +68,7 @@ async function setPassword(userId, { identifier, currentPassword, adminPassword,
   if (next.length < MIN_ADMIN_PASSWORD) {
     throw new BusinessRuleError(`A senha de administrador precisa de pelo menos ${MIN_ADMIN_PASSWORD} caracteres.`);
   }
-  if (await bcrypt.compare(next, user.password_hash)) {
+  if (user.password_hash && (await bcrypt.compare(next, user.password_hash))) {
     throw new BusinessRuleError('A senha de administrador tem de ser diferente da senha de login normal.');
   }
   const hash = await bcrypt.hash(next, 12);

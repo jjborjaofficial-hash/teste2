@@ -29,7 +29,6 @@ export function AdminAccess() {
   const [passwordSet, setPasswordSet] = useState(null); // null = a carregar
   const [identifier, setIdentifier] = useState('');
   const [adminPassword, setAdminPassword] = useState('');
-  const [currentPassword, setCurrentPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -57,7 +56,7 @@ export function AdminAccess() {
     try {
       const res = passwordSet
         ? await adminAccessApi.unlock({ identifier, adminPassword })
-        : await adminAccessApi.setPassword({ identifier, currentPassword, adminPassword });
+        : await adminAccessApi.setPassword({ identifier, adminPassword });
       unlockAdmin(res.data);
       navigate('/admin', { replace: true });
     } catch (err) {
@@ -94,19 +93,6 @@ export function AdminAccess() {
             className={inputClass}
           />
         </Field>
-        {!passwordSet && (
-          <Field id="admin-current" label="Senha normal da sua conta (a de login)">
-            <input
-              id="admin-current"
-              type="password"
-              autoComplete="current-password"
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              required
-              className={inputClass}
-            />
-          </Field>
-        )}
         <Field id="admin-password" label={passwordSet ? 'Senha de administrador' : 'Nova senha de administrador'}>
           <input
             id="admin-password"
