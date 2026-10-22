@@ -18,6 +18,9 @@ export const socialProofConfig = {
   demoPessoas: 6000,
   demoMzn: 22000,
   demoNovosSemana: 49,
+  // Contador "a estudar agora" de demonstração: varia com moderação dentro destes limites (lib/liveCounterSimulation.js).
+  demoLiveMin: 400,
+  demoLiveMax: 1200,
 
   // Linhas fixas da prova social (mantidas propositalmente sem ligação
   // ao banco de dados, por pedido explícito do produto).

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { platformStatsApi } from '../api/platformStatsApi';
 import { maisDe } from '../lib/socialProofMilestones';
 import { socialProofConfig } from '../config/socialProofConfig';
+import { useDemoLiveCounter } from '../lib/useDemoLiveCounter';
 
 /**
  * Prova social do Onboarding e do Dashboard: SÓ dados reais (GET /platform-stats, cache de 2 min no servidor).
@@ -18,6 +19,11 @@ const MODO_DEMO = import.meta.env.VITE_PROVA_SOCIAL_DEMO === 'true';
 
 export function SocialProofActivity({ variant = 'card' }) {
   const [stats, setStats] = useState(null);
+  // Só em modo demonstração (não são dados reais): número "ao vivo" a variar com moderação.
+  const liveDemo = useDemoLiveCounter(MODO_DEMO, {
+    min: socialProofConfig.demoLiveMin,
+    max: socialProofConfig.demoLiveMax,
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -46,7 +52,7 @@ export function SocialProofActivity({ variant = 'card' }) {
 
   // Ponto de milhares sempre (6.000, 22.000): o toLocaleString('pt-MZ') não agrupa os números de 4 dígitos e usa espaço nos maiores.
   const fmt = (n) => String(Math.trunc(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-  const LiveDot = !MODO_DEMO && ligados !== null && (
+  const LiveDot = (MODO_DEMO || ligados !== null) && (
     <span className="relative inline-flex h-2 w-2 mr-1.5">
       <span className="animate-live-pulse inline-flex rounded-full h-2 w-2 bg-success" />
     </span>
@@ -54,23 +60,35 @@ export function SocialProofActivity({ variant = 'card' }) {
   const linhaPessoas = pessoas !== null && `Mais de ${fmt(pessoas)} moçambicanos ligados no Aprenda e Ganha`;
   const linhaMzn = mzn !== null && `Mais de ${fmt(mzn)} MZN já distribuídos em recompensas`;
   // Terceira linha sempre verdadeira: gente a estudar agora, ou (se ainda há pouca) quantos entraram esta semana.
-  // Em modo demonstração a terceira linha mostra os "novos esta semana" de demonstração (não reais).
-  const linhaAgora = MODO_DEMO
-    ? `Mais de ${fmt(socialProofConfig.demoNovosSemana)} novos esta semana`
-    : ligados !== null
-      ? `Mais de ${fmt(ligados)} a estudar agora`
-      : novos !== null && `Mais de ${fmt(novos)} novos esta semana`;
+  const linhaAgora = ligados !== null
+    ? `Mais de ${fmt(ligados)} a estudar agora`
+    : novos !== null && `Mais de ${fmt(novos)} novos esta semana`;
+  // Modo demonstração (não são dados reais): linha "ao vivo" com o ponto verde a pulsar e, por baixo, os novos da semana.
+  const linhaLiveDemo = MODO_DEMO && liveDemo !== null && `${fmt(liveDemo)} a estudar agora`;
+  const linhaNovosDemo = MODO_DEMO && `Mais de ${fmt(socialProofConfig.demoNovosSemana)} novos esta semana`;
 
   if (variant === 'compact') {
     return (
       <div className="space-y-0.5">
         {linhaPessoas && <p className="text-body text-gold font-semibold">{linhaPessoas}</p>}
         {linhaMzn && <p className="text-caption text-gold">{linhaMzn}</p>}
-        {linhaAgora && (
-          <p className="text-caption text-text-secondary flex items-center justify-center">
-            {LiveDot}
-            {linhaAgora}
-          </p>
+        {MODO_DEMO ? (
+          <>
+            {linhaLiveDemo && (
+              <p className="text-caption text-text-secondary flex items-center justify-center">
+                {LiveDot}
+                {linhaLiveDemo}
+              </p>
+            )}
+            <p className="text-caption text-text-secondary">{linhaNovosDemo}</p>
+          </>
+        ) : (
+          linhaAgora && (
+            <p className="text-caption text-text-secondary flex items-center justify-center">
+              {LiveDot}
+              {linhaAgora}
+            </p>
+          )
         )}
       </div>
     );
@@ -80,11 +98,23 @@ export function SocialProofActivity({ variant = 'card' }) {
     <>
       {linhaPessoas && <p className="text-body text-gold font-semibold">{linhaPessoas}</p>}
       {linhaMzn && <p className="text-caption text-gold mb-1.5">{linhaMzn}</p>}
-      {linhaAgora && (
-        <p className="text-caption text-text-secondary flex items-center justify-center">
-          {LiveDot}
-          {linhaAgora}
-        </p>
+      {MODO_DEMO ? (
+        <>
+          {linhaLiveDemo && (
+            <p className="text-caption text-text-secondary flex items-center justify-center">
+              {LiveDot}
+              {linhaLiveDemo}
+            </p>
+          )}
+          <p className="text-caption text-text-secondary">{linhaNovosDemo}</p>
+        </>
+      ) : (
+        linhaAgora && (
+          <p className="text-caption text-text-secondary flex items-center justify-center">
+            {LiveDot}
+            {linhaAgora}
+          </p>
+        )
       )}
     </>
   );
