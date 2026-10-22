@@ -22,6 +22,7 @@ import { Quiz } from './pages/Quiz';
 import { QuizResult } from './pages/QuizResult';
 import { Wallet } from './pages/Wallet';
 import { Profile } from './pages/Profile';
+import { AdminAccess } from './pages/AdminAccess';
 import { Settings } from './pages/Settings';
 import { Ranking } from './pages/Ranking';
 import { Notifications } from './pages/Notifications';
@@ -109,6 +110,7 @@ export default function App() {
               <Route path="/ranking" element={<Ranking />} />
               <Route path="/notificacoes" element={<Notifications />} />
               <Route path="/perfil" element={<Profile />} />
+              <Route path="/admin/acesso" element={<AdminAccess />} />
               <Route path="/configuracoes" element={<Settings />} />
             </Route>
 

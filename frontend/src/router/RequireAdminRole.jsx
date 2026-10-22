@@ -1,5 +1,6 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { isAdminUnlocked } from '../lib/adminUnlock';
 
 /**
  * Guarda de rota do Painel Admin. Diferente de ProtectedRoute (que só exige
@@ -25,6 +26,11 @@ export function RequireAdminRole({ roles, children }) {
   const isAdmin = user.role && user.role.startsWith('admin_');
   if (!isAdmin) {
     return <Navigate to="/dashboard" replace />;
+  }
+
+  // Segundo passo: confirmar número e senha no ecrã "Acesso de administrador" (vale 30 minutos neste separador).
+  if (!isAdminUnlocked()) {
+    return <Navigate to="/admin/acesso" replace />;
   }
 
   if (roles && user.role !== 'admin_master' && !roles.includes(user.role)) {

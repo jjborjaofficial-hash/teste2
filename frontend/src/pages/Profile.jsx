@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { isAdminRole } from '../lib/adminUnlock';
 import { trustScoreApi, gamificationApi } from '../api/profileApi';
 import { referralsApi } from '../api/referralsApi';
 import { Card } from '../components/Card';
@@ -188,6 +189,15 @@ export function Profile() {
   return (
     <div className="space-y-5 pb-4">
       <header className="pt-2 flex flex-col items-center text-center relative">
+        {isAdminRole(user) && (
+          <Link
+            to="/admin/acesso"
+            aria-label="Acesso de administrador"
+            className="absolute top-2 left-0 w-11 h-11 flex items-center justify-center rounded-full bg-surface border border-border text-text"
+          >
+            <TrustShieldIcon className="w-6 h-6 text-warning" />
+          </Link>
+        )}
         <button
           onClick={handleSettingsTap}
           aria-label="Configurações"

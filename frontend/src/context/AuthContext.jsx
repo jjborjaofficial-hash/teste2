@@ -4,6 +4,7 @@ import { setTokens, clearTokens, ApiError } from '../api/client';
 import { usersApi } from '../api/profileApi';
 import { shopApi } from '../api/shopApi';
 import { syncPushToken } from '../lib/pushNotifications';
+import { lockAdmin } from '../lib/adminUnlock';
 
 const AuthContext = createContext(null);
 
@@ -166,6 +167,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   const logout = useCallback(async () => {
+    lockAdmin();
     clearTokens();
     setUser(null);
     setTrialEnded(false);
