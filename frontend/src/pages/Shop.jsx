@@ -6,7 +6,7 @@ import { Card } from '../components/Card';
 import { PrimaryButton, SecondaryButton } from '../components/Button';
 import { useToast } from '../components/Toast';
 import { ApiError } from '../api/client';
-import { PointsIcon, ShopIcon, CheckIcon } from '../icons';
+import { PointsIcon, ShopIcon, CheckIcon, WalletIcon } from '../icons';
 import { ThemeTrialCard } from '../components/ThemeTrialCard';
 import { AVATAR_IMAGES, slotForKey } from '../constants/shopCosmetics';
 
@@ -220,10 +220,16 @@ export function Shop() {
           <ShopIcon className="w-6 h-6 text-primary" />
           <h1 className="font-display text-h1 text-text">Loja</h1>
         </div>
-        <span className="flex items-center gap-1.5 bg-gold/10 text-gold font-semibold px-3 py-1.5 rounded-full text-caption">
-          <PointsIcon className="w-4 h-4" />
-          {user?.pointsBalance ?? 0} Pontos
-        </span>
+        <div className="flex flex-col items-end gap-1">
+          <span className="flex items-center gap-1.5 bg-gold/10 text-gold font-semibold px-3 py-1 rounded-full text-caption">
+            <PointsIcon className="w-4 h-4" />
+            {user?.pointsBalance ?? 0} Pontos
+          </span>
+          <span className="flex items-center gap-1.5 bg-success/10 text-success font-semibold px-3 py-1 rounded-full text-caption">
+            <WalletIcon className="w-4 h-4" />
+            {(user?.walletBalanceMzn ?? 0).toFixed(2)} MZN
+          </span>
+        </div>
       </header>
 
       <div className="flex gap-2">

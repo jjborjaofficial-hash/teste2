@@ -191,7 +191,7 @@ export function Profile() {
         <button
           onClick={handleSettingsTap}
           aria-label="Configurações"
-          className="absolute top-2 right-0 w-11 h-11 flex items-center justify-center text-text-secondary"
+          className="absolute top-2 right-0 w-11 h-11 flex items-center justify-center rounded-full bg-surface border border-border text-text"
         >
           <SettingsIcon className="w-6 h-6" spinKey={settingsSpinKey} />
         </button>
@@ -257,27 +257,21 @@ export function Profile() {
         </Card>
       )}
 
-      <Link to="/loja" className="flex items-center justify-between gap-2 bg-surface border border-border rounded-card px-4 py-3">
-        <span className="flex items-center gap-2">
-          <ShopIcon className="w-5 h-5 text-primary" />
+      <div className="grid grid-cols-2 gap-3">
+        <Link to="/loja" className="flex flex-col items-center gap-1 bg-surface border border-border rounded-card px-3 py-4 text-center">
+          <ShopIcon className="w-7 h-7 text-primary" />
           <span className="text-body font-semibold text-text">Loja de Pontos</span>
-        </span>
-        <span className="flex items-center gap-2">
           <span className="flex items-center gap-1 text-caption text-gold font-semibold">
             <PointsIcon className="w-4 h-4" />
-            {user?.pointsBalance ?? 0}
+            {user?.pointsBalance ?? 0} Pontos
           </span>
-          <ChevronRightIcon className="w-4 h-4 text-text-secondary" />
-        </span>
-      </Link>
-
-      <Link to="/meus-recursos" className="flex items-center justify-between gap-2 bg-surface border border-border rounded-card px-4 py-3 mt-3">
-        <span className="flex items-center gap-2">
-          <AchievementIcon className="w-5 h-5 text-primary" />
+        </Link>
+        <Link to="/meus-recursos" className="flex flex-col items-center gap-1 bg-surface border border-border rounded-card px-3 py-4 text-center">
+          <AchievementIcon className="w-7 h-7 text-primary" />
           <span className="text-body font-semibold text-text">Meus Recursos</span>
-        </span>
-        <ChevronRightIcon className="w-4 h-4 text-text-secondary" />
-      </Link>
+          <span className="text-caption text-text-secondary">Boosts e personalização</span>
+        </Link>
+      </div>
 
       <EarningsHistory />
 

@@ -146,7 +146,7 @@ export function Dashboard() {
           <p className="text-caption text-text-secondary">XP</p>
         </Card>
 
-        <Card className="!p-3">
+        <Link to="/loja" aria-label="Abrir a Loja de Pontos" className="block"><Card className="!p-3">
           <div className="flex items-center gap-1.5 mb-1">
             <PointsIcon className="w-4 h-4 text-secondary shrink-0" />
             <span className="text-caption text-text-secondary">Pontos</span>
@@ -155,7 +155,7 @@ export function Dashboard() {
             {gamification?.pointsBalance ?? 0}
           </p>
           <p className="text-caption text-text-secondary">moeda soft</p>
-        </Card>
+        </Card></Link>
       </div>
 
       <WelcomeBonusCard bonus={welcomeBonus} onClaimed={reloadAfterWelcomeClaim} />
