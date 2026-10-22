@@ -1,6 +1,7 @@
 const { Router } = require('express');
 const controller = require('../controllers/adminLegalController');
 const authenticate = require('../../../middleware/authenticate');
+const requireAdminAccess = require('../../../middleware/requireAdminAccess');
 const requireRole = require('../../../middleware/requireRole');
 const validate = require('../../../middleware/validate');
 const {
@@ -14,6 +15,7 @@ const router = Router();
 // Painel Administrativo — Módulo Jurídico e Compliance (docx Parte 11).
 // Exclusivo de admin_juridico (admin_master sempre tem acesso, via requireRole).
 router.use(authenticate);
+router.use(requireAdminAccess);
 router.use(requireRole('admin_juridico'));
 
 // --- Gestão de Documentos Jurídicos (docx Parte 11.1) ---

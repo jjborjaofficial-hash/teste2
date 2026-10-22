@@ -1,6 +1,7 @@
 const { Router } = require('express');
 const controller = require('../controllers/adminMissionsController');
 const authenticate = require('../../../middleware/authenticate');
+const requireAdminAccess = require('../../../middleware/requireAdminAccess');
 const requireRole = require('../../../middleware/requireRole');
 const validate = require('../../../middleware/validate');
 const { createMissionSchema, updateMissionSchema } = require('../validators/adminMissionsValidators');
@@ -8,6 +9,7 @@ const { createMissionSchema, updateMissionSchema } = require('../validators/admi
 const router = Router();
 
 router.use(authenticate);
+router.use(requireAdminAccess);
 router.use(requireRole('admin_suporte'));
 
 router.get('/', controller.listMissions);

@@ -37,7 +37,7 @@ const corsOptions = {
   },
   credentials: true, // necessário para o cookie httpOnly do refresh token
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Admin-Access'],
 };
 
 module.exports = corsOptions;

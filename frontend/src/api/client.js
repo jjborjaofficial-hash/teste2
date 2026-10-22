@@ -11,6 +11,8 @@
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
 
+import { getAdminAccessToken } from '../lib/adminUnlock';
+
 let accessToken = null;
 
 function setTokens({ accessToken: newAccess }) {
@@ -34,6 +36,10 @@ async function rawRequest(path, { method = 'GET', body, auth = true } = {}) {
   const headers = { 'Content-Type': 'application/json' };
   if (auth && accessToken) {
     headers.Authorization = `Bearer ${accessToken}`;
+  }
+  if (auth && path.startsWith('/admin/')) {
+    const adminToken = getAdminAccessToken();
+    if (adminToken) headers['X-Admin-Access'] = adminToken;
   }
 
   const res = await fetch(`${API_BASE_URL}${path}`, {

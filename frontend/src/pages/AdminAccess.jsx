@@ -1,33 +1,64 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { PrimaryButton } from '../components/Button';
 import { ApiError } from '../api/client';
-import { cleanPhone } from '../lib/phone';
+import { adminAccessApi } from '../api/adminAccessApi';
 import { isAdminRole, unlockAdmin } from '../lib/adminUnlock';
 
-/** Acesso de administrador: só quem já tem o papel de admin chega aqui (o ícone só aparece a eles). */
+const inputClass =
+  'w-full rounded-button border border-border bg-surface px-4 py-3 text-body text-text focus:border-primary outline-none';
+
+function Field({ id, label, children }) {
+  return (
+    <div>
+      <label htmlFor={id} className="text-caption text-text-secondary block mb-1">{label}</label>
+      {children}
+    </div>
+  );
+}
+
+/**
+ * Acesso de administrador. 1.ª vez: cria a SENHA DE ADMINISTRADOR (confirmando a senha normal da conta).
+ * Depois: confirma número ou Gmail da conta + senha de administrador (diferente da senha de login).
+ * Só chega aqui quem tem papel admin_* (o ícone no Perfil só aparece a eles).
+ */
 export function AdminAccess() {
-  const { user, login } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
-  const [phone, setPhone] = useState('');
-  const [password, setPassword] = useState('');
+  const [passwordSet, setPasswordSet] = useState(null); // null = a carregar
+  const [identifier, setIdentifier] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  if (!isAdminRole(user)) return <Navigate to="/dashboard" replace />;
+  const isAdmin = isAdminRole(user);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    adminAccessApi
+      .status()
+      .then((res) => setPasswordSet(res.data.adminPasswordSet))
+      .catch(() => setError('Não foi possível carregar. Tente novamente.'));
+  }, [isAdmin]);
+
+  if (!isAdmin) return <Navigate to="/dashboard" replace />;
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError(null);
+    if (!passwordSet && adminPassword !== confirmPassword) {
+      setError('As duas senhas de administrador não são iguais.');
+      return;
+    }
     setLoading(true);
     try {
-      const entered = await login({ phone, password });
-      if (!isAdminRole(entered)) {
-        setError('Estas credenciais não são de administrador.');
-        return;
-      }
-      unlockAdmin();
+      const res = passwordSet
+        ? await adminAccessApi.unlock({ identifier, adminPassword })
+        : await adminAccessApi.setPassword({ currentPassword, adminPassword });
+      unlockAdmin(res.data);
       navigate('/admin', { replace: true });
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Não foi possível entrar. Tente novamente.');
@@ -36,38 +67,76 @@ export function AdminAccess() {
     }
   }
 
+  if (passwordSet === null && !error) {
+    return <p className="text-text-secondary text-body pt-6">Carregando...</p>;
+  }
+
   return (
     <div className="max-w-md mx-auto w-full pt-6 pb-4">
-      <h1 className="font-display text-h1 text-text mb-1">Acesso de administrador</h1>
-      <p className="text-body text-text-secondary mb-6">Confirme o número e a senha para abrir o painel.</p>
+      <h1 className="font-display text-h1 text-text mb-1">
+        {passwordSet ? 'Acesso de administrador' : 'Criar senha de administrador'}
+      </h1>
+      <p className="text-body text-text-secondary mb-6">
+        {passwordSet
+          ? 'Confirme o seu número ou Gmail e a senha de administrador.'
+          : 'É a senha só do painel, diferente da senha com que entra na plataforma. Mínimo 10 caracteres.'}
+      </p>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="admin-phone" className="text-caption text-text-secondary block mb-1">Número de telefone</label>
-          <input
-            id="admin-phone"
-            type="tel"
-            inputMode="numeric"
-            placeholder="84XXXXXXX"
-            value={phone}
-            maxLength={9}
-            onChange={(e) => setPhone(cleanPhone(e.target.value))}
-            required
-            className="w-full rounded-button border border-border bg-surface px-4 py-3 text-body text-text focus:border-primary outline-none"
-          />
-        </div>
-        <div>
-          <label htmlFor="admin-password" className="text-caption text-text-secondary block mb-1">Senha</label>
+        {passwordSet ? (
+          <Field id="admin-id" label="Número de telefone ou Gmail">
+            <input
+              id="admin-id"
+              type="text"
+              autoComplete="username"
+              placeholder="84XXXXXXX ou nome@gmail.com"
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
+              required
+              className={inputClass}
+            />
+          </Field>
+        ) : (
+          <Field id="admin-current" label="Senha normal da sua conta (a de login)">
+            <input
+              id="admin-current"
+              type="password"
+              autoComplete="current-password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              required
+              className={inputClass}
+            />
+          </Field>
+        )}
+        <Field id="admin-password" label={passwordSet ? 'Senha de administrador' : 'Nova senha de administrador'}>
           <input
             id="admin-password"
             type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="new-password"
+            value={adminPassword}
+            onChange={(e) => setAdminPassword(e.target.value)}
             required
-            className="w-full rounded-button border border-border bg-surface px-4 py-3 text-body text-text focus:border-primary outline-none"
+            minLength={passwordSet ? undefined : 10}
+            className={inputClass}
           />
-        </div>
+        </Field>
+        {!passwordSet && (
+          <Field id="admin-confirm" label="Repita a senha de administrador">
+            <input
+              id="admin-confirm"
+              type="password"
+              autoComplete="new-password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              className={inputClass}
+            />
+          </Field>
+        )}
         {error && <p className="text-danger text-caption">{error}</p>}
-        <PrimaryButton type="submit" loading={loading} className="w-full">Entrar no painel</PrimaryButton>
+        <PrimaryButton type="submit" loading={loading} className="w-full">
+          {passwordSet ? 'Entrar no painel' : 'Criar senha e entrar'}
+        </PrimaryButton>
       </form>
     </div>
   );

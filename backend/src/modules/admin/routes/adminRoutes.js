@@ -1,6 +1,7 @@
 const { Router } = require('express');
 const controller = require('../controllers/adminController');
 const authenticate = require('../../../middleware/authenticate');
+const requireAdminAccess = require('../../../middleware/requireAdminAccess');
 const requireRole = require('../../../middleware/requireRole');
 const validate = require('../../../middleware/validate');
 const {
@@ -18,6 +19,7 @@ const router = Router();
 // fazer o quê) é decidida rota a rota via requireRole (Manual Parte 5: autorização
 // é responsabilidade de middleware transversal, não duplicada em cada controller).
 router.use(authenticate);
+router.use(requireAdminAccess);
 
 // --- Saques: exclusivo de admin_financeiro (admin_master sempre tem acesso) ---
 router.get('/withdrawals', requireRole('admin_financeiro'), controller.listWithdrawals);

@@ -1,6 +1,7 @@
 const { Router } = require('express');
 const controller = require('../controllers/adminQuizController');
 const authenticate = require('../../../middleware/authenticate');
+const requireAdminAccess = require('../../../middleware/requireAdminAccess');
 const requireRole = require('../../../middleware/requireRole');
 const validate = require('../../../middleware/validate');
 const {
@@ -15,6 +16,7 @@ const router = Router();
 // Gestão de Categorias e Perguntas — antes desta rota não existia NENHUMA
 // forma de adicionar conteúdo além de editar o banco na mão (seed de dev).
 router.use(authenticate);
+router.use(requireAdminAccess);
 router.use(requireRole('admin_suporte'));
 
 router.get('/categories', controller.listCategories);

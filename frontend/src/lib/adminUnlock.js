@@ -1,35 +1,42 @@
 /**
- * Segundo passo de acesso ao Painel Administrativo: depois de entrar na conta normal, o administrador volta a
- * escrever o número e a senha no ecrã "Acesso de administrador". O desbloqueio vale 30 minutos, só neste separador
- * (sessionStorage). É uma barreira extra de uso; a segurança verdadeira continua no servidor (o papel vai no token).
+ * Acesso ao Painel Administrativo: o servidor emite um token de acesso de admin (30 min) depois de o administrador
+ * confirmar número ou email + a SENHA DE ADMINISTRADOR (diferente da senha de login). Fica em sessionStorage (só
+ * neste separador) e vai no cabeçalho X-Admin-Access das chamadas /admin/* (ver api/client.js).
  */
-const KEY = 'adminUnlockedUntil';
-const DURATION_MS = 30 * 60 * 1000;
+const KEY = 'adminAccessToken';
+const KEY_UNTIL = 'adminAccessUntil';
 
 export function isAdminRole(user) {
   return Boolean(user?.role && user.role.startsWith('admin_'));
 }
 
-export function unlockAdmin() {
+export function unlockAdmin({ adminAccessToken, expiresInMinutes = 30 }) {
   try {
-    sessionStorage.setItem(KEY, String(Date.now() + DURATION_MS));
+    sessionStorage.setItem(KEY, adminAccessToken);
+    sessionStorage.setItem(KEY_UNTIL, String(Date.now() + expiresInMinutes * 60 * 1000));
   } catch {
-    // sem sessionStorage: o desbloqueio simplesmente não persiste
+    // sem sessionStorage: o acesso não persiste
   }
 }
 
 export function lockAdmin() {
   try {
     sessionStorage.removeItem(KEY);
+    sessionStorage.removeItem(KEY_UNTIL);
   } catch {
     // ignorar
   }
 }
 
-export function isAdminUnlocked() {
+export function getAdminAccessToken() {
   try {
-    return Number(sessionStorage.getItem(KEY) || 0) > Date.now();
+    if (Number(sessionStorage.getItem(KEY_UNTIL) || 0) <= Date.now()) return null;
+    return sessionStorage.getItem(KEY);
   } catch {
-    return false;
+    return null;
   }
+}
+
+export function isAdminUnlocked() {
+  return Boolean(getAdminAccessToken());
 }
