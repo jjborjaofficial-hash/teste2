@@ -22,7 +22,7 @@ O dinheiro dos saques (mínimo 100 MZN, cerca de 2 semanas de uso) tem de sair d
 - **Claude (proposto, não aprovado):** guardar uma contagem simples por utilizador e por dia de anúncios vistos (sem dados pessoais) para cruzar com o relatório da Adcash e saber se o custo por conta fica abaixo da receita. Primeiro ver no código o que já existe.
 
 ### B. Decisões do dono (não implementar sem ele aprovar)
-1. **Economia:** conferir se o bónus de boas-vindas (até 12 MZN em 7 dias: 2/1/1/1,5/1,5/2/3) e a conversão de Pontos (até ~25 MZN/dia no teto de 5.000 Pontos; 1.000 Pontos = 5 MZN desde 21/10) cabem na receita real da Adcash. Se não cabem, ajusta-se o bónus (chave `welcome_rewards_mzn` em `system_config`); não se acrescenta verificação por SMS (decidido: sem SMS).
+1. **Economia:** conferir se o bónus de boas-vindas (até 10 MZN em 7 dias: 2/1/1/1/1,5/1,5/2; eram 12 até 21/10) e a conversão de Pontos (até ~25 MZN/dia no teto de 5.000 Pontos; 1.000 Pontos = 5 MZN desde 21/10) cabem na receita real da Adcash. Se não cabem, ajusta-se o bónus (chave `welcome_rewards_mzn` em `system_config`); não se acrescenta verificação por SMS (decidido: sem SMS).
 2. **Regra "Porque" do validador do quiz:** aceitar ou não perguntas cuja explicação não começa assim.
 3. **Pedir a ativação do push** logo após o 1.º login ou a 1.ª missão (cartão "Quer receber avisos?"), para subir a adesão. Só recebe push quem tocar em "Ativar".
 
