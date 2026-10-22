@@ -17,6 +17,7 @@ export const socialProofConfig = {
   // VITE_PROVA_SOCIAL_DEMO=true; não são dados reais. Desligar antes do lançamento.
   demoPessoas: 6000,
   demoMzn: 22000,
+  demoNovosSemana: 49,
 
   // Linhas fixas da prova social (mantidas propositalmente sem ligação
   // ao banco de dados, por pedido explícito do produto).

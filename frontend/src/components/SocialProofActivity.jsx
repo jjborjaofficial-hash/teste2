@@ -44,8 +44,9 @@ export function SocialProofActivity({ variant = 'card' }) {
     return <p className="text-body text-gold font-semibold">Plataforma em lançamento</p>;
   }
 
-  const fmt = (n) => n.toLocaleString('pt-MZ');
-  const LiveDot = ligados !== null && (
+  // Ponto de milhares sempre (6.000, 22.000): o toLocaleString('pt-MZ') não agrupa os números de 4 dígitos e usa espaço nos maiores.
+  const fmt = (n) => String(Math.trunc(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  const LiveDot = !MODO_DEMO && ligados !== null && (
     <span className="relative inline-flex h-2 w-2 mr-1.5">
       <span className="animate-live-pulse inline-flex rounded-full h-2 w-2 bg-success" />
     </span>
@@ -53,9 +54,12 @@ export function SocialProofActivity({ variant = 'card' }) {
   const linhaPessoas = pessoas !== null && `Mais de ${fmt(pessoas)} moçambicanos ligados no Aprenda e Ganha`;
   const linhaMzn = mzn !== null && `Mais de ${fmt(mzn)} MZN já distribuídos em recompensas`;
   // Terceira linha sempre verdadeira: gente a estudar agora, ou (se ainda há pouca) quantos entraram esta semana.
-  const linhaAgora = ligados !== null
-    ? `Mais de ${fmt(ligados)} a estudar agora`
-    : novos !== null && `Mais de ${fmt(novos)} novos esta semana`;
+  // Em modo demonstração a terceira linha mostra os "novos esta semana" de demonstração (não reais).
+  const linhaAgora = MODO_DEMO
+    ? `Mais de ${fmt(socialProofConfig.demoNovosSemana)} novos esta semana`
+    : ligados !== null
+      ? `Mais de ${fmt(ligados)} a estudar agora`
+      : novos !== null && `Mais de ${fmt(novos)} novos esta semana`;
 
   if (variant === 'compact') {
     return (
