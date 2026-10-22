@@ -31,6 +31,7 @@ export function SocialProofActivity({ variant = 'card' }) {
   const pessoas = maisDe(stats.activeUsersCount ?? 0);
   const mzn = maisDe(Math.floor(stats.totalRewardsDistributedMzn ?? 0));
   const ligados = maisDe(stats.onlineNowCount ?? 0);
+  const novos = maisDe(stats.newUsers7dCount ?? 0);
   if (pessoas === null && mzn === null) {
     return <p className="text-body text-gold font-semibold">Plataforma em lançamento</p>;
   }
@@ -43,7 +44,10 @@ export function SocialProofActivity({ variant = 'card' }) {
   );
   const linhaPessoas = pessoas !== null && `Mais de ${fmt(pessoas)} moçambicanos ligados no Aprenda e Ganha`;
   const linhaMzn = mzn !== null && `Mais de ${fmt(mzn)} MZN já distribuídos em recompensas`;
-  const linhaAgora = ligados !== null && `Mais de ${fmt(ligados)} a estudar agora`;
+  // Terceira linha sempre verdadeira: gente a estudar agora, ou (se ainda há pouca) quantos entraram esta semana.
+  const linhaAgora = ligados !== null
+    ? `Mais de ${fmt(ligados)} a estudar agora`
+    : novos !== null && `Mais de ${fmt(novos)} novos esta semana`;
 
   if (variant === 'compact') {
     return (

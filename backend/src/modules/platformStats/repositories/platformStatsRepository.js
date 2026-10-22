@@ -12,7 +12,7 @@ const db = require('../../../config/database');
  */
 
 async function getPlatformStats(executor = db) {
-  const [activeUsers, rewards, online] = await Promise.all([
+  const [activeUsers, rewards, online, recent] = await Promise.all([
     executor.query(`SELECT COUNT(*)::int AS count FROM users WHERE deleted_at IS NULL`),
     executor.query(
       `SELECT COALESCE(SUM(amount_mzn), 0) AS total
@@ -29,12 +29,16 @@ async function getPlatformStats(executor = db) {
          SELECT id AS user_id FROM users WHERE deleted_at IS NULL AND last_login_at > now() - interval '5 minutes'
        ) t`
     ),
+    executor.query(
+      `SELECT COUNT(*)::int AS count FROM users WHERE deleted_at IS NULL AND created_at > now() - interval '7 days'`
+    ),
   ]);
 
   return {
     activeUsersCount: activeUsers.rows[0].count,
     totalRewardsDistributedMzn: Number(rewards.rows[0].total),
     onlineNowCount: online.rows[0].count,
+    newUsers7dCount: recent.rows[0].count,
   };
 }
 
