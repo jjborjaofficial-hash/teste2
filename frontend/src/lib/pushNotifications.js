@@ -53,11 +53,8 @@ export async function syncPushToken() {
     if (!isConfigured() || Notification.permission !== 'granted') return false;
     if (localStorage.getItem(PUSH_FLAG) !== '1') return false;
 
-    const { initializeApp, getApps, getApp } = await import('firebase/app');
-    const { getMessaging, getToken } = await import('firebase/messaging');
-    const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-    const messaging = getMessaging(app);
-    const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+    const registration = await ensureServiceWorkerReady();
+    const { messaging, getToken } = await loadFirebase();
     const token = await getToken(messaging, { vapidKey: VAPID_KEY, serviceWorkerRegistration: registration });
     if (!token) return false;
     await notificationsApi.registerPushToken(token, 'web');
@@ -67,10 +64,50 @@ export async function syncPushToken() {
   }
 }
 
+// Service worker pronto (registado E ativo). Guardado para não repetir o trabalho: o getToken do Firebase falha
+// com "no active Service Worker" se for pedido antes de o service worker estar ativo, o que acontecia na 1.ª ativação.
+let swReadyPromise = null;
+function ensureServiceWorkerReady() {
+  if (!swReadyPromise) {
+    swReadyPromise = navigator.serviceWorker
+      .register('/firebase-messaging-sw.js')
+      .then(() => navigator.serviceWorker.ready)
+      .catch((err) => {
+        swReadyPromise = null; // deixa tentar de novo
+        throw err;
+      });
+  }
+  return swReadyPromise;
+}
+
+async function loadFirebase() {
+  const { initializeApp, getApps, getApp } = await import('firebase/app');
+  const { getMessaging, getToken } = await import('firebase/messaging');
+  const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+  return { messaging: getMessaging(app), getToken };
+}
+
 /**
- * Pede permissão de notificação ao usuário e, se concedida, registra o
- * token do dispositivo no backend. Retorna 'unsupported' | 'unconfigured' |
- * 'denied' | 'registered' — o chamador decide o que mostrar, se algo.
+ * Aquece o push SEM pedir permissão: carrega o Firebase e deixa o service worker pronto. A página de Notificações
+ * chama isto ao abrir, para que o 1.º toque em "Ativar" já encontre tudo pronto (era isto que fazia falhar à primeira).
+ * Nunca lança erro.
+ */
+export async function prewarmPush() {
+  try {
+    if (!('Notification' in window) || !('serviceWorker' in navigator) || !isConfigured()) return;
+    await Promise.all([ensureServiceWorkerReady(), loadFirebase()]);
+  } catch {
+    /* só falhou o aquecimento; o toque em "Ativar" tenta outra vez */
+  }
+}
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Pede permissão de notificação ao usuário e, se concedida, registra o token do dispositivo no backend.
+ * Retorna 'unsupported' | 'unconfigured' | 'denied' | 'registered' | 'failed'.
+ * 'failed' = a permissão foi dada mas o registo falhou mesmo depois de 3 tentativas (rede, servidor a acordar).
+ * Só 'unconfigured' quando faltam mesmo as chaves do Firebase.
  */
 export async function requestPushPermission() {
   if (!('Notification' in window) || !('serviceWorker' in navigator)) {
@@ -81,27 +118,29 @@ export async function requestPushPermission() {
   }
 
   try {
+    // A permissão é pedida logo de início (o Chrome exige que seja a partir do toque do utilizador).
     const permission = await Notification.requestPermission();
     if (permission !== 'granted') return 'denied';
-
-    // Imports dinâmicos: se `firebase` não estiver instalado ainda, o resto
-    // do app continua funcionando — só esta função falha silenciosamente.
-    const { initializeApp } = await import('firebase/app');
-    const { getMessaging, getToken } = await import('firebase/messaging');
-
-    const app = initializeApp(firebaseConfig);
-    const messaging = getMessaging(app);
-    const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-    const token = await getToken(messaging, { vapidKey: VAPID_KEY, serviceWorkerRegistration: registration });
-
-    if (token) {
-      await notificationsApi.registerPushToken(token, 'web');
-      return 'registered';
-    }
-    return 'denied';
   } catch {
-    // Pacote não instalado, Service Worker indisponível, rede falhou, etc.
-    // — nunca deixa isso quebrar o restante do app.
-    return 'unconfigured';
+    return 'failed';
   }
+
+  // 3 tentativas, com pausa curta: na 1.ª ativação o service worker e o Firebase ainda estão a arrancar e o servidor
+  // pode estar a acordar (plano gratuito). Só mostra erro se falharem as três.
+  const waits = [0, 800, 2000];
+  for (let attempt = 0; attempt < waits.length; attempt += 1) {
+    if (waits[attempt]) await sleep(waits[attempt]);
+    try {
+      const registration = await ensureServiceWorkerReady();
+      const { messaging, getToken } = await loadFirebase();
+      const token = await getToken(messaging, { vapidKey: VAPID_KEY, serviceWorkerRegistration: registration });
+      if (token) {
+        await notificationsApi.registerPushToken(token, 'web');
+        return 'registered';
+      }
+    } catch {
+      /* tenta outra vez */
+    }
+  }
+  return 'failed';
 }

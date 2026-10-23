@@ -5,7 +5,7 @@ import { Card } from '../components/Card';
 import { PrimaryButton } from '../components/Button';
 import { useToast } from '../components/Toast';
 import { NotificationIcon } from '../icons';
-import { requestPushPermission, PUSH_FLAG } from '../lib/pushNotifications';
+import { requestPushPermission, prewarmPush, PUSH_FLAG } from '../lib/pushNotifications';
 import { notificationRoute } from '../lib/notificationRoute';
 
 const PUSH_STATUS_MESSAGES = {
@@ -13,6 +13,7 @@ const PUSH_STATUS_MESSAGES = {
   unconfigured: 'Notificações push ainda não estão disponíveis nesta plataforma.',
   denied: 'Permissão de notificações negada. Você pode ativar depois nas configurações do navegador.',
   registered: 'Notificações push ativadas neste dispositivo!',
+  failed: 'Não foi possível ativar agora. Toque em Ativar de novo.',
 };
 
 export function Notifications() {
@@ -38,6 +39,11 @@ export function Notifications() {
 
   useEffect(() => {
     load().finally(() => setLoading(false));
+  }, []);
+
+  // Deixa o push pronto antes do toque em "Ativar" (sem pedir permissão), para ativar à primeira.
+  useEffect(() => {
+    prewarmPush();
   }, []);
 
   async function handleOpen(notification) {
