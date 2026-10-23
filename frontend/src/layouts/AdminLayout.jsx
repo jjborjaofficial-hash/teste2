@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { notificationsApi } from '../api/gameplayApi';
-import { NotificationIcon } from '../icons';
+import { NotificationIcon, HomeIcon, WalletIcon, ProfileIcon, QuizIcon, ShopIcon } from '../icons';
 import { lockAdmin } from '../lib/adminUnlock';
 
 const ROLE_LABELS = {
@@ -63,6 +63,15 @@ export function AdminLayout() {
         { to: '/admin/auditoria', label: 'Auditoria' },
       ],
     },
+  ];
+
+  // Barra de baixo (6 botões): só mostra o que o papel permite; o último abre o menu completo.
+  const bottomItems = [
+    { to: '/admin', label: 'Início', icon: HomeIcon, end: true },
+    ...(canSeeWithdrawals ? [{ to: '/admin/saques', label: 'Saques', icon: WalletIcon }] : []),
+    ...(canSeeUsers ? [{ to: '/admin/usuarios', label: 'Pessoas', icon: ProfileIcon }] : []),
+    ...(canSeeUsers ? [{ to: '/admin/conteudo/categorias', label: 'Conteúdo', icon: QuizIcon }] : []),
+    ...(canSeeReports ? [{ to: '/admin/loja', label: 'Loja', icon: ShopIcon }] : []),
   ];
 
   useEffect(() => {
@@ -133,9 +142,37 @@ export function AdminLayout() {
         </nav>
       )}
 
-      <main className="max-w-3xl mx-auto px-4 py-6">
+      <main className="max-w-3xl mx-auto px-4 py-6 pb-28">
         <Outlet />
       </main>
+
+      <nav className="fixed bottom-0 inset-x-0 z-20 bg-surface border-t border-border">
+        <div className="max-w-3xl mx-auto flex">
+          {bottomItems.map((it) => (
+            <NavLink
+              key={it.to}
+              to={it.to}
+              end={it.end}
+              onClick={() => setMenuOpen(false)}
+              className={({ isActive }) =>
+                `flex-1 flex flex-col items-center gap-0.5 py-2 text-caption transition-colors duration-micro ${
+                  isActive ? 'text-primary' : 'text-text-secondary'
+                }`
+              }
+            >
+              <it.icon className="w-6 h-6" />
+              {it.label}
+            </NavLink>
+          ))}
+          <button
+            onClick={() => setMenuOpen((o) => !o)}
+            className={`flex-1 flex flex-col items-center gap-0.5 py-2 text-caption ${menuOpen ? 'text-primary' : 'text-text-secondary'}`}
+          >
+            <span className="w-6 h-6 flex items-center justify-center text-h2 leading-none">☰</span>
+            Menu
+          </button>
+        </div>
+      </nav>
     </div>
   );
 }

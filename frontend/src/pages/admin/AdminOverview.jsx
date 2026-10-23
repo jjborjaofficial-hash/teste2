@@ -27,20 +27,17 @@ function Kpi({ to, label, value, hint, tone = 'text-text' }) {
   );
 }
 
-/** Botão de atalho grande, com ícone. */
-function Shortcut({ to, icon: Icon, label, sub }) {
+/** Botão de atalho compacto: ícone e nome. */
+function Shortcut({ to, icon: Icon, label }) {
   return (
     <Link
       to={to}
-      className="flex flex-col items-start gap-2 bg-surface border border-border rounded-card p-4 transition-all duration-micro hover:border-primary/40 hover:shadow-sm active:scale-[0.98]"
+      className="flex flex-col items-center gap-1.5 bg-surface border border-border rounded-card px-2 py-3 text-center transition-all duration-micro hover:border-primary/40 active:scale-[0.97]"
     >
-      <span className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center">
-        <Icon className="w-5 h-5" />
+      <span className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+        <Icon className="w-4 h-4" />
       </span>
-      <span>
-        <span className="block text-body font-semibold text-text">{label}</span>
-        <span className="block text-caption text-text-secondary">{sub}</span>
-      </span>
+      <span className="text-caption font-semibold text-text leading-tight">{label}</span>
     </Link>
   );
 }
@@ -132,17 +129,15 @@ export function AdminOverview() {
       </Section>
 
       <Section title="Atalhos">
-        <div className="grid grid-cols-2 gap-2">
-          {canMoney && <Shortcut to="/admin/saques" icon={WalletIcon} label="Saques" sub="Aprovar e pagar" />}
-          {canPeople && <Shortcut to="/admin/usuarios" icon={ProfileIcon} label="Utilizadores" sub="Procurar e gerir contas" />}
-          {canPeople && (
-            <Shortcut to="/admin/conteudo/categorias" icon={QuizIcon} label="Perguntas" sub={`${data.content.questions} ativas em ${data.content.categories} categorias`} />
-          )}
-          {canPeople && <Shortcut to="/admin/conteudo/missoes" icon={MissionsIcon} label="Missões" sub="Diárias e especiais" />}
-          {canMoney && <Shortcut to="/admin/loja" icon={ShopIcon} label="Loja" sub="Itens e preços" />}
-          <Shortcut to="/admin/notificacoes" icon={NotificationIcon} label="Notificações" sub="Avisos do sistema" />
-          {canMoney && <Shortcut to="/admin/relatorios" icon={AchievementIcon} label="Relatórios" sub="Números por dia" />}
-          <Shortcut to="/admin/auditoria" icon={TrustShieldIcon} label="Auditoria" sub="Quem fez o quê" />
+        <div className="grid grid-cols-3 gap-2">
+          {canMoney && <Shortcut to="/admin/saques" icon={WalletIcon} label="Saques" />}
+          {canPeople && <Shortcut to="/admin/usuarios" icon={ProfileIcon} label="Utilizadores" />}
+          {canPeople && <Shortcut to="/admin/conteudo/categorias" icon={QuizIcon} label="Perguntas" />}
+          {canPeople && <Shortcut to="/admin/conteudo/missoes" icon={MissionsIcon} label="Missões" />}
+          {canMoney && <Shortcut to="/admin/loja" icon={ShopIcon} label="Loja" />}
+          <Shortcut to="/admin/notificacoes" icon={NotificationIcon} label="Notificações" />
+          {canMoney && <Shortcut to="/admin/relatorios" icon={AchievementIcon} label="Relatórios" />}
+          <Shortcut to="/admin/auditoria" icon={TrustShieldIcon} label="Auditoria" />
         </div>
       </Section>
     </div>
