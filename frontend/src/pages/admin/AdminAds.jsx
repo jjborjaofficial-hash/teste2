@@ -3,7 +3,7 @@ import { adminAdsApi } from '../../api/adminApi';
 import { ApiError } from '../../api/client';
 
 function Switch({ on, onChange, label, disabled }) {
-  // Medidas em px de propósito (o tema do site tem uma escala própria de espaçamentos).
+  // O botão é só a área de toque (o site obriga a 44 px); a alavanca desenhada fica centrada lá dentro.
   return (
     <button
       type="button"
@@ -12,22 +12,27 @@ function Switch({ on, onChange, label, disabled }) {
       aria-label={label}
       disabled={disabled}
       onClick={() => onChange(!on)}
-      style={{ width: 56, height: 32, borderRadius: 16, padding: 3, flexShrink: 0 }}
-      className={`relative transition-colors duration-micro disabled:opacity-50 ${on ? 'bg-success' : 'bg-border'}`}
+      style={{ width: 64, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+      className="disabled:opacity-50"
     >
       <span
-        style={{
-          position: 'absolute',
-          top: 3,
-          left: on ? 27 : 3,
-          width: 26,
-          height: 26,
-          borderRadius: 13,
-          background: '#fff',
-          transition: 'left 0.18s ease',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.4)',
-        }}
-      />
+        style={{ position: 'relative', display: 'block', width: 52, height: 30, borderRadius: 15, transition: 'background-color 0.18s ease' }}
+        className={on ? 'bg-success' : 'bg-border'}
+      >
+        <span
+          style={{
+            position: 'absolute',
+            top: 3,
+            left: on ? 25 : 3,
+            width: 24,
+            height: 24,
+            borderRadius: 12,
+            background: '#fff',
+            transition: 'left 0.18s ease',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.4)',
+          }}
+        />
+      </span>
     </button>
   );
 }
