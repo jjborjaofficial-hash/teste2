@@ -43,7 +43,7 @@ function RarityBadge({ rarity }) {
   );
 }
 
-function ItemCard({ item, equippedKeys, onChanged }) {
+function ItemCard({ item, equippedKeys, onChanged, tile = false }) {
   const { showToast } = useToast();
   const { refreshProfile } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -87,7 +87,21 @@ function ItemCard({ item, equippedKeys, onChanged }) {
   }
 
   return (
-    <Card status={isEquipped ? 'completed' : 'normal'} className="space-y-2">
+    <Card status={isEquipped ? 'completed' : 'normal'} className={tile ? 'space-y-2 !p-3' : 'space-y-2'}>
+      {tile ? (
+        <div className="flex flex-col items-center text-center gap-2">
+          <img
+            src={avatarImage}
+            alt={`Pré-visualização: ${item.name}`}
+            width="96"
+            height="96"
+            loading="lazy"
+            className={`w-24 h-24 rounded-full object-cover ring-4 ${isEquipped ? 'ring-success' : 'ring-gold/60'}`}
+          />
+          <p className="text-body font-semibold text-text leading-tight">{item.name}</p>
+          <RarityBadge rarity={item.rarity} />
+        </div>
+      ) : (
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0 flex items-start gap-3">
           {avatarImage && (
@@ -110,8 +124,9 @@ function ItemCard({ item, equippedKeys, onChanged }) {
         </div>
         {isEquipped && <CheckIcon className="w-5 h-5 text-success shrink-0" />}
       </div>
+      )}
 
-      <div className="flex items-center justify-between pt-1">
+      <div className={tile ? 'flex flex-col items-center gap-2 pt-1' : 'flex items-center justify-between pt-1'}>
         <span className="flex items-center gap-1 text-caption font-semibold text-gold">
           <PointsIcon className="w-4 h-4" />
           {item.pricePoints} Pontos
@@ -261,10 +276,20 @@ export function Shop() {
                   {CATEGORY_LABELS[category]}
                 </h2>
                 <div className="space-y-3">
-                  {categoryItems.map((item) => (
+                  {categoryItems.filter((i) => !AVATAR_IMAGES[i.key]).map((item) => (
                     <ItemCard key={item.key} item={item} equippedKeys={equippedKeys} onChanged={load} />
                   ))}
                 </div>
+                {categoryItems.some((i) => AVATAR_IMAGES[i.key]) && (
+                  <>
+                    <h3 className="text-caption font-semibold text-text-secondary uppercase tracking-wide pt-2">Avatares</h3>
+                    <div className="grid grid-cols-2 gap-3">
+                      {categoryItems.filter((i) => AVATAR_IMAGES[i.key]).map((item) => (
+                        <ItemCard key={item.key} item={item} equippedKeys={equippedKeys} onChanged={load} tile />
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
             );
           })}

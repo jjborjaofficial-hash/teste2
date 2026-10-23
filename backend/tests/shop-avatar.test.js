@@ -3,6 +3,8 @@
  * e tema. Teste de integração (PostgreSQL com as migrations). Os utilizadores de teste NÃO são apagados
  * (user_purchases e audit_logs são append-only e bloqueiam o DELETE em cascata).
  */
+const fs = require('fs');
+const path = require('path');
 const db = require('../src/config/database');
 const shopService = require('../src/modules/shop/services/shopService');
 const userRepository = require('../src/modules/users/repositories/userRepository');
@@ -77,5 +79,20 @@ describe('avatar_naruto na Loja', () => {
     const userId = await makeUser(499);
     await expect(shopService.purchase(userId, 'avatar_naruto')).rejects.toThrow();
     await expect(shopService.equip(userId, 'avatar_naruto')).rejects.toThrow(/não possui/i);
+  });
+
+  it('todo avatar ativo da Loja tem a imagem no frontend (nome do ficheiro = chave) e vice-versa', async () => {
+    const dir = path.join(__dirname, '../../frontend/src/assets/avatars');
+    const files = fs.readdirSync(dir).filter((f) => f.endsWith('.webp')).map((f) => f.replace(/\.webp$/, ''));
+    const { rows } = await db.query(`SELECT key FROM shop_items WHERE key LIKE 'avatar\\_%' AND is_active = TRUE`);
+    const keys = rows.map((r) => r.key);
+    expect(keys.filter((k) => !files.includes(k))).toEqual([]); // item à venda sem imagem = cartão vazio
+    expect(files.filter((f) => !keys.includes(f))).toEqual([]); // imagem sem item = ficheiro esquecido
+    expect(keys.length).toBeGreaterThanOrEqual(25);
+  });
+
+  it('preços da coleção ficam nas faixas definidas (300, 400 ou 500) e todos são cosméticos', async () => {
+    const { rows } = await db.query(`SELECT category, price_points FROM shop_items WHERE key LIKE 'avatar\\_%'`);
+    expect(rows.every((r) => r.category === 'cosmetic' && [300, 400, 500].includes(r.price_points))).toBe(true);
   });
 });
