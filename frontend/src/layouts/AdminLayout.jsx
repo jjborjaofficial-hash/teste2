@@ -2,7 +2,10 @@ import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { notificationsApi } from '../api/gameplayApi';
-import { NotificationIcon, HomeIcon, WalletIcon, ProfileIcon, QuizIcon, ShopIcon } from '../icons';
+import {
+  NotificationIcon, HomeIcon, WalletIcon, ProfileIcon, QuizIcon, ShopIcon, MissionsIcon, AchievementIcon,
+  TrustShieldIcon, BoostIcon, SettingsIcon, CloseIcon,
+} from '../icons';
 import { lockAdmin } from '../lib/adminUnlock';
 
 const ROLE_LABELS = {
@@ -30,37 +33,37 @@ export function AdminLayout() {
   const canSeeReports = user?.role === 'admin_master' || user?.role === 'admin_financeiro';
 
   const groups = [
-    { title: 'Início', items: [{ to: '/admin', label: 'Visão geral' }] },
+    { title: 'Início', items: [{ to: '/admin', label: 'Visão geral', icon: HomeIcon }] },
     {
       title: 'Dinheiro',
       items: [
-        ...(canSeeWithdrawals ? [{ to: '/admin/saques', label: 'Saques' }] : []),
-        ...(canSeeReports ? [{ to: '/admin/relatorios', label: 'Relatórios diários' }] : []),
+        ...(canSeeWithdrawals ? [{ to: '/admin/saques', label: 'Saques', icon: WalletIcon }] : []),
+        ...(canSeeReports ? [{ to: '/admin/relatorios', label: 'Relatórios', icon: AchievementIcon }] : []),
       ],
     },
-    { title: 'Pessoas', items: canSeeUsers ? [{ to: '/admin/usuarios', label: 'Utilizadores' }] : [] },
+    { title: 'Pessoas', items: canSeeUsers ? [{ to: '/admin/usuarios', label: 'Utilizadores', icon: ProfileIcon }] : [] },
     {
       title: 'Conteúdo',
       items: canSeeUsers
         ? [
-            { to: '/admin/conteudo/categorias', label: 'Categorias e perguntas' },
-            { to: '/admin/conteudo/missoes', label: 'Missões' },
+            { to: '/admin/conteudo/categorias', label: 'Perguntas', icon: QuizIcon },
+            { to: '/admin/conteudo/missoes', label: 'Missões', icon: MissionsIcon },
           ]
         : [],
     },
-    { title: 'Economia', items: canSeeReports ? [{ to: '/admin/loja', label: 'Loja' }] : [] },
-    { title: 'Comunicação', items: [{ to: '/admin/notificacoes', label: 'Notificações' }] },
+    { title: 'Economia', items: canSeeReports ? [{ to: '/admin/loja', label: 'Loja', icon: ShopIcon }] : [] },
+    { title: 'Comunicação', items: [{ to: '/admin/notificacoes', label: 'Notificações', icon: NotificationIcon }] },
     {
       title: 'Jurídico e sistema',
       items: [
         ...(canSeeLegal
           ? [
-              { to: '/admin/legal/documentos', label: 'Documentos' },
-              { to: '/admin/legal/reclamacoes', label: 'Reclamações' },
-              { to: '/admin/legal/recursos', label: 'Recursos' },
+              { to: '/admin/legal/documentos', label: 'Documentos', icon: TrustShieldIcon },
+              { to: '/admin/legal/reclamacoes', label: 'Reclamações', icon: NotificationIcon },
+              { to: '/admin/legal/recursos', label: 'Recursos', icon: BoostIcon },
             ]
           : []),
-        { to: '/admin/auditoria', label: 'Auditoria' },
+        { to: '/admin/auditoria', label: 'Auditoria', icon: SettingsIcon },
       ],
     },
   ];
@@ -124,22 +127,49 @@ export function AdminLayout() {
       </header>
 
       {menuOpen && (
-        <nav className="bg-surface border-b border-border px-4 py-3 space-y-3">
-          {groups.map((g) =>
-            g.items.length === 0 ? null : (
-              <div key={g.title}>
-                <p className="text-caption text-text-secondary uppercase tracking-wide mb-1">{g.title}</p>
-                <div className="flex flex-wrap gap-1">
-                  {g.items.map((it) => (
-                    <NavLink key={it.to} to={it.to} end={it.to === '/admin'} className={linkClass} onClick={() => setMenuOpen(false)}>
-                      {it.label}
-                    </NavLink>
-                  ))}
-                </div>
-              </div>
-            )
-          )}
-        </nav>
+        <div className="fixed inset-0 z-30 flex items-end" role="dialog" aria-modal="true" aria-label="Menu do painel">
+          <button
+            aria-label="Fechar menu"
+            onClick={() => setMenuOpen(false)}
+            className="absolute inset-0 bg-black/60 animate-fade-in"
+          />
+          <div className="relative animate-sheet-up w-full max-w-3xl mx-auto bg-surface border-t border-border rounded-t-2xl px-4 pt-3 pb-24 max-h-[85vh] overflow-y-auto">
+            <div className="w-10 h-1 rounded-full bg-border mx-auto mb-3" />
+            <div className="flex items-center justify-between mb-3">
+              <p className="font-display text-h2 text-text">Menu</p>
+              <button onClick={() => setMenuOpen(false)} aria-label="Fechar" className="w-9 h-9 flex items-center justify-center text-text-secondary">
+                <CloseIcon className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              {groups.map((g) =>
+                g.items.length === 0 ? null : (
+                  <div key={g.title}>
+                    <p className="text-caption text-text-secondary uppercase tracking-wide mb-2">{g.title}</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {g.items.map((it) => (
+                        <NavLink
+                          key={it.to}
+                          to={it.to}
+                          end={it.to === '/admin'}
+                          onClick={() => setMenuOpen(false)}
+                          className={({ isActive }) =>
+                            `flex flex-col items-center gap-1.5 rounded-card border px-2 py-3 text-center transition-all duration-micro active:scale-[0.97] ${
+                              isActive ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-background text-text'
+                            }`
+                          }
+                        >
+                          <it.icon className="w-6 h-6" />
+                          <span className="text-caption font-semibold leading-tight">{it.label}</span>
+                        </NavLink>
+                      ))}
+                    </div>
+                  </div>
+                )
+              )}
+            </div>
+          </div>
+        </div>
       )}
 
       <main className="max-w-3xl mx-auto px-4 py-6 pb-28">
