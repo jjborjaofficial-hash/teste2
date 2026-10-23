@@ -3,6 +3,7 @@ import { adminAdsApi } from '../../api/adminApi';
 import { ApiError } from '../../api/client';
 
 function Switch({ on, onChange, label, disabled }) {
+  // Medidas em px de propósito (o tema do site tem uma escala própria de espaçamentos).
   return (
     <button
       type="button"
@@ -11,9 +12,22 @@ function Switch({ on, onChange, label, disabled }) {
       aria-label={label}
       disabled={disabled}
       onClick={() => onChange(!on)}
-      className={`relative w-12 h-7 rounded-full transition-colors duration-micro shrink-0 disabled:opacity-50 ${on ? 'bg-success' : 'bg-border'}`}
+      style={{ width: 56, height: 32, borderRadius: 16, padding: 3, flexShrink: 0 }}
+      className={`relative transition-colors duration-micro disabled:opacity-50 ${on ? 'bg-success' : 'bg-border'}`}
     >
-      <span className={`absolute top-0.5 w-6 h-6 rounded-full bg-white transition-all duration-micro ${on ? 'left-[22px]' : 'left-0.5'}`} />
+      <span
+        style={{
+          position: 'absolute',
+          top: 3,
+          left: on ? 27 : 3,
+          width: 26,
+          height: 26,
+          borderRadius: 13,
+          background: '#fff',
+          transition: 'left 0.18s ease',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.4)',
+        }}
+      />
     </button>
   );
 }
