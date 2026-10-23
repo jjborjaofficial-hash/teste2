@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { notificationsApi } from '../api/gameplayApi';
-import { WalletIcon, ProfileIcon, NotificationIcon } from '../icons';
+import { NotificationIcon } from '../icons';
+import { lockAdmin } from '../lib/adminUnlock';
 
 const ROLE_LABELS = {
   admin_master: 'Admin Master',
@@ -18,14 +19,51 @@ const ROLE_LABELS = {
  * cada item só aparece se o papel do admin tiver acesso à área.
  */
 export function AdminLayout() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [unreadCount, setUnreadCount] = useState(0);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const canSeeWithdrawals = user?.role === 'admin_master' || user?.role === 'admin_financeiro';
   const canSeeUsers = user?.role === 'admin_master' || user?.role === 'admin_suporte';
   const canSeeLegal = user?.role === 'admin_master' || user?.role === 'admin_juridico';
   const canSeeReports = user?.role === 'admin_master' || user?.role === 'admin_financeiro';
+
+  const groups = [
+    { title: 'Início', items: [{ to: '/admin', label: 'Visão geral' }] },
+    {
+      title: 'Dinheiro',
+      items: [
+        ...(canSeeWithdrawals ? [{ to: '/admin/saques', label: 'Saques' }] : []),
+        ...(canSeeReports ? [{ to: '/admin/relatorios', label: 'Relatórios diários' }] : []),
+      ],
+    },
+    { title: 'Pessoas', items: canSeeUsers ? [{ to: '/admin/usuarios', label: 'Utilizadores' }] : [] },
+    {
+      title: 'Conteúdo',
+      items: canSeeUsers
+        ? [
+            { to: '/admin/conteudo/categorias', label: 'Categorias e perguntas' },
+            { to: '/admin/conteudo/missoes', label: 'Missões' },
+          ]
+        : [],
+    },
+    { title: 'Economia', items: canSeeReports ? [{ to: '/admin/loja', label: 'Loja' }] : [] },
+    { title: 'Comunicação', items: [{ to: '/admin/notificacoes', label: 'Notificações' }] },
+    {
+      title: 'Jurídico e sistema',
+      items: [
+        ...(canSeeLegal
+          ? [
+              { to: '/admin/legal/documentos', label: 'Documentos' },
+              { to: '/admin/legal/reclamacoes', label: 'Reclamações' },
+              { to: '/admin/legal/recursos', label: 'Recursos' },
+            ]
+          : []),
+        { to: '/admin/auditoria', label: 'Auditoria' },
+      ],
+    },
+  ];
 
   useEffect(() => {
     let mounted = true;
@@ -35,9 +73,10 @@ export function AdminLayout() {
     return () => { mounted = false; };
   }, []);
 
-  async function handleLogout() {
-    await logout();
-    navigate('/entrar', { replace: true });
+  // Fecha só o painel (volta ao Perfil, na conta normal); sair da conta faz-se no Perfil.
+  function handleExitAdmin() {
+    lockAdmin();
+    navigate('/perfil', { replace: true });
   }
 
   const linkClass = ({ isActive }) =>
@@ -48,9 +87,19 @@ export function AdminLayout() {
   return (
     <div className="min-h-screen bg-background">
       <header className="bg-surface border-b border-border px-4 py-3 flex items-center justify-between sticky top-0 z-10">
-        <div>
-          <p className="font-display font-semibold text-text">Aprenda e Ganhe · Admin</p>
-          <p className="text-caption text-text-secondary">{ROLE_LABELS[user?.role] || user?.role}</p>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setMenuOpen((o) => !o)}
+            aria-label="Abrir menu"
+            aria-expanded={menuOpen}
+            className="w-10 h-10 flex items-center justify-center rounded-button border border-border text-text text-h2"
+          >
+            {menuOpen ? '✕' : '☰'}
+          </button>
+          <div>
+            <p className="font-display font-semibold text-text">Aprenda e Ganhe · Admin</p>
+            <p className="text-caption text-text-secondary">{ROLE_LABELS[user?.role] || user?.role}</p>
+          </div>
         </div>
         <div className="flex items-center gap-3">
           <NavLink to="/admin/notificacoes" className="relative w-10 h-10 flex items-center justify-center">
@@ -59,60 +108,30 @@ export function AdminLayout() {
               <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-danger" />
             )}
           </NavLink>
-          <button onClick={handleLogout} className="text-caption text-danger font-semibold">
-            Sair
+          <button onClick={handleExitAdmin} className="text-caption text-primary font-semibold">
+            Sair do painel
           </button>
         </div>
       </header>
 
-      <nav className="bg-surface border-b border-border px-4 flex gap-1 overflow-x-auto">
-        {canSeeWithdrawals && (
-          <NavLink to="/admin/saques" className={linkClass}>
-            <span className="flex items-center gap-1"><WalletIcon className="w-4 h-4" /> Saques</span>
-          </NavLink>
-        )}
-        {canSeeUsers && (
-          <NavLink to="/admin/usuarios" className={linkClass}>
-            <span className="flex items-center gap-1"><ProfileIcon className="w-4 h-4" /> Usuários</span>
-          </NavLink>
-        )}
-        {canSeeUsers && (
-          <NavLink to="/admin/conteudo/categorias" className={linkClass}>
-            Categorias
-          </NavLink>
-        )}
-        {canSeeUsers && (
-          <NavLink to="/admin/conteudo/missoes" className={linkClass}>
-            Missões
-          </NavLink>
-        )}
-        <NavLink to="/admin/auditoria" className={linkClass}>
-          Auditoria
-        </NavLink>
-        {canSeeReports && (
-          <NavLink to="/admin/relatorios" className={linkClass}>
-            Relatórios
-          </NavLink>
-        )}
-        {canSeeReports && (
-          <NavLink to="/admin/loja" className={linkClass}>
-            Loja
-          </NavLink>
-        )}
-        {canSeeLegal && (
-          <>
-            <NavLink to="/admin/legal/documentos" className={linkClass}>
-              Documentos
-            </NavLink>
-            <NavLink to="/admin/legal/reclamacoes" className={linkClass}>
-              Reclamações
-            </NavLink>
-            <NavLink to="/admin/legal/recursos" className={linkClass}>
-              Recursos
-            </NavLink>
-          </>
-        )}
-      </nav>
+      {menuOpen && (
+        <nav className="bg-surface border-b border-border px-4 py-3 space-y-3">
+          {groups.map((g) =>
+            g.items.length === 0 ? null : (
+              <div key={g.title}>
+                <p className="text-caption text-text-secondary uppercase tracking-wide mb-1">{g.title}</p>
+                <div className="flex flex-wrap gap-1">
+                  {g.items.map((it) => (
+                    <NavLink key={it.to} to={it.to} end={it.to === '/admin'} className={linkClass} onClick={() => setMenuOpen(false)}>
+                      {it.label}
+                    </NavLink>
+                  ))}
+                </div>
+              </div>
+            )
+          )}
+        </nav>
+      )}
 
       <main className="max-w-3xl mx-auto px-4 py-6">
         <Outlet />

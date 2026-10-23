@@ -77,6 +77,7 @@ router.post(
 );
 
 // --- Auditoria: leitura liberada para qualquer papel admin_* ---
+router.get('/overview', requireRole('admin_financeiro', 'admin_suporte'), controller.getOverview);
 router.get('/audit-logs', requireRole('admin_financeiro', 'admin_suporte'), controller.listAuditLogs);
 router.get('/reports/daily', requireRole('admin_financeiro'), controller.listDailyReports);
 

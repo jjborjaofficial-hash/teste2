@@ -14,6 +14,7 @@ export const adminApi = {
   setUserStatus: (userId, status) => api.post(`/admin/users/${userId}/status`, { status }),
   setUserRole: (userId, role) => api.post(`/admin/users/${userId}/role`, { role }),
 
+  getOverview: () => api.get('/admin/overview'),
   listAuditLogs: () => api.get('/admin/audit-logs'),
   listDailyReports: (limit) => api.get(`/admin/reports/daily${limit ? `?limit=${limit}` : ''}`),
 };

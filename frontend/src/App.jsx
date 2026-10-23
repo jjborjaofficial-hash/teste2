@@ -31,7 +31,7 @@ import { TermsPage, PrivacyPage, RewardsPolicyPage, HowItWorksPage, CentralJurid
 import { SupportPage } from './pages/CentralAjuda';
 import { CookieBanner } from './components/CookieBanner';
 import { ThemeTrialBar } from './components/ThemeTrialBar';
-import { AdminHome } from './pages/admin/AdminHome';
+import { AdminOverview } from './pages/admin/AdminOverview';
 import { AdminWithdrawals } from './pages/admin/AdminWithdrawals';
 import { AdminUsers } from './pages/admin/AdminUsers';
 import { AdminAuditLogs } from './pages/admin/AdminAuditLogs';
@@ -136,7 +136,7 @@ export default function App() {
                 </RequireAdminRole>
               }
             >
-              <Route path="/admin" element={<AdminHome />} />
+              <Route path="/admin" element={<AdminOverview />} />
               <Route
                 path="/admin/saques"
                 element={

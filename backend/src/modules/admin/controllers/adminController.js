@@ -151,7 +151,44 @@ async function listDailyReports(req, res, next) {
   }
 }
 
+async function getOverview(req, res, next) {
+  try {
+    const db = require('../../../config/database');
+    const one = async (sql) => (await db.query(sql)).rows[0];
+    const [users, activity, pending, money, content] = await Promise.all([
+      one(`SELECT COUNT(*)::int AS total,
+                  COUNT(*) FILTER (WHERE created_at > now() - interval '24 hours')::int AS new_24h,
+                  COUNT(*) FILTER (WHERE created_at > now() - interval '7 days')::int AS new_7d
+           FROM users WHERE deleted_at IS NULL`),
+      one(`SELECT COUNT(DISTINCT user_id)::int AS active_24h, COUNT(*)::int AS answers_24h
+           FROM quiz_attempts WHERE created_at > now() - interval '24 hours'`),
+      one(`SELECT COUNT(*)::int AS count, COALESCE(SUM(amount_mzn), 0) AS amount
+           FROM withdrawal_requests WHERE status = 'pending_review'`),
+      one(`SELECT
+             (SELECT COALESCE(SUM(amount_mzn), 0) FROM wallet_transactions WHERE type = 'credit' AND status = 'confirmed') AS credited,
+             (SELECT COALESCE(SUM(amount_mzn), 0) FROM withdrawal_requests WHERE status = 'paid') AS paid,
+             (SELECT COALESCE(SUM(wallet_balance_mzn), 0) FROM users WHERE deleted_at IS NULL) AS owed`),
+      one(`SELECT (SELECT COUNT(*)::int FROM categories WHERE is_active) AS categories,
+                  (SELECT COUNT(*)::int FROM questions WHERE is_active) AS questions`),
+    ]);
+    return res.status(200).json({
+      status: 'success',
+      message: null,
+      data: {
+        users: { total: users.total, new24h: users.new_24h, new7d: users.new_7d },
+        activity: { active24h: activity.active_24h, answers24h: activity.answers_24h },
+        pendingWithdrawals: { count: pending.count, amountMzn: Number(pending.amount) },
+        money: { creditedMzn: Number(money.credited), paidMzn: Number(money.paid), owedToUsersMzn: Number(money.owed) },
+        content: { categories: content.categories, questions: content.questions },
+      },
+    });
+  } catch (err) {
+    return next(err);
+  }
+}
+
 module.exports = {
+  getOverview,
   listWithdrawals,
   getWithdrawalDetail,
   approveWithdrawal,
