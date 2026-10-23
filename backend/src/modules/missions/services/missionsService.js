@@ -198,6 +198,9 @@ async function claimReward(userId, userMissionId) {
     return {
       userMissionId,
       title: userMission.title,
+      // Para o ecrã de subida de nível no frontend (só apresentação): true se o XP desta missão fez o utilizador mudar de nível.
+      leveledUp: Boolean(xpResult && xpResult.leveledUp),
+      newLevel: xpResult ? xpResult.level : undefined,
       rewardsGranted: {
         xp: xpResult ? xpResult.xpCredited : 0,
         points: xpResult ? xpResult.pointsCredited : 0,

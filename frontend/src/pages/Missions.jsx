@@ -5,6 +5,8 @@ import { Card } from '../components/Card';
 import { PrimaryButton } from '../components/Button';
 import { useToast } from '../components/Toast';
 import { ApiError } from '../api/client';
+import { useAuth } from '../context/AuthContext';
+import { LevelUpCelebration } from '../components/LevelUpCelebration';
 import { MissionsIcon, XpIcon, PointsIcon, WalletIcon, CheckIcon } from '../icons';
 
 /**
@@ -91,7 +93,7 @@ function MissionCard({ mission, onClaimed }) {
           : `Recompensa resgatada: ${res.data.title}!`,
         'success'
       );
-      onClaimed?.();
+      onClaimed?.(res.data);
     } catch (err) {
       showToast(err instanceof ApiError ? err.message : 'Não foi possível resgatar a recompensa.', 'error');
     } finally {
@@ -158,6 +160,31 @@ function MissionCard({ mission, onClaimed }) {
 export function Missions() {
   const [missions, setMissions] = useState(null);
   const [error, setError] = useState(false);
+  const { user } = useAuth();
+  // Ecrã de subida de nível quando o XP da missão resgatada faz mudar de nível (uma vez por conta e por nível,
+  // a mesma chave que o resultado do quiz usa, para nunca aparecer duas vezes).
+  const [levelUp, setLevelUp] = useState(null);
+
+  function handleClaimed(data) {
+    load();
+    if (!data?.leveledUp || !data?.newLevel) return;
+    const key = `levelup_seen:${user?.id || 'anon'}:${data.newLevel}`;
+    try {
+      if (localStorage.getItem(key) === '1') return;
+    } catch {
+      /* sem armazenamento: mostra na mesma */
+    }
+    setLevelUp({ level: data.newLevel, xp: data.rewardsGranted?.xp ?? 0, key });
+  }
+
+  function closeLevelUp() {
+    try {
+      if (levelUp?.key) localStorage.setItem(levelUp.key, '1');
+    } catch {
+      /* pior caso: volta a aparecer uma vez */
+    }
+    setLevelUp(null);
+  }
 
   function load() {
     missionsApi.listMine()
@@ -184,6 +211,9 @@ export function Missions() {
 
   return (
     <div className="space-y-4 pb-4">
+      {levelUp && (
+        <LevelUpCelebration level={levelUp.level} xpAwarded={levelUp.xp} user={user} onClose={closeLevelUp} />
+      )}
       <header className="pt-2 flex items-center gap-2">
         <MissionsIcon className="w-6 h-6 text-primary" hasNew={claimableCount > 0} />
         <h1 className="font-display text-h1 text-text">Missões</h1>
@@ -219,7 +249,7 @@ export function Missions() {
 
       <div className="space-y-3">
         {missions?.map((m) => (
-          <MissionCard key={m.userMissionId} mission={m} onClaimed={load} />
+          <MissionCard key={m.userMissionId} mission={m} onClaimed={handleClaimed} />
         ))}
       </div>
 
