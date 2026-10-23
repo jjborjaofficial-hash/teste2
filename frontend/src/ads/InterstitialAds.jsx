@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { adConfig, isFormatActive } from './adConfig';
+import { adsConfigReady } from './adRemoteConfig';
 import { hasAdvertisingConsent } from './adConsent';
 import { loadAclib } from './adcashLoader';
 
@@ -33,19 +34,19 @@ export function InterstitialAds({ onDone }) {
     if (attempted) return;
     setAttempted(true);
 
-    if (!isFormatActive('interstitial') || !hasAdvertisingConsent() || !canShowNow()) {
-      onDone?.();
-      return;
-    }
-
-    const zoneId = adConfig.zones.quizResult;
-    if (!zoneId) {
-      onDone?.();
-      return;
-    }
-
-    loadAclib()
-      .then((aclib) => {
+    // Espera (no máximo 3 s) pela configuração vinda do painel antes de decidir se mostra o anúncio.
+    Promise.race([adsConfigReady, new Promise((resolve) => setTimeout(resolve, 3000))])
+      .then(() => {
+        if (!isFormatActive('interstitial') || !hasAdvertisingConsent() || !canShowNow()) {
+          return null;
+        }
+        const zoneId = adConfig.zones.quizResult;
+        if (!zoneId) return null;
+        return loadAclib().then((aclib) => ({ aclib, zoneId }));
+      })
+      .then((ctx) => {
+        if (!ctx) return;
+        const { aclib, zoneId } = ctx;
         localStorage.setItem(LAST_SHOWN_KEY, String(Date.now()));
         aclib.runInterstitial({ zoneId });
       })

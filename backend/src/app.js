@@ -24,6 +24,7 @@ const notificationsRoutes = require('./modules/notifications/routes/notification
 const referralsRoutes = require('./modules/referrals/routes/referralsRoutes');
 const adminRoutes = require('./modules/admin/routes/adminRoutes');
 const adminAccessRoutes = require('./modules/adminAccess/adminAccessRoutes');
+const adsRoutes = require('./modules/ads/adsRoutes');
 const legalRoutes = require('./modules/legal/routes/legalRoutes');
 const adminLegalRoutes = require('./modules/legal/routes/adminLegalRoutes');
 const shopRoutes = require('./modules/shop/routes/shopRoutes');
@@ -70,6 +71,7 @@ app.use('/api/v1/ranking', rankingRoutes);
 app.use('/api/v1/notifications', notificationsRoutes);
 app.use('/api/v1/referrals', referralsRoutes);
 app.use('/api/v1/admin-access', adminAccessRoutes);
+app.use('/api/v1/ads', adsRoutes);
 app.use('/api/v1/admin', adminRoutes);
 app.use('/api/v1/legal', legalRoutes);
 app.use('/api/v1/admin/legal', adminLegalRoutes);

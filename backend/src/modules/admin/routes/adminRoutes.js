@@ -13,6 +13,8 @@ const {
   setUserRoleSchema,
 } = require('../validators/adminValidators');
 
+const adsService = require('../../ads/adsService');
+
 const router = Router();
 
 // Toda rota deste módulo exige autenticação. A autorização granular (quem pode
@@ -78,6 +80,19 @@ router.post(
 
 // --- Auditoria: leitura liberada para qualquer papel admin_* ---
 router.get('/overview', requireRole('admin_financeiro', 'admin_suporte'), controller.getOverview);
+// --- Anúncios: só admin_master (requireRole sem papéis extras) ---
+const adsWrap = (fn) => async (req, res, next) => {
+  try {
+    res.json({ success: true, data: await fn(req) });
+  } catch (err) {
+    next(err);
+  }
+};
+router.get('/ads', requireRole(), adsWrap(() => adsService.listSlots()));
+router.post('/ads/master', requireRole(), adsWrap((req) => adsService.setMaster(req.body?.enabled === true, req.user.id)));
+router.post('/ads/:slotKey', requireRole(), adsWrap((req) => adsService.saveSlot(req.params.slotKey, req.body?.code, req.user.id)));
+router.post('/ads/:slotKey/enabled', requireRole(), adsWrap((req) => adsService.setSlotEnabled(req.params.slotKey, req.body?.enabled === true, req.user.id)));
+router.delete('/ads/:slotKey', requireRole(), adsWrap((req) => adsService.clearSlot(req.params.slotKey, req.user.id)));
 router.get('/audit-logs', requireRole('admin_financeiro', 'admin_suporte'), controller.listAuditLogs);
 router.get('/reports/daily', requireRole('admin_financeiro'), controller.listDailyReports);
 

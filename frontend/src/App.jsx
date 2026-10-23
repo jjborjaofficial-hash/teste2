@@ -23,6 +23,7 @@ import { QuizResult } from './pages/QuizResult';
 import { Wallet } from './pages/Wallet';
 import { Profile } from './pages/Profile';
 import { AdminAccess } from './pages/AdminAccess';
+import { AdminAds } from './pages/admin/AdminAds';
 import { Settings } from './pages/Settings';
 import { Ranking } from './pages/Ranking';
 import { Notifications } from './pages/Notifications';
@@ -195,6 +196,14 @@ export default function App() {
                 }
               />
               <Route path="/admin/notificacoes" element={<AdminNotifications />} />
+              <Route
+                path="/admin/anuncios"
+                element={
+                  <RequireAdminRole roles={[]}>
+                    <AdminAds />
+                  </RequireAdminRole>
+                }
+              />
               <Route
                 path="/admin/legal/documentos"
                 element={

@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { adConfig, isFormatActive } from './adConfig';
 import { hasAdvertisingConsent } from './adConsent';
 import { loadAclib } from './adcashLoader';
+import { useAdsRemoteConfig } from './adRemoteConfig';
 
 /**
  * DisplayAds — banner/display do Adcash.
@@ -28,6 +29,7 @@ import { loadAclib } from './adcashLoader';
  *   - wallet: 300x100 (zona ainda não criada — fica inerte até ter Zone ID)
  */
 export function DisplayAds({ location, className = '' }) {
+  useAdsRemoteConfig();
   const containerRef = useRef(null);
   const dimensions = adConfig.displayDimensions[location];
   const zoneId = adConfig.zones[location];

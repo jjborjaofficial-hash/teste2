@@ -61,3 +61,12 @@ export const adminLegalApi = {
   listAppeals: (status) => api.get(`/admin/legal/appeals${status ? `?status=${status}` : ''}`),
   decideAppeal: (appealId, data) => api.post(`/admin/legal/appeals/${appealId}/decide`, data),
 };
+
+// Painel Administrativo — Anúncios por local (só admin_master)
+export const adminAdsApi = {
+  list: () => api.get('/admin/ads'),
+  save: (slotKey, code) => api.post(`/admin/ads/${slotKey}`, { code }),
+  remove: (slotKey) => api.delete(`/admin/ads/${slotKey}`),
+  setEnabled: (slotKey, enabled) => api.post(`/admin/ads/${slotKey}/enabled`, { enabled }),
+  setMaster: (enabled) => api.post('/admin/ads/master', { enabled }),
+};

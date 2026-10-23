@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { adConfig, isFormatActive } from './adConfig';
+import { useAdsRemoteConfig } from './adRemoteConfig';
 import { hasAdvertisingConsent } from './adConsent';
 import { loadAclib } from './adcashLoader';
 
@@ -16,6 +17,7 @@ import { loadAclib } from './adcashLoader';
  * quando o formato for de fato ativado.
  */
 export function InPagePushAds() {
+  const remoteReady = useAdsRemoteConfig();
   useEffect(() => {
     if (!isFormatActive('inPagePush') || !hasAdvertisingConsent()) return undefined;
 
@@ -39,7 +41,8 @@ export function InPagePushAds() {
     return () => {
       cancelled = true;
     };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [remoteReady]);
 
   return null;
 }

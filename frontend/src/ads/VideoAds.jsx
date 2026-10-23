@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { adConfig, isFormatActive } from './adConfig';
+import { useAdsRemoteConfig } from './adRemoteConfig';
 import { hasAdvertisingConsent } from './adConsent';
 import { loadAclib } from './adcashLoader';
 
@@ -29,6 +30,7 @@ import { loadAclib } from './adcashLoader';
  * de uso, é só um botão que mostra um anúncio sem função).
  */
 export function VideoAds({ location = 'video', label = 'Assistir anúncio', onAdCompleted, onAdFailed }) {
+  useAdsRemoteConfig();
   const [loading, setLoading] = useState(false);
 
   if (!isFormatActive('video') || !adConfig.zones[location]) return null;

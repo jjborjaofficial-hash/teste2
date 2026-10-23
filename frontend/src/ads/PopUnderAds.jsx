@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { adConfig, isFormatActive } from './adConfig';
+import { useAdsRemoteConfig } from './adRemoteConfig';
 import { hasAdvertisingConsent } from './adConsent';
 import { loadAclib } from './adcashLoader';
 
@@ -13,6 +14,7 @@ import { loadAclib } from './adcashLoader';
  * deixar renderizado em qualquer tela sem efeito colateral.
  */
 export function PopUnderAds() {
+  const remoteReady = useAdsRemoteConfig();
   useEffect(() => {
     if (!isFormatActive('popunder') || !hasAdvertisingConsent()) return undefined;
 
@@ -29,7 +31,8 @@ export function PopUnderAds() {
     return () => {
       cancelled = true;
     };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [remoteReady]);
 
   return null;
 }

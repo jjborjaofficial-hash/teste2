@@ -51,7 +51,13 @@ export function AdminLayout() {
           ]
         : [],
     },
-    { title: 'Economia', items: canSeeReports ? [{ to: '/admin/loja', label: 'Loja', icon: ShopIcon }] : [] },
+    {
+      title: 'Economia',
+      items: [
+        ...(canSeeReports ? [{ to: '/admin/loja', label: 'Loja', icon: ShopIcon }] : []),
+        ...(user?.role === 'admin_master' ? [{ to: '/admin/anuncios', label: 'Anúncios', icon: BoostIcon }] : []),
+      ],
+    },
     { title: 'Comunicação', items: [{ to: '/admin/notificacoes', label: 'Notificações', icon: NotificationIcon }] },
     {
       title: 'Jurídico e sistema',
