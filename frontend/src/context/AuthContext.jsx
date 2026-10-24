@@ -3,7 +3,7 @@ import { authApi } from '../api/authApi';
 import { setTokens, clearTokens, ApiError } from '../api/client';
 import { usersApi } from '../api/profileApi';
 import { shopApi } from '../api/shopApi';
-import { syncPushToken } from '../lib/pushNotifications';
+import { syncPushToken, unlinkPushDevice } from '../lib/pushNotifications';
 import { lockAdmin } from '../lib/adminUnlock';
 
 const AuthContext = createContext(null);
@@ -167,6 +167,8 @@ export function AuthProvider({ children }) {
   }, []);
 
   const logout = useCallback(async () => {
+    // Desliga este aparelho da conta que sai (precisa da sessão ainda ativa; espera no máximo 2 s e nunca bloqueia o logout).
+    await unlinkPushDevice();
     lockAdmin();
     clearTokens();
     setUser(null);

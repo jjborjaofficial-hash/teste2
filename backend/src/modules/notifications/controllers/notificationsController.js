@@ -55,7 +55,7 @@ async function registerPushToken(req, res, next) {
 
 async function unregisterPushToken(req, res, next) {
   try {
-    await pushTokensRepository.deleteToken(req.validatedBody.token);
+    await pushTokensRepository.deleteToken(req.validatedBody.token, req.user.id);
     return res.status(200).json({ status: 'success', message: 'Dispositivo removido das notificações push.', data: null });
   } catch (err) {
     return next(err);

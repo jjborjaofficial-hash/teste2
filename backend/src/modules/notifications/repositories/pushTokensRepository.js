@@ -16,8 +16,9 @@ async function upsertToken(userId, token, platform = 'web') {
   );
 }
 
-async function deleteToken(token) {
-  await db.query(`DELETE FROM push_tokens WHERE token = $1`, [token]);
+// Só apaga se o token for da conta indicada (quem sai da conta desliga o seu aparelho, nunca o de outra pessoa).
+async function deleteToken(token, userId) {
+  await db.query(`DELETE FROM push_tokens WHERE token = $1 AND user_id = $2`, [token, userId]);
 }
 
 async function deleteTokens(tokens) {

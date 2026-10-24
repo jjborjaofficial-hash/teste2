@@ -144,3 +144,27 @@ export async function requestPushPermission() {
   }
   return 'failed';
 }
+
+/**
+ * Desliga ESTE aparelho da conta que está a sair (logout), para os avisos dela deixarem de aparecer aqui.
+ * Só tira o aparelho da conta no servidor: a permissão e o "Ativado" do navegador ficam, por isso a pessoa (ou outra)
+ * que entrar a seguir volta a ligar o aparelho sozinha (`syncPushToken`). Tem de correr ANTES de apagar os tokens de
+ * sessão (o pedido precisa de sessão) e nunca atrasa nem impede o logout: no máximo espera 2 segundos. Nunca lança erro.
+ */
+export async function unlinkPushDevice() {
+  try {
+    if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
+    if (!isConfigured() || Notification.permission !== 'granted') return;
+    if (localStorage.getItem(PUSH_FLAG) !== '1') return;
+
+    const work = (async () => {
+      const registration = await ensureServiceWorkerReady();
+      const { messaging, getToken } = await loadFirebase();
+      const token = await getToken(messaging, { vapidKey: VAPID_KEY, serviceWorkerRegistration: registration });
+      if (token) await notificationsApi.unregisterPushToken(token);
+    })();
+    await Promise.race([work.catch(() => {}), sleep(2000)]);
+  } catch {
+    /* o logout segue sempre */
+  }
+}
