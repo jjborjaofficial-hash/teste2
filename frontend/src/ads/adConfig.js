@@ -59,7 +59,7 @@ export const adConfig = {
   // espaço vazio em volta do anúncio).
   displayDimensions: {
     dashboard: { width: 300, height: 100 },
-    content: { width: 300, height: 250 },
+    content: { width: 250, height: 250 },
     wallet: { width: 300, height: 100 },
   },
 

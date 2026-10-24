@@ -4,7 +4,7 @@
  */
 const SLOTS = [
   { key: 'dashboard', label: 'Início (Painel)', where: 'Ecrã inicial, por baixo do resumo', format: 'banner', size: '300x100' },
-  { key: 'content', label: 'Hub de Estudos', where: 'Entre as categorias de estudo', format: 'banner', size: '300x250' },
+  { key: 'content', label: 'Hub de Estudos', where: 'Entre as categorias de estudo', format: 'banner', size: '250x250' },
   { key: 'wallet', label: 'Carteira', where: 'Ecrã da carteira', format: 'banner', size: '300x100' },
   { key: 'quizResult', label: 'Resultado do quiz', where: 'Ao terminar uma rodada (tela cheia, no máximo 1 a cada 90 s)', format: 'interstitial', size: 'tela cheia' },
   { key: 'video', label: 'Vídeo (recompensa)', where: 'Botão "Assistir anúncio" (ainda sem crédito automático)', format: 'video', size: 'vídeo' },
