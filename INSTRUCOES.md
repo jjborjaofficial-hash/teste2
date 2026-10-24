@@ -46,7 +46,7 @@ Risco conhecido: a chave do Firebase e as passwords das bases passaram por conve
 **Nunca escrever endereços nem passwords em ficheiros do repositório.**
 
 ### E. Técnico (Claude faz quando o dono pedir)
-- **Capacidade:** no plano gratuito aguenta cerca de 50 a 100 pessoas em simultâneo. Antes de lançar a sério: plano pago, worker no Render e teste de carga. (A distância servidor/base já foi resolvida com Frankfurt.)
+- **Capacidade (medido em 24/10, `docs/teste-de-carga-2026-10.md`):** confortável com ~30 a 50 pessoas ativas ao mesmo tempo; com 100 o painel fica lento (5 a 8 s). O maior risco são os **logins/registos** (bcrypt 12 = 258 ms de CPU, ~23 por minuto na Render gratuita). Melhorias possíveis, por decidir com o dono: bcrypt 12 → 10/11 (decisão de segurança), otimizar `GET /missions`, reduzir o gasto do servidor parado (16% do orçamento), plano pago da Render (~5x).
 - **Auditoria do quiz no GitHub:** pôr `npm run quiz:audit` nos testes automáticos. Precisa de permissão `workflow` no token.
 - **Aviso duplicado no Chrome:** o teste do Firebase apareceu duas vezes (título e texto genérico). Provável: `notification` + `data` na mesma mensagem. Ver se acontece com avisos reais; se sim, enviar só `data` e deixar o service worker (`frontend/public/firebase-messaging-sw.js`) mostrar.
 - **Contas Google novas** precisam de telefone e de aceitar documentos (fricção no cadastro, decisão de produto, não é erro).
