@@ -15,6 +15,9 @@ Mais os `PENDENTE.md` de cada área (BE-, FE-, ADS-), com instruções técnicas
 
 **Estado em 21/10/2026:** Frankfurt concluído, push a funcionar, quiz completo. Nada abaixo bloqueia o site; é crescimento e arrumação.
 
+### A0. Endereço novo do site (24 a 28/10, feito, falta a Adcash)
+O site passou a `https://aprendaeganha.onrender.com` (site Render `aprendaeganha`, `srv-dbe557ks728c7396qr9g`; detalhes em `REGRAS.md`, secção 2). Login normal e login com Google confirmados pelo dono em 28/10. **Falta:** na Adcash, registar o endereço novo e criar as zonas de novo (as atuais estão ligadas ao endereço antigo) e colá-las no painel de anúncios; depois decidir apagar o site antigo `teste2-frontend`.
+
 ### A. Anúncios (Adcash): o que paga os saques
 O dinheiro dos saques (mínimo 100 MZN, cerca de 2 semanas de uso) tem de sair da receita dos anúncios. O dono vai pôr mais anúncios, "de boa forma".
 - **Dono, na conta Adcash:** bloquear a categoria Adulto nas 4 zonas (separador *Restrictions*); pedir ao suporte o bloqueio de anúncios enganosos (falso "Flash Player", "vírus"); limitar o intersticial a 1 a cada 10 minutos; confirmar "Disable interstitial countdown" desligado. Interruptor geral de emergência: `VITE_ADS_ENABLED=false` (exige novo deploy do frontend).
