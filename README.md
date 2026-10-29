@@ -168,7 +168,6 @@ Abra `http://localhost:5173` no navegador (ou no celular, se estiver na mesma re
 Lista conferida contra o código em 29/10/2026. Pendentes:
 - IA/Personalização
 - Webhooks/postbacks de anúncios (os anúncios em si já funcionam, ver abaixo)
-- Validação OTP por SMS (a recuperação de conta usa o Google ligado antes, sem SMS)
 - App móvel instalável (PWA/loja): ainda não há manifest nem ícones da app; o único service worker é o do push
 - Integração automática de pagamento M-Pesa/e-Mola — o saque é 100% manual (ver
   `docs/fluxo-saque-manual-permissoes-admin-ui.md`)
@@ -177,6 +176,11 @@ Lista conferida contra o código em 29/10/2026. Pendentes:
 - Endpoint público genérico de `system_config` — hoje cada valor exposto ao frontend
   (ex.: taxa de conversão de Pontos) precisou de uma rota dedicada; o saque mínimo já
   vem de `GET /wallet`
+
+## Decisões do dono (não serão feitas)
+
+- **Validação OTP / verificação por SMS: não existirá**, por causa dos custos (decisão de
+  21/10/2026, ver `REGRAS.md`). A recuperação de conta usa o Google ligado antes.
 
 ## O que já foi implementado (constava como pendente)
 
