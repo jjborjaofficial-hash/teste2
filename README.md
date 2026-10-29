@@ -165,23 +165,30 @@ Abra `http://localhost:5173` no navegador (ou no celular, se estiver na mesma re
 
 ## O que ainda NÃO está implementado (próximas entregas)
 
-Conforme a metodologia do Manual (Parte 2), cada módulo será entregue completo, testado
-e documentado antes de avançar para o próximo. Pendentes:
-- Módulos: Publicidade/Webhooks de anúncios, IA/Personalização
-- Cache Redis aplicado apenas ao Ranking por enquanto (perfil e streak ainda não usam cache)
-- Login social via Google e validação OTP por SMS (frontend e backend)
-- Integração real de anúncios (AdSense/AdCash/efficientcpmnetwork) — hoje são placeholders visuais no frontend
-- App Mobile nativo (o frontend web é responsivo mobile-first, mas não é um app instalável de loja)
-- Integração automática de pagamento M-Pesa/e-Mola — o saque é 100% manual (ver `docs/fluxo-saque-manual-permissoes-admin-ui.md`)
-- Campanha de Boas-vindas (Jornada Inicial de 7 dias) — nenhuma tabela, migration ou
-  tipo de missão criada ainda; dias 4–7 também não têm valores de exemplo definidos
-  em nenhum documento oficial, então dependem de decisão do proprietário do projeto
-  antes de qualquer implementação
+Lista conferida contra o código em 29/10/2026. Pendentes:
+- IA/Personalização
+- Webhooks/postbacks de anúncios (os anúncios em si já funcionam, ver abaixo)
+- Validação OTP por SMS (a recuperação de conta usa o Google ligado antes, sem SMS)
+- App móvel instalável (PWA/loja): ainda não há manifest nem ícones da app; o único service worker é o do push
+- Integração automática de pagamento M-Pesa/e-Mola — o saque é 100% manual (ver
+  `docs/fluxo-saque-manual-permissoes-admin-ui.md`)
 - Prazo formal de resposta a pedidos de dados (LGPD, Seção 16.4): o utilizador já
   descarrega os dados e elimina a conta sozinho em Configurações (anonimização)
 - Endpoint público genérico de `system_config` — hoje cada valor exposto ao frontend
   (ex.: taxa de conversão de Pontos) precisou de uma rota dedicada; o saque mínimo já
   vem de `GET /wallet`
+
+## O que já foi implementado (constava como pendente)
+
+- **Publicidade:** módulo `ads` no backend (`GET /ads/config`, locais de anúncio geridos no
+  painel de administrador, migration 741) e integração real com o Adcash no frontend
+  (zonas manuais por local, consentimento de cookies, interruptor `VITE_ADS_ENABLED`).
+  Já não são placeholders visuais.
+- **Cache Redis:** deixou de ser só do Ranking; também cobre perfil, streak, XP, carteira,
+  trust score e estatísticas da plataforma.
+- **Login com Google:** frontend e backend (inclui a recuperação de conta por Google).
+- **Campanha de Boas-vindas (Jornada Inicial de 7 dias):** calendário de 7 dias com
+  recompensas definidas (migrations 106 e 731; 10 MZN no total: 2/1/1/1/1,5/1,5/2).
 
 ## Requisitos
 
