@@ -12,6 +12,8 @@ const configRepository = require('../../../common/repositories/systemConfigRepos
  * alinhado ao espírito da Seção 16.2 — Tolerância Zero).
  */
 
+const DEFAULT_DAILY_INVITE_LIMIT = 5;
+
 function generateCode() {
   return crypto.randomBytes(4).toString('hex').toUpperCase(); // ex: "A1B2C3D4"
 }
@@ -42,6 +44,17 @@ async function linkReferral(executor = db, { referralCode, referredUserId }) {
 
   const referrerUserId = await repository.findUserIdByCode(referralCode, executor);
   if (!referrerUserId || referrerUserId === referredUserId) return null; // código inválido ou auto-indicação
+
+  // Limite diário de convites por pessoa (decisão do dono, 29/10/2026: no máximo 5 por dia; protege contra contas
+  // falsas que se convidam a si mesmas). Valor em system_config (referral_daily_invite_limit); 0 desliga o limite.
+  // Passado o limite, a pessoa nova regista-se NORMALMENTE: só o vínculo com quem convidou não é criado.
+  const dailyLimit = Number(
+    (await configRepository.getConfigValue('referral_daily_invite_limit', executor)) ?? DEFAULT_DAILY_INVITE_LIMIT
+  );
+  if (dailyLimit > 0) {
+    const invitedToday = await repository.countReferralsCreatedToday(referrerUserId, executor);
+    if (invitedToday >= dailyLimit) return null;
+  }
 
   return repository.createReferral(executor, { referrerUserId, referredUserId });
 }

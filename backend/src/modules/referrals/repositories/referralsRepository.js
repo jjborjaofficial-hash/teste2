@@ -35,6 +35,20 @@ async function createReferral(executor, { referrerUserId, referredUserId }) {
   return rows[0] || null;
 }
 
+// Quantos convites este utilizador já fez HOJE (dia do fuso da plataforma, Africa/Maputo). Conta todos os convites
+// criados no dia, qualquer que seja o estado, para o limite diário de convites (referral_daily_invite_limit).
+async function countReferralsCreatedToday(referrerUserId, executor = db) {
+  const { PLATFORM_TIMEZONE } = require('../../../common/time/platformTimezone');
+  const { rows } = await executor.query(
+    `SELECT COUNT(*)::int AS count
+     FROM referrals
+     WHERE referrer_user_id = $1
+       AND (created_at AT TIME ZONE $2)::date = (now() AT TIME ZONE $2)::date`,
+    [referrerUserId, PLATFORM_TIMEZONE]
+  );
+  return rows[0].count;
+}
+
 async function countQualifyingActivity(referredUserId, executor = db) {
   const { rows } = await executor.query(
     `SELECT COUNT(*)::int AS count
@@ -96,6 +110,7 @@ module.exports = {
   createCodeForUser,
   findUserIdByCode,
   createReferral,
+  countReferralsCreatedToday,
   countQualifyingActivity,
   getPendingReferralsForUser,
   markQualifiedAndRewarded,
