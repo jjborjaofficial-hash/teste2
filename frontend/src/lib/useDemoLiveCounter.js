@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { initialLiveValue, nextLiveStep } from './liveCounterSimulation';
+import { initialLiveValue, nextLiveStep, LIVE_DEMO_INTERVAL_MS } from './liveCounterSimulation';
 
 /**
  * Contador "ao vivo" de DEMONSTRAÇÃO. Só corre com `ativo` = true; senão devolve null e não cria timers.
- * A cada 2,5-5,5 s decide o próximo valor (nextLiveStep) e o número "conta" até lá em ~0,8 s (um a um, sem saltar),
+ * A cada ~30 s decide o próximo valor (nextLiveStep, só ±1 ou ±2) e o número "conta" até lá em ~0,8 s (sem saltar),
  * a não ser que a pessoa tenha pedido menos movimento no telemóvel (prefers-reduced-motion).
  */
 export function useDemoLiveCounter(ativo, { min, max }) {
@@ -44,7 +44,7 @@ export function useDemoLiveCounter(ativo, { min, max }) {
         alvo.current = nextLiveStep(de, { min, max });
         animarAte(de, alvo.current);
         agendar();
-      }, 2500 + Math.random() * 3000);
+      }, LIVE_DEMO_INTERVAL_MS.base + Math.random() * LIVE_DEMO_INTERVAL_MS.extra);
     };
     agendar();
 
